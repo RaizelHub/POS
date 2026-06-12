@@ -8,8 +8,8 @@ const sendVerificationEmail = (email, token) => {
     const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
-            user: process.env.EMAIL_USER || '2201102887@student.buksu.edu.ph',
-            pass: process.env.EMAIL_PASS || 'dmkp vpck zata dfqg',
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
         },
         tls: {
             rejectUnauthorized: false
