@@ -1,0 +1,212 @@
+.homepageContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: linear-gradient(135deg, #1a2a6c 0%, #b21f1f 50%, #fdbb2d 100%);
+  color: white;
+  text-align: center;
+  font-family: 'Poppins', sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+.homepageContainer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.3) 100%);
+  pointer-events: none;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 20px 40px;
+  position: absolute;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.adminIcon {
+  color: #ffffff;
+  margin-right: 20px;
+  font-size: 2.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-shadow: 0 0 12px rgba(255,255,255,0.9), 0 0 20px rgba(255,255,255,0.7);
+  filter: brightness(1.5) drop-shadow(0 0 5px rgba(255,255,255,0.8));
+  background-color: rgba(255,255,255,0.25);
+  padding: 12px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  box-shadow: 0 0 15px rgba(255,255,255,0.5);
+}
+
+.adminIcon:hover {
+  transform: translateY(-2px) scale(1.1);
+  text-shadow: 0 0 15px #ffffff, 0 0 25px #ffffff;
+  color: #ffffff;
+  filter: brightness(1.8) drop-shadow(0 0 8px rgba(255,255,255,0.9));
+  background-color: rgba(255,255,255,0.4);
+  box-shadow: 0 0 20px rgba(255,255,255,0.7);
+}
+
+.navButtons {
+  display: flex;
+  gap: 20px;
+}
+
+.customButton {
+  padding: 12px 24px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(5px);
+  letter-spacing: 0.5px;
+}
+
+.customButton:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.customButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.mainContent {
+  margin-top: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.logos {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 40px;
+  perspective: 1000px;
+}
+
+.logoImg {
+  height: 120px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+  transition: transform 0.5s ease;
+  animation: float 6s ease-in-out infinite;
+}
+
+.logoImg:hover {
+  transform: scale(1.05) rotateY(10deg);
+}
+
+.logoImg:nth-child(2) {
+  animation-delay: 0.5s;
+}
+
+.title {
+  font-size: 3.5rem;
+  font-weight: 800;
+  margin-bottom: 20px;
+  background: linear-gradient(to right, #fff, #f0f0f0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  letter-spacing: 1px;
+}
+
+.subtitle {
+  font-size: 1.8rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  letter-spacing: 0.5px;
+}
+
+.footer {
+  position: absolute;
+  bottom: 30px;
+  font-size: 1rem;
+  width: 100%;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.footerText {
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
+/* Enhanced Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .title {
+    font-size: 2.5rem;
+  }
+
+  .subtitle {
+    font-size: 1.4rem;
+  }
+
+  .logoImg {
+    height: 100px;
+  }
+
+  .navButtons {
+    gap: 10px;
+  }
+
+  .customButton {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+  }
+}

@@ -1,0 +1,65 @@
+/* General Styling */
+.profilePaper {
+    width: 100%;
+    max-width: 500px;
+    margin: 40px auto;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+  
+  .inputField {
+    background-color: #fafafa;
+    border-radius: 4px;
+  }
+  
+  .saveButton {
+    background-color: #4CAF50;
+    &:hover {
+      background-color: #45a049;
+    }
+  }
+  
+  .cancelButton {
+    background-color: #f44336;
+    &:hover {
+      background-color: #e53935;
+    }
+  }
+  
+  .editIcon, .editButton {
+    background-color: #fff;
+    border-radius: 50%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    padding: 8px;
+  }
+  
+  .profileDetail {
+    margin-bottom: 10px;
+    font-size: 1rem;
+    color: #555;
+  }
+  
+  .uploadButton {
+    margin-top: 20px;
+    text-transform: none;
+  }
+  
+  .profileContainer .MuiBox-root {
+    padding: 10px;
+  }
+  
+  .MuiAvatar-root {
+    border: 4px solid #4CAF50; /* Avatar border color */
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .MuiAvatar-root:hover {
+    transform: scale(1.1); /* Hover effect */
+  }
+  
+  
+  

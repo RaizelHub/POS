@@ -1,0 +1,58 @@
+/* Center the container with a background */
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f0f4f8;
+    font-family: Arial, sans-serif;
+  }
+  
+  /* Styling for the verification card */
+  .card {
+    background-color: #ffffff;
+    padding: 2rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+  }
+  
+  /* Title styling */
+  .title {
+    font-size: 1.8rem;
+    color: #333;
+    margin-bottom: 1rem;
+  }
+  
+  /* Message styling */
+  .message {
+    font-size: 1rem;
+    margin-top: 1rem;
+  }
+  
+  .success {
+    color: #28a745; /* Green for success */
+  }
+  
+  .error {
+    color: #dc3545; /* Red for errors */
+  }
+  
+  /* Spinner styling */
+  .spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #007bff;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 1rem auto;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  

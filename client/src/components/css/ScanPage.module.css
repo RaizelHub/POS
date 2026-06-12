@@ -1,0 +1,266 @@
+/* Overall page styling */
+.scanPage {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%); /* Set background color to blue */
+    font-family: Arial, sans-serif;
+  }
+  
+  /* Container that holds both left and right sections */
+  .container {
+    display: flex;
+    width: 90%;
+    max-width: 1200px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+  }
+  
+  /* Left section styling */
+  .leftSection,
+  .rightSection {
+    flex: 1;
+    padding: 20px;
+  }
+  
+  /* Left section background and user info */
+  .leftSection {
+    background-color: #f0f4fa; /* Light blue background */
+  }
+  
+  .userSection {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .userIcon,
+  .userImage {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    margin-right: 15px;
+  }
+  
+  /* User name styling */
+  .userName {
+    font-size: 18px;
+    font-weight: bold;
+    color: #0b0b0c;
+  }
+  
+  /* Edit button styling */
+  .editButton {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+  }
+  
+  .editButton:hover {
+    background-color: #0056b3;
+  }
+  
+  /* Items section styling */
+ /* Adjusting Paid and Pay Later sections */
+.itemsSection {
+  display: flex;
+  gap: 20px;
+}
+
+.paidSection,
+.payLaterSection {
+  flex: 1; /* Equal size for both sections */
+  margin-bottom: 20px;
+}
+
+.paidSection {
+  background-color: #e8f5e9; /* Light green background */
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.payLaterSection {
+  background-color: #ffebee; /* Light red background */
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Title styling for Paid and Pay Later sections */
+.itemsSection h4 {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+/* Individual item styling */
+.itemsList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 250px; /* Constrain height */
+  overflow-y: auto;
+  background-color: #ffffff;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.itemsList p {
+  text-align: center;
+  color: #888;
+}
+
+.item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.item:hover {
+  background-color: #e0f7fa;
+}
+
+.item span {
+  font-size: 16px;
+}
+
+.item span:first-child {
+  font-weight: bold;
+}
+
+  .itemName {
+    font-weight: bold;
+    color: #333;
+  }
+  
+  .itemPrice {
+    font-weight: bold;
+    color: #007bff;
+  }
+  
+  /* Adding icons and more design elements */
+  .userSection .userIcon {
+    font-size: 2rem;
+    color: #007bff;
+  }
+  
+  .itemsList .item:hover {
+    background-color: #e6f0ff;
+    cursor: pointer;
+  }
+  
+  /* Scanner input box */
+  .scanBox input {
+    background-color: #f0f4fa;
+    color: #333;
+  }
+  
+  .scanBox input:focus {
+    border-color: #007bff;
+  }
+  .logoutButton {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: #f44336; /* Red color */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 14px;
+  cursor: pointer;
+ 
+  }
+  .modalBox {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px;
+    background-color: white;
+    padding: 20px;
+    box-shadow: 24px;
+    border-radius: 8px;
+    text-align: center;
+  }
+  
+  .modalActions {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+  }
+  /* Right section styling */
+  .rightSection {
+    background-color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  /* Scanner section styling */
+  .scannerSection {
+    text-align: center;
+    width: 100%;
+  }
+  
+  .scanButton {
+    background-color: #286740;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .scanButton:hover {
+    background-color: #0056b3;
+  }
+  
+  .scanBox input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  /* Error message styling */
+  .error {
+    color: red;
+    margin-top: 10px;
+  }
+  .scanButton, .proceedButton, .scanAgainButton {
+    padding: 10px;
+    font-size: 16px;
+    margin-top: 10px;
+    cursor: pointer;
+  }
+  
+  .proceedButton {
+    background-color: #4caf50;
+    color: white;
+  }
+  
+  .scanAgainButton {
+    background-color: #ff9800;
+    color: white;
+  }
+  

@@ -1,0 +1,129 @@
+/* Thank You Page */
+.thankYouPage {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%); /* Blue gradient */
+    color: white;
+    font-family: 'Arial', sans-serif;
+  }
+  
+  .title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 30px;
+    text-align: center;
+  }
+  
+  .receipt {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    width: 90%;
+    max-width: 600px;
+    text-align: left;
+    color: #333;
+  }
+  
+  .receiptTitle {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #4CAF50;
+    text-align: center;
+  }
+  
+  .receiptSection {
+    margin-bottom: 20px;
+  }
+  
+  .receiptSection p {
+    margin: 8px 0;
+    font-size: 1.1rem;
+  }
+  
+  .thankYouNote {
+    font-size: 1.2rem;
+    color: #666;
+    text-align: center;
+    margin-top: 30px;
+  }
+  
+  .backButton {
+    display: block;
+    margin: 20px auto;
+    padding: 12px 25px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: background-color 0.3s ease;
+  }
+  
+  .backButton:hover {
+    background-color: #0056b3;
+  }
+  
+  .downloadButton {
+    display: block;
+    margin: 20px auto;
+    padding: 12px 25px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: background-color 0.3s ease;
+  }
+  
+  .downloadButton:hover {
+    background-color: #45a049;
+  }
+  
+  .errorPage {
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .errorPage h1 {
+    font-size: 2rem;
+    color: red;
+    margin-bottom: 20px;
+  }
+  
+  .errorPage p {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+  }
+  
+  .errorPage .backButton {
+    background-color: #dc3545;
+  }
+  
+  .errorPage .backButton:hover {
+    background-color: #c82333;
+  }
+  .logoutButton {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #f44336; /* Red color */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .logoutButton:hover {
+    background-color: #d32f2f; /* Darker red on hover */
+  }
+  
