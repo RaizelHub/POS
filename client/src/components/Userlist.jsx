@@ -1,38 +1,18 @@
 import React, { useEffect, useState } from "react";
 import {
-  Box,
-  Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  CircularProgress,
-  Typography,
   Avatar,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
+  Box,
+  Typography,
   Divider,
-  Tooltip,
-  IconButton,
-  List,
-  ListItem,
-  ListItemText,
-  Snackbar,
-  TextField,
-  InputAdornment,
-  Alert,
-  useTheme,
-  useMediaQuery,
-  Card,
-  CardContent,
   Grid,
+  Dialog,
+  DialogContent,
+  DialogActions,
+  Snackbar,
+  Alert,
+  Tooltip,
 } from "@mui/material";
-import { Person as PersonIcon, Search as SearchIcon, Close as CloseIcon } from "@mui/icons-material";
+import { FaUserCircle, FaSearch, FaTimes, FaMoneyBillWave, FaClock, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import config from '../config';
@@ -47,8 +27,6 @@ function UserList() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -93,10 +71,6 @@ function UserList() {
     setSnackbarOpen(false);
   };
 
-  const handleSearchChange = (event) => {
-    setSearchTerm(event.target.value);
-  };
-
   const filteredUsers = users.filter(
     (user) =>
       user.firstname.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -108,378 +82,232 @@ function UserList() {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2
-      }
+      transition: { staggerChildren: 0.08, delayChildren: 0.1 }
     }
   };
 
   const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
+    hidden: { y: 15, opacity: 0 },
     visible: {
       y: 0,
       opacity: 1,
-      transition: {
-        duration: 0.5,
-        ease: "easeOut"
-      }
+      transition: { duration: 0.4, ease: "easeOut" }
     }
   };
 
   if (loading) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="100vh"
-        bgcolor="background.default"
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="100vh"
-        bgcolor="background.default"
-      >
-        <Typography color="error" variant="h6">
-          Error: {error}
-        </Typography>
-      </Box>
+      <div className="flex flex-col justify-center items-center py-20 gap-3">
+        <div className="w-8 h-8 border-3 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
+        <span className="text-xs font-semibold text-slate-500">Loading cashiers roster...</span>
+      </div>
     );
   }
 
   return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-      style={{
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, #1a2a6c 0%, #b21f1f 50%, #fdbb2d 100%)",
-        padding: "30px",
-      }}
-    >
-      <Box
-        sx={{
-          maxWidth: "1400px",
-          margin: "0 auto",
-          backgroundColor: "rgba(255, 255, 255, 0.95)",
-          borderRadius: "24px",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
-          backdropFilter: "blur(10px)",
-          padding: "30px",
+    <div className="w-full max-w-5xl mx-auto font-sans text-slate-800 space-y-6">
+      
+      {/* Title Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+        <div>
+          <h2 className="text-xl font-bold text-slate-900">Cashier Accounts</h2>
+          <p className="text-slate-500 text-sm mt-0.5">Manage store registers and cashier sales records.</p>
+        </div>
+
+        {/* Search Input field */}
+        <div className="relative max-w-xs w-full">
+          <FaSearch className="absolute left-3.5 top-3.5 text-slate-400 text-xs" />
+          <input
+            type="text"
+            placeholder="Search cashier profile..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 border border-slate-200 focus:border-slate-400 focus:outline-none rounded-lg text-xs bg-white font-semibold transition-all"
+          />
+        </div>
+      </div>
+
+      {/* Roster Cards list Grid */}
+      <AnimatePresence mode="wait">
+        {filteredUsers.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-16 bg-white border border-slate-200 rounded-xl space-y-3"
+          >
+            <FaUserCircle className="text-4xl text-slate-350 mx-auto" />
+            <div className="space-y-1">
+              <h4 className="font-bold text-slate-900 text-sm">No Cashiers Found</h4>
+              <p className="text-slate-450 text-xs max-w-xs mx-auto">There are no registered cashiers matching your query details.</p>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={containerVariants}
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"
+          >
+            {filteredUsers.map((user) => (
+              <motion.div
+                key={user._id}
+                variants={itemVariants}
+                className="bg-white border border-slate-200 hover:border-slate-300 rounded-xl p-5 shadow-sm hover:shadow transition-all space-y-4 flex flex-col justify-between"
+              >
+                <div className="flex gap-4 items-center">
+                  <div className="w-12 h-12 rounded-full overflow-hidden border border-slate-200 bg-slate-50 flex-shrink-0 flex items-center justify-center">
+                    {user.image ? (
+                      <img src={user.image.startsWith('http') ? user.image : `${config.apiUrl}/${user.image}`} alt={user.firstname} className="w-full h-full object-cover" />
+                    ) : (
+                      <FaUserCircle className="text-slate-400 text-xl" />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <span className="font-bold text-slate-800 text-sm block truncate">
+                      {user.firstname} {user.lastname}
+                    </span>
+                    <span className="text-[11px] text-slate-400 block truncate mt-0.5">
+                      {user.email}
+                    </span>
+                    <span className={`inline-block mt-2 px-2 py-0.5 rounded-full font-bold text-[9px] uppercase ${
+                      user.isVerified ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-red-50 text-red-650 border border-red-100'
+                    }`}>
+                      {user.isVerified ? 'Verified' : 'Unverified'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="border-t border-slate-100 pt-3 flex justify-end">
+                  <button
+                    onClick={() => handleOpenUserDetails(user)}
+                    className="px-3 py-1.5 border border-slate-200 hover:border-slate-350 hover:bg-slate-50 text-slate-700 font-bold rounded-lg text-xs transition-all active:scale-97"
+                  >
+                    View Cash Logs
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Detailed cash logs Dialog popup */}
+      <Dialog
+        open={openUserDetails}
+        onClose={handleCloseUserDetails}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: "16px",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.06)",
+          },
         }}
       >
-        <Typography
-          variant="h4"
-          sx={{
-            fontWeight: "600",
-            marginBottom: "30px",
-            background: "linear-gradient(45deg, #1a2a6c, #b21f1f)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-          }}
-        >
-          User Management
-        </Typography>
-
-        <motion.div variants={itemVariants}>
-          <TextField
-            label="Search Users"
-            variant="outlined"
-            value={searchTerm}
-            onChange={handleSearchChange}
-            fullWidth
-            size="small"
-            sx={{
-              maxWidth: isMobile ? "100%" : "400px",
-              marginBottom: "24px",
-              "& .MuiOutlinedInput-root": {
-                borderRadius: "12px",
-              },
-            }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
-        </motion.div>
-
-        <Grid container spacing={3}>
-          {filteredUsers.map((user) => (
-            <Grid item xs={12} sm={6} md={4} key={user._id}>
-              <motion.div
-                variants={itemVariants}
-                whileHover={{ scale: 1.02 }}
-                style={{ height: "100%" }}
-              >
-                <Card
-                  sx={{
-                    height: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                    borderRadius: "16px",
-                    overflow: "hidden",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                    transition: "all 0.3s ease",
-                    "&:hover": {
-                      boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
-                    },
-                  }}
-                >
-                  <Box
-                    sx={{
-                      padding: "20px",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "15px",
-                    }}
-                  >
-                    <Avatar
-                      src={user.image || ''}
-                      alt={`${user.firstname} ${user.lastname}`}
-                      sx={{
-                        width: 80,
-                        height: 80,
-                        border: "3px solid #1a2a6c",
-                      }}
-                    />
-                    <Box sx={{ flex: 1 }}>
-                      <Typography
-                        variant="h6"
-                        sx={{
-                          fontWeight: "600",
-                          color: "#333",
-                          marginBottom: "4px",
-                        }}
-                      >
-                        {user.firstname} {user.lastname}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: "#666",
-                          marginBottom: "8px",
-                        }}
-                      >
-                        {user.email}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: user.isVerified ? "#4caf50" : "#f44336",
-                          fontWeight: "500",
-                        }}
-                      >
-                        {user.isVerified ? "Verified" : "Not Verified"}
-                      </Typography>
-                    </Box>
-                  </Box>
-
-                  <Divider />
-
-                  <Box
-                    sx={{
-                      padding: "15px",
-                      display: "flex",
-                      justifyContent: "flex-end",
-                    }}
-                  >
-                    <Button
-                      variant="contained"
-                      onClick={() => handleOpenUserDetails(user)}
-                      sx={{
-                        backgroundColor: "#1a2a6c",
-                        color: "white",
-                        borderRadius: "12px",
-                        "&:hover": {
-                          backgroundColor: "#b21f1f",
-                        },
-                      }}
-                    >
-                      View Details
-                    </Button>
-                  </Box>
-                </Card>
-              </motion.div>
-            </Grid>
-          ))}
-        </Grid>
-
-        {/* User Details Dialog */}
-        <Dialog
-          open={openUserDetails}
-          onClose={handleCloseUserDetails}
-          maxWidth="md"
-          fullWidth
-          PaperProps={{
-            sx: {
-              borderRadius: "16px",
-              boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
-            },
-          }}
-        >
-          {selectedUser && (
-            <>
-              <DialogTitle
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "15px",
-                  padding: "20px",
-                }}
-              >
-                <Avatar
-                  src={selectedUser.image || ''}
-                  alt={`${selectedUser.firstname} ${selectedUser.lastname}`}
-                  sx={{
-                    width: 60,
-                    height: 60,
-                    border: "3px solid #1a2a6c",
-                  }}
-                />
-                <Box>
-                  <Typography variant="h6" sx={{ fontWeight: "600" }}>
+        {selectedUser && (
+          <>
+            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full border border-slate-200 overflow-hidden flex items-center justify-center bg-white">
+                  {selectedUser.image ? (
+                    <img src={selectedUser.image.startsWith('http') ? selectedUser.image : `${config.apiUrl}/${selectedUser.image}`} alt={selectedUser.firstname} className="w-full h-full object-cover" />
+                  ) : (
+                    <FaUserCircle className="text-slate-400 text-lg" />
+                  )}
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-sm">
                     {selectedUser.firstname} {selectedUser.lastname}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {selectedUser.email}
-                  </Typography>
-                </Box>
-              </DialogTitle>
+                  </h3>
+                  <p className="text-slate-400 text-xs mt-0.5">{selectedUser.email}</p>
+                </div>
+              </div>
+              <button
+                onClick={handleCloseUserDetails}
+                className="p-1.5 border border-slate-200 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-800 transition-colors"
+              >
+                <FaTimes size={14} />
+              </button>
+            </div>
 
-              <DialogContent dividers>
-                <Box sx={{ padding: "20px" }}>
-                  <Typography variant="h6" sx={{ marginBottom: "20px", fontWeight: "600" }}>
-                    Transaction History
-                  </Typography>
+            <DialogContent>
+              <div className="space-y-6 py-2">
+                <h4 className="font-bold text-slate-800 text-sm">Register Settlement Details</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  
+                  {/* Paid list card */}
+                  <div className="border border-slate-200 rounded-xl p-4 bg-white space-y-4">
+                    <h5 className="font-bold text-emerald-600 text-xs uppercase tracking-wide flex items-center gap-1.5">
+                      <FaMoneyBillWave />
+                      <span>Settle Paid Items</span>
+                    </h5>
+                    <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1 scrollbar-thin divide-y divide-slate-100">
+                      {transactions.paid.length > 0 ? (
+                        transactions.paid.map((item, idx) => (
+                          <div key={idx} className="flex justify-between items-center py-2 text-xs">
+                            <span className="font-semibold text-slate-700">{item.name}</span>
+                            <span className="font-bold text-slate-900">₱{item.price.toFixed(2)}</span>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-8 text-slate-400 text-xs">No settled paid items.</div>
+                      )}
+                    </div>
+                  </div>
 
-                  <Grid container spacing={3}>
-                    <Grid item xs={12} md={6}>
-                      <Card
-                        sx={{
-                          borderRadius: "12px",
-                          boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-                        }}
-                      >
-                        <CardContent>
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              color: "#4caf50",
-                              marginBottom: "15px",
-                              fontWeight: "600",
-                            }}
-                          >
-                            Paid Items
-                          </Typography>
-                          <List>
-                            {transactions.paid.map((item) => (
-                              <ListItem
-                                key={item._id}
-                                sx={{
-                                  borderBottom: "1px solid #f0f0f0",
-                                  padding: "10px 0",
-                                }}
-                              >
-                                <ListItemText
-                                  primary={item.name}
-                                  secondary={`₱${item.price.toFixed(2)}`}
-                                />
-                              </ListItem>
-                            ))}
-                          </List>
-                        </CardContent>
-                      </Card>
-                    </Grid>
+                  {/* Pay later list card */}
+                  <div className="border border-slate-200 rounded-xl p-4 bg-white space-y-4">
+                    <h5 className="font-bold text-amber-600 text-xs uppercase tracking-wide flex items-center gap-1.5">
+                      <FaClock />
+                      <span>Log Pay Later Credit</span>
+                    </h5>
+                    <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1 scrollbar-thin divide-y divide-slate-100">
+                      {transactions.payLater.length > 0 ? (
+                        transactions.payLater.map((item, idx) => (
+                          <div key={idx} className="flex justify-between items-center py-2 text-xs">
+                            <span className="font-semibold text-slate-700">{item.name}</span>
+                            <span className="font-bold text-slate-900">₱{item.price.toFixed(2)}</span>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-8 text-slate-400 text-xs">No logged unpaid items.</div>
+                      )}
+                    </div>
+                  </div>
 
-                    <Grid item xs={12} md={6}>
-                      <Card
-                        sx={{
-                          borderRadius: "12px",
-                          boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-                        }}
-                      >
-                        <CardContent>
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              color: "#ff9800",
-                              marginBottom: "15px",
-                              fontWeight: "600",
-                            }}
-                          >
-                            Pay Later Items
-                          </Typography>
-                          <List>
-                            {transactions.payLater.map((item) => (
-                              <ListItem
-                                key={item._id}
-                                sx={{
-                                  borderBottom: "1px solid #f0f0f0",
-                                  padding: "10px 0",
-                                }}
-                              >
-                                <ListItemText
-                                  primary={item.name}
-                                  secondary={`₱${item.price.toFixed(2)}`}
-                                />
-                              </ListItem>
-                            ))}
-                          </List>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                  </Grid>
-                </Box>
-              </DialogContent>
+                </div>
+              </div>
+            </DialogContent>
 
-              <DialogActions sx={{ padding: "20px" }}>
-                <Button
-                  onClick={handleCloseUserDetails}
-                  sx={{
-                    borderRadius: "12px",
-                    padding: "8px 20px",
-                  }}
-                >
-                  Close
-                </Button>
-              </DialogActions>
-            </>
-          )}
-        </Dialog>
+            <DialogActions className="p-4 border-t border-slate-100">
+              <button
+                onClick={handleCloseUserDetails}
+                className="px-4 py-2 border border-slate-200 rounded-lg text-slate-650 hover:bg-slate-50 text-xs font-bold transition-all active:scale-95"
+              >
+                Close Logs
+              </button>
+            </DialogActions>
+          </>
+        )}
+      </Dialog>
 
-        <Snackbar
-          open={snackbarOpen}
-          autoHideDuration={3000}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert
           onClose={handleCloseSnackbar}
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+          severity="error"
+          variant="filled"
+          sx={{ borderRadius: "12px", fontSize: "12px", fontWeight: "600" }}
         >
-          <Alert
-            onClose={handleCloseSnackbar}
-            severity="error"
-            sx={{
-              borderRadius: "12px",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-            }}
-          >
-            {snackbarMessage}
-          </Alert>
-        </Snackbar>
-      </Box>
-    </motion.div>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
+
+    </div>
   );
 }
 

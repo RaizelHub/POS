@@ -20,6 +20,10 @@ import salesRoutes from './Routes/salesRoutes.js'
 import transactionRoutes from "./Routes/transcationRoutes.js";
 import receipt from './Routes/receiptRoutes.js'
 import draftOrderRoutes from './Routes/draftOrderRoutes.js';
+import couponRoutes from './Routes/couponRoutes.js';
+import shiftRoutes from './Routes/shiftRoutes.js';
+import customerRoutes from './Routes/customerRoutes.js';
+import analyticsRoutes from './Routes/analyticsRoutes.js';
 import fs from 'fs';
 import jwt from 'jsonwebtoken';
 
@@ -49,10 +53,6 @@ const port = process.env.PORT || 8000;
 // More flexible CORS configuration with function to check origin
 const whitelist = [
     process.env.CLIENT_URL,
-    'https://clean-pos-frontend.onrender.com',
-    'https://682c1cff30ac40008cef192-aquamarine-khapse-67e0d4.netlify.app',
-    'https://aquamarine-khapse-67e0d4.netlify.app',
-    'https://clean-u8gn.onrender.com',
     'http://localhost:3000',
     'http://localhost:3454'
 ];
@@ -70,12 +70,6 @@ const corsOptions = {
         // Check if origin is in whitelist
         if (whitelist.indexOf(origin) !== -1) {
             console.log('Origin in whitelist:', origin);
-            return callback(null, true);
-        }
-
-        // Allow all Netlify domains
-        if (origin && origin.endsWith('.netlify.app')) {
-            console.log('Allowing Netlify domain:', origin);
             return callback(null, true);
         }
 
@@ -170,6 +164,10 @@ app.use('/api', salesRoutes)
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/', receipt);
 app.use('/api', draftOrderRoutes);
+app.use('/api', couponRoutes);
+app.use('/api', shiftRoutes);
+app.use('/api', customerRoutes);
+app.use('/api', analyticsRoutes);
 
 
 // Global error handler

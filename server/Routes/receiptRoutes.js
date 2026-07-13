@@ -1,6 +1,6 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
-import { createReceipt } from '../Controller/receiptController.js';
+import { createReceipt, getReceiptSettings, updateReceiptSettings } from '../Controller/receiptController.js';
 
 const router = express.Router();
 
@@ -33,5 +33,8 @@ router.post(
   },
   createReceipt
 );
+
+router.get('/receipt-settings', getReceiptSettings);
+router.post('/receipt-settings', updateReceiptSettings);
 
 export default router;

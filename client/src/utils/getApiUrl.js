@@ -17,7 +17,7 @@ export const getApiUrl = () => {
   }
 
   // For development, use localhost
-  return 'http://localhost:8000';
+  return 'http://localhost:8001';
 };
 
 export default getApiUrl;

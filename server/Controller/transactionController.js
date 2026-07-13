@@ -76,3 +76,37 @@ export const confirmPayLaterPayment = async (req, res) => {
     res.status(500).json({ message: 'Error confirming payment.', error: error.stack || error.message });
   }
 };
+
+export const getAllTransactionsLedger = async (req, res) => {
+  try {
+    const { cashierId, startDate, endDate } = req.query;
+    const query = {};
+
+    if (cashierId) {
+      query.userId = cashierId;
+    }
+
+    if (startDate || endDate) {
+      query.transactionDate = {};
+      if (startDate) {
+        query.transactionDate.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        query.transactionDate.$lte = end;
+      }
+    }
+
+    // Populate user details (cashier) and customer profile
+    const transactions = await Transaction.find(query)
+      .populate('userId', 'firstname lastname email')
+      .populate('customerId', 'name phone email')
+      .sort({ transactionDate: -1 });
+
+    res.status(200).json(transactions);
+  } catch (error) {
+    console.error('Error fetching transactions ledger:', error);
+    res.status(500).json({ message: 'Error fetching transactions ledger.', error: error.message });
+  }
+};

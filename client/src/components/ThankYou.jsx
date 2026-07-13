@@ -1,38 +1,23 @@
 import React, { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Box,
-  Button,
-  Typography,
-  IconButton,
-  Card,
-  CardContent,
-  Divider,
-  Grid,
-  useTheme,
-  useMediaQuery,
-  CircularProgress,
-  Alert,
-} from '@mui/material';
-import {
-  CheckCircle,
-  Home,
-  Logout,
-  ShoppingCart,
-} from '@mui/icons-material';
-import axios from 'axios';
-import bsuLogo from '../images/BSU LOGO.png';
-import cotLogo from '../images/COT.png';
+import { motion } from 'framer-motion';
+import { 
+  FaCheckCircle, 
+  FaHome, 
+  FaSignOutAlt, 
+  FaBarcode, 
+  FaFilePdf, 
+  FaPrint, 
+  FaExclamationTriangle,
+  FaReceipt 
+} from 'react-icons/fa';
+import novaLogo from '../images/nova_logo.png';
 import config from '../config';
 
 function ThankYou() {
   const location = useLocation();
   const navigate = useNavigate();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const baseURL = config.apiUrl;
   // Retrieve purchase details from location.state or fallback to localStorage
   const {
     product,
@@ -44,19 +29,15 @@ function ThankYou() {
     isMultipleProducts,
     receiptUrl,
     receiptStatus,
-    emailSent
   } = location.state || JSON.parse(localStorage.getItem('lastPurchase')) || {};
 
   useEffect(() => {
-    // If state is missing, check localStorage for fallback data
     if ((!product && !cartItems) || !user) {
       const fallbackData = JSON.parse(localStorage.getItem('lastPurchase'));
       if (!fallbackData) {
-        // Redirect to home if no fallback data
         navigate('/login-selection');
       }
     } else {
-      // Save current purchase details in localStorage for backup
       localStorage.setItem(
         'lastPurchase',
         JSON.stringify({
@@ -69,480 +50,283 @@ function ThankYou() {
           isMultipleProducts,
           receiptUrl,
           receiptStatus,
-          emailSent
         })
       );
     }
-  }, [product, cartItems, user, quantity, totalPrice, paymentMethod, isMultipleProducts, receiptUrl, receiptStatus, emailSent, navigate]);
+  }, [product, cartItems, user, quantity, totalPrice, paymentMethod, isMultipleProducts, receiptUrl, receiptStatus, navigate]);
 
-  // Logout function
+  // Automatically print the receipt and navigate back to the scanpage
+  useEffect(() => {
+    if ((product || (cartItems && cartItems.length > 0)) && user) {
+      const printAndNavigate = async () => {
+        // A short delay to ensure everything (logos, text) has fully rendered
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        window.print();
+        navigate('/scan');
+      };
+      printAndNavigate();
+    }
+  }, [product, cartItems, user, navigate]);
+
   const handleLogout = () => {
-    localStorage.clear(); // Clear all stored user data
-    navigate('/login-selection'); // Redirect to login page
+    localStorage.clear();
+    navigate('/login-selection');
   };
 
   const containerVariants = {
-    hidden: { opacity: 0 },
+    hidden: { opacity: 0, y: 10 },
     visible: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2
-      }
+      y: 0,
+      transition: { duration: 0.4, ease: 'easeOut', staggerChildren: 0.08 }
     }
   };
 
   const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        duration: 0.5,
-        ease: "easeOut"
-      }
-    }
+    hidden: { opacity: 0, y: 10 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.3 } }
   };
 
-  // If no valid data is found, show the error
+  // If no valid data is found, show the error state
   if ((!product && !cartItems) || !user) {
     return (
-      <motion.div
-        initial="hidden"
-        animate="visible"
-        variants={containerVariants}
-        style={{
-          minHeight: "100vh",
-          background: "linear-gradient(135deg, #1a2a6c 0%, #b21f1f 50%, #fdbb2d 100%)",
-          padding: "20px",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <motion.div variants={itemVariants}>
-          <Card
-            sx={{
-              maxWidth: 400,
-              textAlign: "center",
-              borderRadius: "24px",
-              boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
-              background: "rgba(255, 255, 255, 0.95)",
-              backdropFilter: "blur(10px)",
-              padding: "24px",
-            }}
+      <div className="min-h-screen bg-slate-50 font-sans text-slate-800 flex items-center justify-center p-6 antialiased">
+        <motion.div 
+          initial="hidden"
+          animate="visible"
+          variants={containerVariants}
+          className="w-full max-w-md bg-white border border-slate-200 rounded-xl p-6 text-center shadow-sm"
+        >
+          <div className="w-12 h-12 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-150">
+            <FaExclamationTriangle className="text-lg" />
+          </div>
+          <h3 className="font-bold text-slate-900 text-lg">No Details Found</h3>
+          <p className="text-slate-500 text-xs mt-1 mb-6">No recent transaction details could be retrieved.</p>
+          <button
+            onClick={() => navigate('/')}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg text-xs transition-all active:scale-97"
           >
-            <Typography
-              variant="h4"
-              sx={{
-                color: "#e74c3c",
-                fontWeight: "600",
-                mb: 2,
-              }}
-            >
-              Error
-            </Typography>
-            <Typography color="text.secondary" sx={{ mb: 3 }}>
-              No purchase details found.
-            </Typography>
-            <Divider sx={{ my: 2 }} />
-            <Button
-              variant="contained"
-              startIcon={<Home />}
-              onClick={() => navigate('/')}
-              sx={{
-                background: "linear-gradient(45deg, #1a2a6c, #b21f1f)",
-                "&:hover": {
-                  background: "linear-gradient(45deg, #b21f1f, #1a2a6c)",
-                },
-                borderRadius: "12px",
-                textTransform: "none",
-                padding: "12px 24px",
-              }}
-            >
-              Go Back Home
-            </Button>
-          </Card>
+            <FaHome className="text-xs" />
+            <span>Go Back Home</span>
+          </button>
         </motion.div>
-      </motion.div>
+      </div>
     );
   }
 
   return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-      style={{
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, #1a2a6c 0%, #b21f1f 50%, #fdbb2d 100%)",
-        padding: "20px",
-        position: "relative",
-      }}
-    >
-      <Box
-        sx={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: "radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.1) 100%)",
-          pointerEvents: "none",
-        }}
-      />
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-800 py-10 px-4 md:px-6 relative antialiased">
+      
+      {/* CSS print override styles */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          #printable-card-receipt, #printable-card-receipt * {
+            visibility: visible;
+          }
+          .no-print, .no-print * {
+            display: none !important;
+            visibility: hidden !important;
+          }
+          #printable-card-receipt {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100% !important;
+            box-shadow: none !important;
+            border: none !important;
+            background: white !important;
+            color: black !important;
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+        }
+      `}} />
 
-      <IconButton
-        onClick={handleLogout}
-        sx={{
-          position: "absolute",
-          top: "20px",
-          right: "20px",
-          color: "#f44336",
-          backgroundColor: "rgba(244, 67, 54, 0.1)",
-          "&:hover": {
-            backgroundColor: "rgba(244, 67, 54, 0.2)",
-          },
-        }}
-      >
-        <Logout />
-      </IconButton>
+      {/* Logout button top right */}
+      <div className="absolute top-6 right-6 no-print">
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-1.5 px-3 py-1.5 border border-red-200 text-red-650 hover:bg-red-50 rounded-lg text-xs font-bold transition-all active:scale-95 bg-white shadow-sm"
+        >
+          <FaSignOutAlt />
+          <span>Exit Session</span>
+        </button>
+      </div>
 
       <motion.div
-        variants={itemVariants}
-        style={{
-          maxWidth: "800px",
-          margin: "0 auto",
-          padding: isMobile ? "20px" : "40px",
-        }}
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+        className="w-full max-w-xl mx-auto space-y-6"
       >
-        <Card
-          sx={{
-            borderRadius: "24px",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
-            background: "rgba(255, 255, 255, 0.95)",
-            backdropFilter: "blur(10px)",
-            overflow: "hidden",
-          }}
+        
+        {/* Printable Card */}
+        <div 
+          id="printable-card-receipt"
+          className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 md:p-8 space-y-6"
         >
-          <CardContent sx={{ p: 4 }}>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "center",
-                mb: 4,
-              }}
-            >
-              <motion.img
-                src={bsuLogo}
-                alt="BSU Logo"
-                style={{ height: "80px", marginRight: "20px" }}
-                whileHover={{ scale: 1.1 }}
-                transition={{ duration: 0.3 }}
-              />
-              <motion.img
-                src={cotLogo}
-                alt="COT Logo"
-                style={{ height: "80px" }}
-                whileHover={{ scale: 1.1 }}
-                transition={{ duration: 0.3 }}
-              />
-            </Box>
+          
+          {/* Header Logos */}
+          <div className="flex items-center justify-center gap-4 no-print pb-2">
+            <img src={novaLogo} alt="Nova Logo" className="h-14 w-auto object-contain rounded-xl shadow-sm" />
+          </div>
 
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                mb: 4,
-              }}
-            >
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", duration: 0.5 }}
-              >
-                <CheckCircle
-                  sx={{
-                    fontSize: 80,
-                    color: "#2ecc71",
-                    mb: 2,
-                  }}
-                />
-              </motion.div>
-              <Typography
-                variant="h4"
-                sx={{
-                  fontWeight: "600",
-                  background: "linear-gradient(45deg, #1a2a6c, #b21f1f)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  mb: 1,
-                }}
-              >
-                Thank You for Your Purchase!
-              </Typography>
-              <Typography color="text.secondary" sx={{ mb: 3 }}>
-                Your transaction was successful.
-              </Typography>
-            </Box>
+          {/* Success message banner */}
+          <div className="text-center space-y-2 no-print border-b border-slate-100 pb-5">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-50 text-emerald-500 border border-emerald-150 mb-1">
+              <FaCheckCircle className="text-xl" />
+            </div>
+            <h2 className="text-lg font-bold text-slate-900">Purchase Completed!</h2>
+            <p className="text-slate-500 text-xs">Transaction processed successfully.</p>
+          </div>
 
-            <Divider sx={{ my: 3 }} />
+          {/* Receipt Content Title */}
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <span className="flex items-center gap-2 font-bold text-slate-900 text-xs uppercase tracking-wider">
+              <FaReceipt className="text-slate-400" />
+              <span>Official Receipt</span>
+            </span>
+            <span className="text-[10px] text-slate-400 font-semibold uppercase">
+              Method: {paymentMethod}
+            </span>
+          </div>
 
-            <Typography
-              variant="h5"
-              sx={{
-                textAlign: "center",
-                fontWeight: "600",
-                color: "#1a2a6c",
-                mb: 3,
-              }}
-            >
-              Receipt
-            </Typography>
+          {/* Cashier Metadata */}
+          <div className="grid grid-cols-2 gap-4 text-xs">
+            <div>
+              <span className="text-slate-450 text-[10px] block uppercase font-bold tracking-wider">Cashier / Staff</span>
+              <span className="font-semibold text-slate-800">{user.firstname} {user.lastname}</span>
+            </div>
+            <div className="text-right">
+              <span className="text-slate-450 text-[10px] block uppercase font-bold tracking-wider">Date & Time</span>
+              <span className="font-semibold text-slate-800">{new Date().toLocaleString()}</span>
+            </div>
+          </div>
 
-            {/* Customer Information */}
-            <Grid container spacing={2} sx={{ mb: 3 }}>
-              <Grid item xs={6}>
-                <Typography variant="subtitle1" fontWeight="600">
-                  Purchased By:
-                </Typography>
-              </Grid>
-              <Grid item xs={6} sx={{ textAlign: "right" }}>
-                <Typography color="text.secondary">
-                  {user.firstname} {user.lastname}
-                </Typography>
-              </Grid>
-              <Grid item xs={6}>
-                <Typography variant="subtitle1" fontWeight="600">
-                  Payment Method:
-                </Typography>
-              </Grid>
-              <Grid item xs={6} sx={{ textAlign: "right" }}>
-                <Typography color="text.secondary">{paymentMethod}</Typography>
-              </Grid>
-              <Grid item xs={12}>
-                <Divider sx={{ my: 2 }} />
-              </Grid>
-            </Grid>
+          {/* Items Table */}
+          <div className="border border-slate-150 rounded-lg overflow-hidden bg-slate-50">
+            <div className="px-4 py-2 border-b border-slate-200 bg-slate-100 grid grid-cols-12 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+              <span className="col-span-6">Item Description</span>
+              <span className="col-span-2 text-center">Qty</span>
+              <span className="col-span-4 text-right">Total</span>
+            </div>
+            
+            <div className="divide-y divide-slate-150">
+              {/* Single item display */}
+              {product && !isMultipleProducts && (
+                <div className="px-4 py-3 grid grid-cols-12 text-xs items-center bg-white">
+                  <div className="col-span-6 flex items-center gap-3">
+                    {product.image && (
+                      <img src={product.image} alt={product.name} className="w-10 h-10 object-contain rounded border border-slate-150 bg-slate-50 no-print flex-shrink-0" />
+                    )}
+                    <div>
+                      <span className="font-bold text-slate-850 block">{product.name}</span>
+                      <span className="text-[10px] text-slate-400">₱{product.price.toFixed(2)} each</span>
+                    </div>
+                  </div>
+                  <span className="col-span-2 text-center font-semibold text-slate-600">{quantity}</span>
+                  <span className="col-span-4 text-right font-bold text-slate-850">₱{totalPrice.toFixed(2)}</span>
+                </div>
+              )}
 
-            {/* Single Product Purchase */}
-            {product && !isMultipleProducts && (
-              <>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "center",
-                    mb: 3,
-                  }}
-                >
-                  <motion.img
-                    src={product.image}
-                    alt={product.name}
-                    style={{
-                      width: "100%",
-                      maxWidth: "200px",
-                      objectFit: "contain",
-                      borderRadius: "12px",
-                      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                    }}
-                    whileHover={{ scale: 1.05 }}
-                    transition={{ duration: 0.3 }}
-                  />
-                </Box>
+              {/* Multiple item cart list */}
+              {cartItems && isMultipleProducts && cartItems.map((item, index) => (
+                <div key={index} className="px-4 py-3 grid grid-cols-12 text-xs items-center bg-white">
+                  <div className="col-span-6 flex items-center gap-3">
+                    {item.product.image && (
+                      <img src={item.product.image} alt={item.product.name} className="w-10 h-10 object-contain rounded border border-slate-150 bg-slate-50 no-print flex-shrink-0" />
+                    )}
+                    <div>
+                      <span className="font-bold text-slate-850 block">{item.product.name}</span>
+                      <span className="text-[10px] text-slate-400">₱{item.product.price.toFixed(2)} each</span>
+                    </div>
+                  </div>
+                  <span className="col-span-2 text-center font-semibold text-slate-600">{item.quantity}</span>
+                  <span className="col-span-4 text-right font-bold text-slate-850">₱{(item.product.price * item.quantity).toFixed(2)}</span>
+                </div>
+              ))}
+            </div>
 
-                <Grid container spacing={2} sx={{ mb: 3 }}>
-                  <Grid item xs={6}>
-                    <Typography variant="subtitle1" fontWeight="600">
-                      Product:
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={6} sx={{ textAlign: "right" }}>
-                    <Typography color="text.secondary">{product.name}</Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="subtitle1" fontWeight="600">
-                      Quantity:
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={6} sx={{ textAlign: "right" }}>
-                    <Typography color="text.secondary">{quantity}</Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="subtitle1" fontWeight="600">
-                      Price:
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={6} sx={{ textAlign: "right" }}>
-                    <Typography color="text.secondary">
-                      ₱{product.price.toFixed(2)}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="subtitle1" fontWeight="600">
-                      Total Price:
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={6} sx={{ textAlign: "right" }}>
-                    <Typography color="text.secondary">
-                      ₱{totalPrice.toFixed(2)}
-                    </Typography>
-                  </Grid>
-                </Grid>
-              </>
-            )}
+            {/* Receipt Summary Footer Row */}
+            <div className="px-4 py-3 bg-slate-100 border-t border-slate-200 flex justify-between items-center text-xs font-bold">
+              <span className="text-slate-500 uppercase tracking-wider">Total Amount Due</span>
+              <span className="text-sm text-slate-900 font-extrabold">₱{totalPrice.toFixed(2)}</span>
+            </div>
+          </div>
 
-            {/* Multiple Products Purchase */}
-            {cartItems && isMultipleProducts && (
-              <Box sx={{ mb: 3 }}>
-                <Typography variant="h6" sx={{ mb: 2, fontWeight: "600", color: "#1a2a6c" }}>
-                  Items Purchased:
-                </Typography>
-
-                {cartItems.map((item, index) => (
-                  <Card key={index} sx={{ mb: 2, borderRadius: "12px", overflow: "hidden" }}>
-                    <CardContent sx={{ p: 2 }}>
-                      <Box sx={{ display: "flex", alignItems: "center" }}>
-                        <Box sx={{ width: "60px", height: "60px", mr: 2 }}>
-                          <img
-                            src={item.product.image}
-                            alt={item.product.name}
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              objectFit: "cover",
-                              borderRadius: "8px"
-                            }}
-                          />
-                        </Box>
-                        <Box sx={{ flex: 1 }}>
-                          <Typography variant="subtitle1" fontWeight="600">
-                            {item.product.name}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {item.quantity} x ₱{item.product.price.toFixed(2)} = ₱{(item.product.price * item.quantity).toFixed(2)}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </CardContent>
-                  </Card>
-                ))}
-
-                <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
-                  <Typography variant="subtitle1" fontWeight="600">
-                    Total Price:
-                  </Typography>
-                  <Typography variant="subtitle1" fontWeight="600" color="#1a2a6c">
-                    ₱{totalPrice.toFixed(2)}
-                  </Typography>
-                </Box>
-              </Box>
-            )}
-
-            {/* Receipt Section */}
-            <Box sx={{ mb: 3 }}>
-              {receiptUrl ? (
-                <Box sx={{ textAlign: "center" }}>
-                  <Typography variant="body1" sx={{ mb: 2, textAlign: "center", color: "success.main" }}>
-                    Your receipt has been generated and sent to your email.
-                  </Typography>
-                  <Button
-                    variant="outlined"
+          {/* Receipt Actions Section */}
+          <div className="no-print space-y-4 pt-2">
+            {receiptUrl ? (
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3">
+                <span className="text-xs font-semibold text-emerald-800 block text-center">
+                  Receipt has been generated and sent to your email.
+                </span>
+                <div className="flex gap-3">
+                  <a
                     href={receiptUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    sx={{
-                      borderRadius: "12px",
-                      textTransform: "none",
-                      padding: "8px 16px",
-                    }}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 border border-slate-200 hover:bg-slate-100 rounded-lg text-xs font-bold transition-all bg-white"
                   >
-                    View Receipt PDF
-                  </Button>
-                </Box>
-              ) : receiptStatus === 'email_only' ? (
-                <Box sx={{
-                  p: 2,
-                  backgroundColor: "rgba(37, 99, 235, 0.1)",
-                  borderRadius: "12px",
-                  textAlign: "center"
-                }}>
-                  <Typography variant="body1" sx={{ mb: 1, fontWeight: "500", color: "primary.main" }}>
-                    Your receipt has been sent to your email.
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                    Please check your inbox for the receipt details.
-                  </Typography>
-                </Box>
-              ) : receiptStatus === 'failed' || receiptStatus === 'error' ? (
-                <Box sx={{
-                  p: 2,
-                  backgroundColor: "rgba(239, 68, 68, 0.1)",
-                  borderRadius: "12px",
-                  textAlign: "center"
-                }}>
-                  <Typography variant="body1" sx={{ mb: 1, fontWeight: "500", color: "error.main" }}>
-                    We encountered an issue generating your receipt.
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                    Your payment was processed successfully, but the receipt could not be generated.
-                    Please contact support if you need a receipt for this transaction.
-                  </Typography>
-                </Box>
-              ) : (
-                <Box sx={{
-                  p: 2,
-                  backgroundColor: "rgba(16, 185, 129, 0.1)",
-                  borderRadius: "12px",
-                  textAlign: "center"
-                }}>
-                  <Typography variant="body1" sx={{ mb: 1, fontWeight: "500", color: "success.main" }}>
-                    Your transaction was completed successfully.
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                    Thank you for your purchase!
-                  </Typography>
-                </Box>
-              )}
-            </Box>
+                    <FaFilePdf className="text-slate-500 text-xs" />
+                    <span>View PDF</span>
+                  </a>
+                  <button
+                    onClick={() => window.print()}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm active:scale-97"
+                  >
+                    <FaPrint />
+                    <span>Print Receipt</span>
+                  </button>
+                </div>
+              </div>
+            ) : receiptStatus === 'email_only' ? (
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-center space-y-3">
+                <span className="text-xs font-semibold text-slate-700 block">
+                  A verification receipt has been forwarded to the email address.
+                </span>
+                <button
+                  onClick={() => window.print()}
+                  className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition-all shadow-sm"
+                >
+                  <FaPrint />
+                  <span>Print Receipt Copies</span>
+                </button>
+              </div>
+            ) : (
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-center space-y-3">
+                <span className="text-xs font-semibold text-emerald-800 block">
+                  Transaction finalized successfully.
+                </span>
+                <button
+                  onClick={() => window.print()}
+                  className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition-all shadow-sm"
+                >
+                  <FaPrint />
+                  <span>Print Paper Receipt</span>
+                </button>
+              </div>
+            )}
+          </div>
 
-            <Divider sx={{ my: 3 }} />
-
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: 2,
-              }}
+          {/* Return button */}
+          <div className="no-print pt-2 text-center">
+            <button
+              onClick={() => navigate('/scan')}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg text-xs transition-all shadow-sm active:scale-97"
             >
-              <Typography
-                variant="body1"
-                sx={{ fontStyle: "italic", color: "text.secondary" }}
-              >
-                We hope to see you again!
-              </Typography>
-              <Button
-                variant="contained"
-                startIcon={<ShoppingCart />}
-                onClick={() => navigate('/scan')}
-                sx={{
-                  borderRadius: "12px",
-                  textTransform: "none",
-                  padding: "12px 24px",
-                  transition: "all 0.3s ease",
-                  "&:hover": {
-                    transform: "translateY(-2px)",
-                  },
-                }}
-              >
-                Scan Another Product
-              </Button>
-            </Box>
-          </CardContent>
-        </Card>
+              <FaBarcode className="text-xs" />
+              <span>Scan Another Product</span>
+            </button>
+          </div>
+
+        </div>
+
       </motion.div>
-    </motion.div>
+    </div>
   );
 }
 

@@ -1,24 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import {
-  Box,
-  Button,
-  TextField,
-  Avatar,
-  Typography,
-  Card,
-  CardContent,
-  Snackbar,
-  Alert,
-  Grid,
-  IconButton,
-  Tooltip,
-  CircularProgress,
-  useTheme,
-  Divider,
-} from "@mui/material";
+import { Avatar, Snackbar, Alert } from "@mui/material";
+import { FaUser, FaSave, FaCamera, FaEnvelope, FaLock, FaTimes } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
-import { PhotoCamera, Save, ArrowBack } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { uploadToCloudinary } from "../config/cloudinary";
 import config from '../config';
@@ -38,7 +22,6 @@ function AdminProfile() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
-  const theme = useTheme();
 
   useEffect(() => {
     const fetchAdminData = async () => {
@@ -97,6 +80,8 @@ function AdminProfile() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
+    setSuccessMessage("");
+    setErrorMessage("");
 
     try {
       let imageUrl = admin?.image;
@@ -131,367 +116,160 @@ function AdminProfile() {
     }
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        duration: 0.5,
-        ease: "easeOut"
-      }
-    }
-  };
-
   if (loading) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="100vh"
-        bgcolor="background.default"
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (!admin) {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="100vh"
-        bgcolor="background.default"
-      >
-        <Typography color="error">Admin data not available</Typography>
-      </Box>
+      <div className="flex flex-col justify-center items-center py-20 gap-3">
+        <div className="w-8 h-8 border-3 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
+        <span className="text-xs font-semibold text-slate-500">Retrieving admin profile...</span>
+      </div>
     );
   }
 
   return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-      style={{
-        minHeight: "100vh",
-        padding: 0,
-        background: "linear-gradient(135deg, #1a2a6c 0%, #b21f1f 50%, #fdbb2d 100%)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <Box
-        sx={{
-          width: "100%",
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "rgba(255,255,255,0.15)",
-          position: "relative",
-          py: { xs: 2, md: 6 },
-        }}
-      >
-        {/* Back Button */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
-          style={{ position: "absolute", top: 32, left: 32, zIndex: 2 }}
-        >
-          <Tooltip title="Go Back">
-            <IconButton
-              onClick={() => navigate("/dashboard")}
-              sx={{
-                bgcolor: "white",
-                boxShadow: 3,
-                "&:hover": {
-                  bgcolor: "grey.100",
-                  transform: "scale(1.1)",
-                },
-                transition: "all 0.3s ease",
-              }}
-            >
-              <ArrowBack />
-            </IconButton>
-          </Tooltip>
-        </motion.div>
+    <div className="w-full max-w-2xl mx-auto font-sans text-slate-800 space-y-6">
+      
+      {/* Title Header */}
+      <div className="border-b border-slate-200 pb-5">
+        <h2 className="text-xl font-bold text-slate-900">Admin Account Profile</h2>
+        <p className="text-slate-500 text-sm mt-0.5">Modify administrator credentials and details.</p>
+      </div>
 
-        <Card
-          component={motion.div}
-          variants={itemVariants}
-          sx={{
-            maxWidth: 500,
-            width: "100%",
-            boxShadow: "0px 12px 32px rgba(26,42,108,0.15)",
-            borderRadius: "24px",
-            background: "rgba(255,255,255,0.98)",
-            padding: { xs: 2, md: 4 },
-            position: "relative",
-            overflow: "hidden",
-          }}
-        >
-          <CardContent>
-            <Box
-              display="flex"
-              flexDirection="column"
-              alignItems="center"
-              mb={2}
-            >
-              <motion.div
-                whileHover={{ scale: 1.08 }}
-                whileTap={{ scale: 0.97 }}
-                style={{ position: "relative" }}
-              >
-                <Avatar
-                  src={imagePreview}
-                  alt="Admin Profile"
-                  sx={{
-                    width: 130,
-                    height: 130,
-                    border: "5px solid #1a2a6c",
-                    boxShadow: "0px 8px 24px rgba(26,42,108,0.15)",
-                    background: "#f4f5f7",
-                  }}
-                />
+      <div className="bg-white border border-slate-200 rounded-xl p-6 md:p-8 shadow-sm grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+        
+        {/* Left column: Avatar details selection */}
+        <div className="md:col-span-4 flex flex-col items-center space-y-4">
+          <div className="relative group cursor-pointer">
+            <div className="w-28 h-28 rounded-full border-2 border-slate-250 overflow-hidden shadow-sm flex items-center justify-center bg-slate-50 relative">
+              {imagePreview ? (
+                <img src={imagePreview} alt="Admin profile preview" className="w-full h-full object-cover" />
+              ) : (
+                <FaUser className="text-slate-400 text-3xl" />
+              )}
+            </div>
+            
+            {/* Upload trigger label overlay camera */}
+            <input
+              accept="image/*"
+              style={{ display: "none" }}
+              id="admin-photo-input"
+              type="file"
+              onChange={handleFileChange}
+            />
+            <label htmlFor="admin-photo-input" className="absolute bottom-1 right-1 bg-slate-900 hover:bg-slate-800 text-white p-2 rounded-full cursor-pointer shadow border border-slate-800 transition-all hover:scale-105 active:scale-95">
+              <FaCamera className="text-xs" />
+            </label>
+          </div>
+          <div className="text-center">
+            <span className="font-bold text-slate-900 text-sm block">
+              {formData.firstname || "Admin"} {formData.lastname || "User"}
+            </span>
+            <span className="text-slate-400 text-[11px] block mt-0.5">
+              Administrator Profile
+            </span>
+          </div>
+        </div>
+
+        {/* Right column: Fields update form */}
+        <div className="md:col-span-8">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-slate-500 block uppercase">First Name</label>
                 <input
-                  accept="image/*"
-                  style={{ display: "none" }}
-                  id="icon-button-file"
-                  type="file"
-                  onChange={handleFileChange}
+                  type="text"
+                  name="firstname"
+                  value={formData.firstname}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-slate-200 focus:border-slate-400 focus:outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
                 />
-                <label htmlFor="icon-button-file">
-                  <Tooltip title="Change Photo">
-                    <IconButton
-                      color="primary"
-                      component="span"
-                      sx={{
-                        position: "absolute",
-                        bottom: 0,
-                        right: 0,
-                        backgroundColor: "white",
-                        boxShadow: 2,
-                        "&:hover": {
-                          backgroundColor: "grey.100",
-                          transform: "scale(1.1)",
-                        },
-                        transition: "all 0.3s ease",
-                      }}
-                    >
-                      <PhotoCamera />
-                    </IconButton>
-                  </Tooltip>
-                </label>
-              </motion.div>
-              <Typography
-                variant="h4"
-                align="center"
-                fontWeight="bold"
-                gutterBottom
-                sx={{
-                  color: "#1a2a6c",
-                  mt: 2,
-                  mb: 0.5,
-                  letterSpacing: 1,
-                }}
-              >
-                {admin.firstname} {admin.lastname}
-              </Typography>
-              <Typography
-                variant="subtitle1"
-                align="center"
-                color="text.secondary"
-                sx={{ mb: 1 }}
-              >
-                {admin.email}
-              </Typography>
-            </Box>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-slate-500 block uppercase">Last Name</label>
+                <input
+                  type="text"
+                  name="lastname"
+                  value={formData.lastname}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-slate-200 focus:border-slate-400 focus:outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
+                />
+              </div>
+            </div>
 
-            <Divider sx={{ my: 2 }} />
-            <Typography
-              variant="h6"
-              sx={{
-                color: "#b21f1f",
-                fontWeight: 600,
-                mb: 2,
-                letterSpacing: 1,
-              }}
-            >
-              Profile Details
-            </Typography>
+            <div className="space-y-1">
+              <label className="text-[11px] font-semibold text-slate-500 block uppercase">Email Address (Read-only)</label>
+              <div className="relative">
+                <FaEnvelope className="absolute left-3.5 top-3 text-slate-400 text-xs" />
+                <input
+                  type="email"
+                  readOnly
+                  value={formData.email}
+                  className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-xs bg-slate-100 font-semibold cursor-not-allowed text-slate-450"
+                />
+              </div>
+            </div>
 
-            <form onSubmit={handleSubmit}>
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="First Name"
-                    name="firstname"
-                    value={formData.firstname}
-                    onChange={handleInputChange}
-                    fullWidth
-                    size="small"
-                    sx={{
-                      backgroundColor: "#fff",
-                      borderRadius: "12px",
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Last Name"
-                    name="lastname"
-                    value={formData.lastname}
-                    onChange={handleInputChange}
-                    fullWidth
-                    size="small"
-                    sx={{
-                      backgroundColor: "#fff",
-                      borderRadius: "12px",
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    label="Email"
-                    name="email"
-                    value={formData.email}
-                    fullWidth
-                    size="small"
-                    sx={{
-                      backgroundColor: "#f4f5f7",
-                      borderRadius: "12px",
-                    }}
-                    InputProps={{ readOnly: true }}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    label="New PIN (optional)"
-                    name="pin"
-                    type="password"
-                    value={formData.pin}
-                    onChange={handleInputChange}
-                    fullWidth
-                    size="small"
-                    sx={{
-                      backgroundColor: "#fff",
-                      borderRadius: "12px",
-                    }}
-                    inputProps={{
-                      maxLength: 6,
-                      pattern: "[0-9]*",
-                      inputMode: "numeric",
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <motion.div
-                    variants={itemVariants}
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Button
-                      type="submit"
-                      variant="contained"
-                      fullWidth
-                      disabled={saving}
-                      startIcon={saving ? <CircularProgress size={20} /> : <Save />}
-                      sx={{
-                        padding: "12px 24px",
-                        borderRadius: "12px",
-                        textTransform: "none",
-                        fontWeight: 600,
-                        fontSize: "1rem",
-                        background: "linear-gradient(45deg, #1a2a6c, #b21f1f)",
-                        boxShadow: "0 4px 16px rgba(26,42,108,0.08)",
-                        transition: "all 0.3s ease",
-                        "&:hover": {
-                          background: "linear-gradient(45deg, #b21f1f, #1a2a6c)",
-                          transform: "translateY(-2px)",
-                        },
-                      }}
-                    >
-                      {saving ? "Saving..." : "Save Changes"}
-                    </Button>
-                  </motion.div>
-                </Grid>
-              </Grid>
-            </form>
-          </CardContent>
-        </Card>
+            <div className="space-y-1">
+              <label className="text-[11px] font-semibold text-slate-500 block uppercase">New Security PIN (Optional)</label>
+              <div className="relative">
+                <FaLock className="absolute left-3.5 top-3 text-slate-400 text-xs" />
+                <input
+                  type="password"
+                  name="pin"
+                  placeholder="Leave blank to keep existing PIN"
+                  value={formData.pin}
+                  onChange={handleInputChange}
+                  maxLength={6}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  className="w-full pl-9 pr-4 py-2 border border-slate-200 focus:border-slate-400 focus:outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
+                />
+              </div>
+            </div>
 
-        <AnimatePresence>
-          {successMessage && (
-            <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 50 }}
-              transition={{ duration: 0.3 }}
-              style={{
-                position: "fixed",
-                bottom: 20,
-                right: 20,
-                zIndex: 1000,
-              }}
-            >
-              <Alert
-                severity="success"
-                sx={{
-                  borderRadius: "12px",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                }}
+            <div className="pt-4 border-t border-slate-100 flex justify-end">
+              <button
+                type="submit"
+                disabled={saving}
+                className="flex items-center gap-1.5 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg text-xs transition-all shadow-sm active:scale-97 disabled:opacity-50"
               >
-                {successMessage}
-              </Alert>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                <FaSave />
+                <span>{saving ? "Saving Profile..." : "Save Changes"}</span>
+              </button>
+            </div>
 
-        <AnimatePresence>
-          {errorMessage && (
-            <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 50 }}
-              transition={{ duration: 0.3 }}
-              style={{
-                position: "fixed",
-                bottom: 20,
-                right: 20,
-                zIndex: 1000,
-              }}
-            >
-              <Alert
-                severity="error"
-                sx={{
-                  borderRadius: "12px",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                }}
-              >
-                {errorMessage}
-              </Alert>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </Box>
-    </motion.div>
+          </form>
+        </div>
+
+      </div>
+
+      <AnimatePresence>
+        {successMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 12 }}
+            className="fixed bottom-6 right-6 bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-lg text-xs font-semibold shadow flex items-center gap-2 z-55"
+          >
+            <FaCheckCircle className="text-emerald-500 text-sm" />
+            <span>{successMessage}</span>
+          </motion.div>
+        )}
+
+        {errorMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 12 }}
+            className="fixed bottom-6 right-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-xs font-semibold shadow flex items-center gap-2 z-55"
+          >
+            <FaExclamationCircle className="text-red-500 text-sm" />
+            <span>{errorMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+    </div>
   );
 }
 

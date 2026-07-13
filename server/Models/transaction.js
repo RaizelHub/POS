@@ -12,6 +12,7 @@ const transactionSchema = new mongoose.Schema({
 
   products: [
     {
+      productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
       name: { type: String, required: true },
       price: { type: Number, required: true },
       quantity: { type: Number, required: true, min: 1 },
@@ -24,7 +25,7 @@ const transactionSchema = new mongoose.Schema({
       },
       paymentMethod: {
         type: String,
-        enum: ['Cash', 'Pay Later'], // Updated to support more payment methods
+        enum: ['Cash', 'Card', 'GCash/PayMaya', 'Split', 'Pay Later'],
         default: 'Pay Later'
       }
     }
@@ -32,7 +33,7 @@ const transactionSchema = new mongoose.Schema({
 
   paymentMethod: {
     type: String, 
-    enum: ['Cash', 'Pay Later'], 
+    enum: ['Cash', 'Card', 'GCash/PayMaya', 'Split', 'Pay Later'], 
     required: true 
   },
 
@@ -49,6 +50,37 @@ const transactionSchema = new mongoose.Schema({
   lastUpdated: { 
     type: Date, 
     default: Date.now 
+  },
+  discountAmount: {
+    type: Number,
+    default: 0,
+  },
+  originalAmount: {
+    type: Number,
+    default: 0,
+  },
+  promoCode: {
+    type: String,
+  },
+  customerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Customer',
+  },
+  shiftId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Shift',
+  },
+  loyaltyPointsEarned: {
+    type: Number,
+    default: 0,
+  },
+  loyaltyPointsRedeemed: {
+    type: Number,
+    default: 0,
+  },
+  splitDetails: {
+    cashAmount: { type: Number, default: 0 },
+    digitalAmount: { type: Number, default: 0 },
   },
 });
 

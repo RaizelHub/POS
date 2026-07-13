@@ -2,29 +2,13 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Box,
-  Typography,
-  CircularProgress,
-  Alert,
-  Button,
-  useTheme,
-  useMediaQuery,
-} from '@mui/material';
-import {
-  CheckCircle,
-  Error,
-  Email,
-} from '@mui/icons-material';
-import bsuLogo from '../images/BSU LOGO.png';
-import cotLogo from '../images/COT.png';
+import { FaCheckCircle, FaExclamationTriangle, FaEnvelope, FaArrowRight } from 'react-icons/fa';
+import novaLogo from '../images/nova_logo.png';
 import config from '../config';
 
 const VerifyEmailPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -59,204 +43,82 @@ const VerifyEmailPage = () => {
     }
   }, [token]);
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        duration: 0.5,
-        ease: "easeOut"
-      }
-    }
-  };
-
   return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-      style={{
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, #1a2a6c 0%, #b21f1f 50%, #fdbb2d 100%)",
-        padding: "20px",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Box
-        sx={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: "radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.1) 100%)",
-          pointerEvents: "none",
-        }}
-      />
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-800 flex items-center justify-center p-6 antialiased">
+      <div className="w-full max-w-md bg-white border border-slate-200 rounded-xl p-6 md:p-8 shadow-sm space-y-6 text-center">
+        
+        {/* Institutional Logos */}
+        <div className="flex items-center justify-center gap-4">
+          <img src={novaLogo} alt="Nova Logo" className="h-14 w-auto object-contain rounded-xl shadow-sm" />
+        </div>
 
-      <motion.div
-        variants={itemVariants}
-        style={{
-          maxWidth: "500px",
-          width: "100%",
-          margin: "0 auto",
-          padding: isMobile ? "20px" : "40px",
-        }}
-      >
-        <Box
-          sx={{
-            backgroundColor: "rgba(255, 255, 255, 0.95)",
-            borderRadius: "24px",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
-            backdropFilter: "blur(10px)",
-            padding: "40px",
-            textAlign: "center",
-          }}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              mb: 4,
-            }}
-          >
-            <motion.img
-              src={bsuLogo}
-              alt="BSU Logo"
-              style={{ height: "80px", marginRight: "20px" }}
-              whileHover={{ scale: 1.1 }}
-              transition={{ duration: 0.3 }}
-            />
-            <motion.img
-              src={cotLogo}
-              alt="COT Logo"
-              style={{ height: "80px" }}
-              whileHover={{ scale: 1.1 }}
-              transition={{ duration: 0.3 }}
-            />
-          </Box>
+        <h2 className="text-lg font-bold text-slate-900">Email Verification Gateway</h2>
+        <p className="text-slate-400 text-xs">Authenticating employee registry security tokens</p>
 
-          <Typography
-            variant="h4"
-            sx={{
-              fontWeight: "600",
-              background: "linear-gradient(45deg, #1a2a6c, #b21f1f)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              mb: 3,
-            }}
-          >
-            Email Verification
-          </Typography>
-
-          {loading ? (
-            <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-              <CircularProgress
-                size={60}
-                sx={{
-                  color: "#1a2a6c",
-                }}
-              />
-              <Typography color="text.secondary">
-                Verifying your email...
-              </Typography>
-            </Box>
-          ) : (
-            <AnimatePresence mode="wait">
-              {error ? (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                >
-                  <Alert
-                    severity="error"
-                    icon={<Error />}
-                    sx={{
-                      borderRadius: "12px",
-                      mb: 3,
-                    }}
-                  >
-                    {error}
-                  </Alert>
-                  <Button
-                    variant="contained"
-                    startIcon={<Email />}
-                    onClick={() => navigate('/register')}
-                    sx={{
-                      background: "linear-gradient(45deg, #1a2a6c, #b21f1f)",
-                      "&:hover": {
-                        background: "linear-gradient(45deg, #b21f1f, #1a2a6c)",
-                      },
-                      borderRadius: "12px",
-                      textTransform: "none",
-                      padding: "12px 24px",
-                    }}
-                  >
-                    Register Again
-                  </Button>
-                </motion.div>
-              ) : (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                >
-                  <Alert
-                    severity="success"
-                    icon={<CheckCircle />}
-                    sx={{
-                      borderRadius: "12px",
-                      mb: 3,
-                    }}
-                  >
-                    {message}
-                  </Alert>
-                  <Button
-                    variant="contained"
-                    onClick={() => navigate('/login-selection')}
-                    sx={{
-                      background: "linear-gradient(45deg, #1a2a6c, #b21f1f)",
-                      "&:hover": {
-                        background: "linear-gradient(45deg, #b21f1f, #1a2a6c)",
-                      },
-                      borderRadius: "12px",
-                      textTransform: "none",
-                      padding: "12px 24px",
-                    }}
-                  >
-                    Go to Login
-                  </Button>
-                </motion.div>
-              )}
-            </AnimatePresence>
+        <AnimatePresence mode="wait">
+          {loading && (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex flex-col items-center justify-center py-6 gap-3"
+            >
+              <div className="w-9 h-9 border-3 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
+              <span className="text-xs font-semibold text-slate-500">Checking verification status...</span>
+            </motion.div>
           )}
-        </Box>
-      </motion.div>
-    </motion.div>
+
+          {error && (
+            <motion.div
+              key="error"
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-4 py-4"
+            >
+              <div className="mx-auto w-12 h-12 rounded-full bg-red-50 text-red-500 flex items-center justify-center text-xl">
+                <FaExclamationTriangle />
+              </div>
+              <p className="text-xs font-semibold text-red-700 max-w-xs mx-auto">
+                {error}
+              </p>
+              <button
+                onClick={() => navigate('/register')}
+                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs transition-colors shadow-sm flex items-center justify-center gap-2"
+              >
+                <FaEnvelope className="text-[10px]" />
+                <span>Request Verification Link</span>
+              </button>
+            </motion.div>
+          )}
+
+          {message && (
+            <motion.div
+              key="success"
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-4 py-4"
+            >
+              <div className="mx-auto w-12 h-12 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center text-xl">
+                <FaCheckCircle />
+              </div>
+              <p className="text-xs font-semibold text-emerald-800 max-w-xs mx-auto leading-relaxed">
+                {message}
+              </p>
+              <button
+                onClick={() => navigate('/login-selection')}
+                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs transition-colors shadow-sm flex items-center justify-center gap-2"
+              >
+                <span>Navigate to Login</span>
+                <FaArrowRight className="text-[10px]" />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+      </div>
+    </div>
   );
 };
 
 export default VerifyEmailPage;
-
-
-
-
-
-
-
-

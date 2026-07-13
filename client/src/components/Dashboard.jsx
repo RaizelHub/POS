@@ -1,547 +1,144 @@
-import React, { useState, useEffect } from "react";
-import { Routes, Route, Link, useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Routes, Route, Link, useNavigate, useLocation } from "react-router-dom";
+import { Avatar, CircularProgress, Drawer, IconButton, useMediaQuery, useTheme } from "@mui/material";
 import {
-  Drawer,
-  List,
-  ListItem,
-  Avatar,
-  Box,
-  Typography,
-  Divider,
-  IconButton,
-  Tooltip,
-  CssBaseline,
-  useTheme,
-  useMediaQuery,
-  Card,
-  Grid,
-} from "@mui/material";
-import { FaUsers, FaBox, FaChartLine } from "react-icons/fa";
-import { IoLogOut, IoMenu, IoClose } from "react-icons/io5";
-import { motion, AnimatePresence } from "framer-motion";
-import ThemeToggle from "./ThemeToggle";
+  FaBell, FaBox, FaChartLine, FaChevronRight, FaClock, FaExclamationTriangle,
+  FaHome, FaSearch, FaSignOutAlt, FaStore, FaTag, FaUser, FaUsers, FaCrown, FaReceipt
+} from "react-icons/fa";
+import { IoClose, IoMenu } from "react-icons/io5";
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import axios from "axios";
 import UserList from "./Userlist";
 import ProductList from "./Productlist";
 import TotalSales from "./TotalSales";
 import AdminProfile from "./AdminProfile";
-import axios from "axios";
-import PersonIcon from "@mui/icons-material/Person";
-import { People as PeopleIcon, Inventory2 as InventoryIcon, BarChart as BarChartIcon } from '@mui/icons-material';
-import config from '../config';
+import ShiftLog from "./ShiftLog";
+import CouponManager from "./CouponManager";
+import ReceiptCustomizer from "./ReceiptCustomizer";
+import InventoryManager from "./InventoryManager";
+import Leaderboard from "./Leaderboard";
+import TransactionsLedger from "./TransactionsLedger";
+import config from "../config";
+import novaLogo from "../images/nova_logo.png";
 
-
+const peso = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 0 });
 
 function Dashboard() {
   const [admin, setAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const navigate = useNavigate();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const drawerWidth = 240;
   const [stats, setStats] = useState({ users: 0, products: 0, sales: 0 });
+  const [analytics, setAnalytics] = useState(null);
+  const [lowStock, setLowStock] = useState([]);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const drawerWidth = 268;
 
-  // Fetch admin data based on the current token in localStorage
   useEffect(() => {
-    const fetchAdminData = async () => {
+    const fetchAdmin = async () => {
       const token = localStorage.getItem("token");
-
-      if (!token) {
-        navigate("/"); // Redirect to login if no token is found
-        return;
-      }
-
+      if (!token) return navigate("/");
       try {
-        const response = await axios.get(`${config.apiUrl}/api/admin/profile`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        // Ensure response.data contains the correct admin details
-        console.log("Admin data received:", response.data);
-
-        // Make sure you are correctly updating the state with the fetched data
-        setAdmin(response.data); // Set the admin data to the state
-        setLoading(false); // Set loading state to false after data is fetched
-      } catch (err) {
-        console.error("Error fetching admin data:", err);
-        navigate("/admin-login"); // Redirect to login if the token is invalid or expired
-      }
-
-
+        const { data } = await axios.get(`${config.apiUrl}/api/admin/profile`, { headers: { Authorization: `Bearer ${token}` } });
+        setAdmin(data);
+      } catch (error) {
+        console.error("Error fetching admin data:", error);
+        navigate("/admin-login");
+      } finally { setLoading(false); }
     };
+    fetchAdmin();
+  }, [navigate]);
 
-
-    fetchAdminData();
-  }, [navigate]); // This effect depends on navigation changes and will run whenever the page is loaded or token changes
-
-  // Fetch dashboard stats
   useEffect(() => {
     const fetchStats = async () => {
       try {
         const token = localStorage.getItem("token");
-        const [usersRes, productsRes, salesRes] = await Promise.all([
-          axios.get(`${config.apiUrl}/api/users`, { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get(`${config.apiUrl}/api/products`, { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get(`${config.apiUrl}/api/total-sales-details`, { headers: { Authorization: `Bearer ${token}` } }),
+        const headers = { Authorization: `Bearer ${token}` };
+        const [usersRes, productsRes, salesRes, analyticsRes] = await Promise.all([
+          axios.get(`${config.apiUrl}/api/users`, { headers }),
+          axios.get(`${config.apiUrl}/api/products`, { headers }),
+          axios.get(`${config.apiUrl}/api/total-sales-details`, { headers }),
+          axios.get(`${config.apiUrl}/api/admin/analytics`, { headers }),
         ]);
-        setStats({
-          users: usersRes.data.length,
-          products: productsRes.data.length,
-          sales: salesRes.data.totalSales || 0,
-        });
-      } catch (err) {
-        // ignore errors for stats
-      }
+        setStats({ users: usersRes.data.length, products: productsRes.data.length, sales: salesRes.data.totalSales || 0 });
+        setAnalytics(analyticsRes.data);
+        setLowStock(productsRes.data.filter((product) => product.quantity <= (product.lowStockThreshold || 5)));
+      } catch (error) { console.error("Error fetching dashboard stats:", error); }
     };
     fetchStats();
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token"); // Remove token on logout
-    setAdmin(null); // Clear admin data
-    setLoading(true); // Reset loading state
-    navigate("/"); // Redirect to login page
-  };
+  const handleLogout = () => { localStorage.removeItem("token"); navigate("/"); };
+  const menuItems = [
+    { text: "Overview", path: "/dashboard", icon: <FaHome /> },
+    { text: "Products", path: "/dashboard/product-list", icon: <FaBox /> },
+    { text: "Cashiers", path: "/dashboard/user-list", icon: <FaUsers /> },
+    { text: "Sales reports", path: "/dashboard/total-sales", icon: <FaChartLine /> },
+    { text: "Account settings", path: "/dashboard/admin-profile", icon: <FaUser /> },
+  ];
+  const operationsItems = [
+    { text: "Cashier shifts", path: "/dashboard/shifts-log", icon: <FaClock /> },
+    { text: "Promotions", path: "/dashboard/coupon-manager", icon: <FaTag /> },
+    { text: "Receipt builder", path: "/dashboard/receipt-customizer", icon: <FaStore /> },
+    { text: "Auto-Restock PO", path: "/dashboard/inventory-manager", icon: <FaBox /> },
+    { text: "Leaderboards", path: "/dashboard/leaderboard", icon: <FaCrown /> },
+    { text: "Transactions Ledger", path: "/dashboard/transactions-ledger", icon: <FaReceipt /> },
+  ];
+  const isOverview = location.pathname === "/dashboard" || location.pathname === "/dashboard/";
 
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
-  };
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { x: -20, opacity: 0 },
-    visible: {
-      x: 0,
-      opacity: 1,
-      transition: {
-        duration: 0.5,
-        ease: "easeOut"
-      }
-    }
-  };
-
-  const drawerContent = (
-    <motion.div
-      variants={containerVariants}
-      style={{
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        background: "linear-gradient(135deg, #1a2a6c 0%, #b21f1f 50%, #fdbb2d 100%)",
-        color: "white",
-        overflow: "hidden",
-      }}
-    >
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          padding: "20px",
-          borderBottom: "1px solid rgba(255,255,255,0.1)",
-        }}
-      >
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-          }}
-        >
-          <Avatar
-            src={admin?.image}
-            alt={admin?.firstname}
-            sx={{
-              width: 50,
-              height: 50,
-              border: "2px solid rgba(255,255,255,0.2)",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-            }}
-          />
-          <Box>
-            <Typography
-              variant="h6"
-              sx={{
-                fontWeight: "600",
-                fontSize: "1.1rem",
-                marginBottom: "2px",
-              }}
-            >
-              {admin?.firstname} {admin?.lastname}
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{
-                opacity: 0.8,
-                fontSize: "0.85rem",
-              }}
-            >
-              Administrator
-            </Typography>
-          </Box>
-        </motion.div>
-      </Box>
-
-      <Box
-        sx={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          padding: "20px",
-          gap: "10px",
-        }}
-      >
-        <motion.div
-          variants={itemVariants}
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "10px",
-          }}
-        >
-          <ListItem
-            button
-            component={Link}
-            to="/admin-profile"
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              color: "white",
-              padding: "12px",
-              marginBottom: "16px",
-              borderRadius: "8px",
-              transition: "all 0.3s ease",
-              "&:hover": {
-                backgroundColor: "rgba(255,255,255,0.2)",
-                transform: "translateX(5px)",
-              },
-            }}
-          >
-            <Avatar
-              sx={{
-                width: 40,
-                height: 40,
-                backgroundColor: "rgba(255,255,255,0.1)",
-                marginBottom: "8px",
-              }}
-            >
-              <PersonIcon />
-            </Avatar>
-            <Typography variant="body1" sx={{ marginTop: "8px" }}>
-              Profile
-            </Typography>
-          </ListItem>
-
-          <ListItem
-            button
-            component={Link}
-            to="/user-list"
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              color: "white",
-              padding: "12px",
-              marginBottom: "16px",
-              borderRadius: "8px",
-              transition: "all 0.3s ease",
-              "&:hover": {
-                backgroundColor: "rgba(255,255,255,0.2)",
-                transform: "translateX(5px)",
-              },
-            }}
-          >
-            <Avatar
-              sx={{
-                width: 40,
-                height: 40,
-                backgroundColor: "rgba(255,255,255,0.1)",
-                marginBottom: "8px",
-              }}
-            >
-              <FaUsers />
-            </Avatar>
-            <Typography variant="body1" sx={{ marginTop: "8px" }}>
-              Users
-            </Typography>
-          </ListItem>
-
-          <ListItem
-            button
-            component={Link}
-            to="/product-list"
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              color: "white",
-              padding: "12px",
-              marginBottom: "16px",
-              borderRadius: "8px",
-              transition: "all 0.3s ease",
-              "&:hover": {
-                backgroundColor: "rgba(255,255,255,0.2)",
-                transform: "translateX(5px)",
-              },
-            }}
-          >
-            <Avatar
-              sx={{
-                width: 40,
-                height: 40,
-                backgroundColor: "rgba(255,255,255,0.1)",
-                marginBottom: "8px",
-              }}
-            >
-              <FaBox />
-            </Avatar>
-            <Typography variant="body1" sx={{ marginTop: "8px" }}>
-              Products
-            </Typography>
-          </ListItem>
-
-          <ListItem
-            button
-            component={Link}
-            to="/total-sales"
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              color: "white",
-              padding: "12px",
-              marginBottom: "16px",
-              borderRadius: "8px",
-              transition: "all 0.3s ease",
-              "&:hover": {
-                backgroundColor: "rgba(255,255,255,0.2)",
-                transform: "translateX(5px)",
-              },
-            }}
-          >
-            <Avatar
-              sx={{
-                width: 40,
-                height: 40,
-                backgroundColor: "rgba(255,255,255,0.1)",
-                marginBottom: "8px",
-              }}
-            >
-              <FaChartLine />
-            </Avatar>
-            <Typography variant="body1" sx={{ marginTop: "8px" }}>
-              Sales
-            </Typography>
-          </ListItem>
-        </motion.div>
-      </Box>
-
-      <Box sx={{ padding: "16px" }} className="bg-white dark:bg-gray-800">
-        <motion.div
-          variants={itemVariants}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-        >
-          <Tooltip title="Logout">
-            <IconButton
-              onClick={handleLogout}
-              sx={{
-                backgroundColor: "rgba(255,0,0,0.8)",
-                color: "white",
-                width: "100%",
-                transition: "all 0.3s ease",
-                "&:hover": {
-                  backgroundColor: "rgba(255,0,0,1)",
-                  transform: "translateY(-2px)",
-                },
-                padding: "16px",
-                borderRadius: "10px",
-                boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
-              }}
-            >
-              <IoLogOut />
-            </IconButton>
-          </Tooltip>
-        </motion.div>
-      </Box>
-    </motion.div>
+  const sidebarContent = (
+    <div className="h-full bg-slate-900 text-slate-300 flex flex-col">
+      <div className="h-[76px] px-5 border-b border-slate-800 flex items-center gap-3">
+        <img src={novaLogo} alt="SUELTO Logo" className="h-9 w-auto object-contain rounded-lg" />
+        <div><p className="font-bold text-white text-sm">SUELTO Retail</p><p className="text-[11px] text-slate-500">Operations console</p></div>
+      </div>
+      <nav className="flex-1 px-3 py-6 space-y-1">
+        <p className="px-3 pb-2 text-[10px] font-bold tracking-[.14em] uppercase text-slate-500">Workspace</p>
+        {menuItems.map((item) => {
+          const active = item.path === "/dashboard" ? isOverview : location.pathname === item.path;
+          return <Link key={item.text} to={item.path} onClick={() => setMobileOpen(false)} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${active ? "bg-emerald-600 text-white shadow-sm" : "text-slate-400 hover:bg-slate-800 hover:text-white"}`}>
+            <span className="w-4">{item.icon}</span>{item.text}
+          </Link>;
+        })}
+        <p className="px-3 pt-7 pb-2 text-[10px] font-bold tracking-[.14em] uppercase text-slate-500">Operations</p>
+        {operationsItems.map((item) => {
+          const active = location.pathname === item.path;
+          return <Link key={item.text} to={item.path} onClick={() => setMobileOpen(false)} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${active ? "bg-emerald-600 text-white shadow-sm" : "text-slate-400 hover:bg-slate-800 hover:text-white"}`}><span className="w-4">{item.icon}</span>{item.text}</Link>;
+        })}
+      </nav>
+      <div className="p-4 border-t border-slate-800">
+        <div className="flex items-center gap-3 mb-4 px-1"><Avatar src={admin?.image} sx={{ width: 34, height: 34 }}>{admin?.firstname?.[0]}</Avatar><div className="min-w-0"><p className="text-sm text-white font-medium truncate">{admin?.firstname} {admin?.lastname}</p><p className="text-[11px] text-slate-500">Store administrator</p></div></div>
+        <button onClick={handleLogout} className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-rose-500/10 hover:text-rose-300 transition-colors"><FaSignOutAlt /> Sign out</button>
+        <p className="mt-3 px-3 text-[10px] text-slate-600">SUELTO POS · v1.0</p>
+      </div>
+    </div>
   );
 
-  if (loading) {
-    return <Typography variant="h6">Loading...</Typography>; // Loading state while fetching admin data
-  }
+  const chartData = analytics?.salesByDay || analytics?.dailySales || [];
+  if (loading) return <div className="min-h-screen grid place-items-center bg-slate-50"><div className="text-center"><CircularProgress color="success" /><p className="mt-4 text-sm text-slate-500">Preparing your workspace…</p></div></div>;
 
-  return (
-    <Box sx={{ display: "flex" }}>
-      <CssBaseline />
-
-      {/* Mobile App Bar */}
-      {isMobile && (
-        <Box
-          sx={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 1200,
-            bgcolor: "white",
-            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-            display: "flex",
-            alignItems: "center",
-            padding: "8px 16px",
-          }}
-        >
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ mr: 2 }}
-          >
-            {mobileOpen ? <IoClose /> : <IoMenu />}
-          </IconButton>
-            <Typography variant="h6" noWrap component="div">
-              Admin Dashboard
-            </Typography>
-            <ThemeToggle />
-        </Box>
-      )}
-
-      {/* Drawer */}
-      <Box
-        component="nav"
-        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
-      >
-        <AnimatePresence>
-          {(mobileOpen || !isMobile) && (
-            <motion.div
-              initial={{ x: -drawerWidth }}
-              animate={{ x: 0 }}
-              exit={{ x: -drawerWidth }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            >
-              <Drawer
-                variant={isMobile ? "temporary" : "permanent"}
-                open={mobileOpen || !isMobile}
-                onClose={handleDrawerToggle}
-                ModalProps={{
-                  keepMounted: true,
-                }}
-                sx={{
-                  display: { xs: "block", sm: "block" },
-                  "& .MuiDrawer-paper": {
-                    boxSizing: "border-box",
-                    width: drawerWidth,
-                    border: "none",
-                  },
-                }}
-              >
-                {drawerContent}
-              </Drawer>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </Box>
-
-      {/* Main Content */}
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          p: 3,
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-          marginTop: isMobile ? "64px" : 0,
-          minHeight: "100vh",
-          background: "linear-gradient(135deg, #f8fafc 0%, #e0e7ef 100%)",
-        }}
-      >
-        {/* Dashboard Welcome & Stats Section (only on main dashboard route) */}
-        {window.location.pathname === "/admin" && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            style={{ marginBottom: 40 }}
-          >
-            <Box
-              sx={{
-                background: "rgba(255,255,255,0.95)",
-                borderRadius: "24px",
-                boxShadow: "0 8px 32px rgba(0,0,0,0.08)",
-                padding: { xs: 3, md: 5 },
-                mb: 4,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                textAlign: "center",
-              }}
-            >
-              <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
-                Welcome, {admin?.firstname} {admin?.lastname}!
-              </Typography>
-              <Typography variant="body1" sx={{ color: "#666", mb: 3 }}>
-                Here's a quick overview of your store's performance today.
-              </Typography>
-              <Grid container spacing={3} justifyContent="center">
-                <Grid item xs={12} sm={4}>
-                  <Card sx={{ borderRadius: 3, boxShadow: 2, p: 2, display: "flex", alignItems: "center", gap: 2 }}>
-                    <Avatar sx={{ bgcolor: "#1a2a6c", width: 56, height: 56 }}>
-                      <PeopleIcon />
-                    </Avatar>
-                    <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 600 }}>{stats.users}</Typography>
-                      <Typography variant="body2" color="text.secondary">Users</Typography>
-                    </Box>
-                  </Card>
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                  <Card sx={{ borderRadius: 3, boxShadow: 2, p: 2, display: "flex", alignItems: "center", gap: 2 }}>
-                    <Avatar sx={{ bgcolor: "#b21f1f", width: 56, height: 56 }}>
-                      <InventoryIcon />
-                    </Avatar>
-                    <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 600 }}>{stats.products}</Typography>
-                      <Typography variant="body2" color="text.secondary">Products</Typography>
-                    </Box>
-                  </Card>
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                  <Card sx={{ borderRadius: 3, boxShadow: 2, p: 2, display: "flex", alignItems: "center", gap: 2 }}>
-                    <Avatar sx={{ bgcolor: "#fdbb2d", width: 56, height: 56, color: "#1a2a6c" }}>
-                      <BarChartIcon />
-                    </Avatar>
-                    <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 600 }}>₱{stats.sales.toLocaleString()}</Typography>
-                      <Typography variant="body2" color="text.secondary">Total Sales</Typography>
-                    </Box>
-                  </Card>
-                </Grid>
-              </Grid>
-            </Box>
-          </motion.div>
-        )}
-        <Routes>
-          <Route path="/user-list" element={<UserList />} />
-          <Route path="/product-list" element={<ProductList />} />
-          <Route path="/total-sales" element={<TotalSales />} />
-          <Route path="/admin-profile" element={<AdminProfile />} />
-        </Routes>
-      </Box>
-    </Box>
-  );
+  return <div className="min-h-screen bg-slate-50 flex font-sans">
+    {isMobile ? <Drawer variant="temporary" open={mobileOpen} onClose={() => setMobileOpen(false)} ModalProps={{ keepMounted: true }} sx={{ "& .MuiDrawer-paper": { width: drawerWidth, border: 0 } }}>{sidebarContent}</Drawer> : <aside className="fixed inset-y-0 left-0 w-[268px]">{sidebarContent}</aside>}
+    <div className={`min-w-0 flex-1 ${isMobile ? "" : "ml-[268px]"}`}>
+      <header className="sticky top-0 z-20 h-[76px] bg-white border-b border-slate-200 px-5 md:px-8 flex items-center justify-between gap-4">
+        <div className="flex items-center min-w-0 gap-3">{isMobile && <IconButton onClick={() => setMobileOpen(true)} aria-label="Open navigation"><IoMenu /></IconButton>}<div className="hidden sm:block"><p className="text-xs text-slate-500">Retail operations / {isOverview ? "Overview" : "Management"}</p><p className="font-bold text-slate-900">{isOverview ? "Store overview" : "Management workspace"}</p></div></div>
+        <div className="hidden lg:flex items-center max-w-sm flex-1 mx-auto relative"><FaSearch className="absolute left-3 text-slate-400 text-xs"/><input aria-label="Global search" className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 pl-9 pr-3 text-sm placeholder:text-slate-400 focus:bg-white focus:border-emerald-600" placeholder="Search products, transactions…"/></div>
+        <div className="flex items-center gap-3"><div className="hidden md:flex items-center gap-2 text-right"><div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 grid place-items-center"><FaStore size={13}/></div><div><p className="text-xs font-semibold text-slate-700">Main Branch</p><p className="text-[10px] text-slate-500">Open · Today</p></div></div><button aria-label="Notifications" className="relative w-9 h-9 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50"><FaBell className="mx-auto" size={14}/><span className="absolute top-2 right-2 w-1.5 h-1.5 bg-rose-500 rounded-full"/></button><Avatar src={admin?.image} sx={{ width: 34, height: 34 }}>{admin?.firstname?.[0]}</Avatar></div>
+      </header>
+      <main className="max-w-[1440px] mx-auto p-5 md:p-8">
+        {isOverview && <section className="space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between gap-4"><div><p className="text-sm text-slate-500">{new Date().toLocaleDateString("en-PH", { weekday: "long", month: "long", day: "numeric" })}</p><h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">Good day, {admin?.firstname}.</h1><p className="mt-1 text-sm text-slate-500">Here’s how your store is performing today.</p></div><Link to="/dashboard/product-list" className="self-start inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold shadow-sm">Manage catalog <FaChevronRight size={11}/></Link></div>
+          <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            {[{label:"Total sales",value:peso.format(stats.sales),note:"All recorded revenue",icon:<FaChartLine/>,tone:"bg-emerald-50 text-emerald-600"},{label:"Catalog products",value:stats.products.toLocaleString(),note:"Available in catalog",icon:<FaBox/>,tone:"bg-sky-50 text-sky-600"},{label:"Cashier accounts",value:stats.users.toLocaleString(),note:"Active store users",icon:<FaUsers/>,tone:"bg-violet-50 text-violet-600"},{label:"Low stock alerts",value:lowStock.length.toLocaleString(),note:lowStock.length ? "Items need attention" : "Inventory levels healthy",icon:<FaExclamationTriangle/>,tone:"bg-amber-50 text-amber-600"}].map((card) => <div key={card.label} className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm"><div className="flex justify-between"><div><p className="text-sm font-medium text-slate-500">{card.label}</p><p className="mt-3 text-2xl font-bold tracking-tight text-slate-900">{card.value}</p></div><div className={`w-10 h-10 grid place-items-center rounded-lg ${card.tone}`}>{card.icon}</div></div><p className="mt-3 text-xs text-slate-500">{card.note}</p></div>)}
+          </div>
+          <div className="grid xl:grid-cols-3 gap-6"><section className="xl:col-span-2 bg-white border border-slate-200 rounded-xl p-5 md:p-6 shadow-sm"><div className="flex items-start justify-between mb-6"><div><h2 className="font-bold text-slate-900">Sales performance</h2><p className="text-sm text-slate-500 mt-1">Revenue activity over the selected period</p></div><span className="text-xs font-medium bg-slate-100 text-slate-600 px-2.5 py-1 rounded-md">Live data</span></div><div className="h-[280px]">{chartData.length ? <ResponsiveContainer width="100%" height="100%"><AreaChart data={chartData}><defs><linearGradient id="salesFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#059669" stopOpacity={.22}/><stop offset="100%" stopColor="#059669" stopOpacity={0}/></linearGradient></defs><CartesianGrid vertical={false} stroke="#e2e8f0"/><XAxis dataKey="date" tickLine={false} axisLine={false} tick={{fontSize:11,fill:"#64748b"}}/><YAxis tickLine={false} axisLine={false} tick={{fontSize:11,fill:"#64748b"}}/><Tooltip/><Area type="monotone" dataKey="sales" stroke="#059669" strokeWidth={2} fill="url(#salesFill)"/></AreaChart></ResponsiveContainer> : <div className="h-full grid place-items-center text-center"><div><FaChartLine className="mx-auto text-slate-200 text-3xl"/><p className="mt-3 text-sm font-medium text-slate-600">Sales trend will appear here</p><p className="text-xs text-slate-400 mt-1">Complete transactions to populate analytics.</p></div></div>}</div></section><section className="bg-white border border-slate-200 rounded-xl shadow-sm"><div className="p-5 border-b border-slate-100"><h2 className="font-bold text-slate-900">Inventory attention</h2><p className="text-sm text-slate-500 mt-1">Products at or below their threshold</p></div><div className="divide-y divide-slate-100">{lowStock.length ? lowStock.slice(0,5).map((item) => <div key={item._id} className="px-5 py-3.5 flex items-center gap-3"><div className="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 grid place-items-center"><FaBox size={13}/></div><div className="min-w-0 flex-1"><p className="font-medium text-sm text-slate-800 truncate">{item.name}</p><p className="text-xs text-slate-500">{item.category || "Uncategorized"}</p></div><span className="text-xs font-bold text-rose-600">{item.quantity} left</span></div>) : <div className="p-8 text-center"><div className="w-10 h-10 mx-auto grid place-items-center rounded-full bg-emerald-50 text-emerald-600">✓</div><p className="mt-3 text-sm font-medium text-slate-700">Inventory looks healthy</p><p className="mt-1 text-xs text-slate-500">No low-stock items right now.</p></div>}</div></section></div>
+        </section>}
+        <section className={isOverview ? "mt-7" : ""}><Routes><Route path="user-list" element={<UserList/>}/><Route path="product-list" element={<ProductList/>}/><Route path="total-sales" element={<TotalSales/>}/><Route path="admin-profile" element={<AdminProfile/>}/><Route path="shifts-log" element={<ShiftLog/>}/><Route path="coupon-manager" element={<CouponManager/>}/><Route path="receipt-customizer" element={<ReceiptCustomizer/>}/><Route path="inventory-manager" element={<InventoryManager/>}/><Route path="leaderboard" element={<Leaderboard/>}/><Route path="transactions-ledger" element={<TransactionsLedger/>}/></Routes></section>
+      </main>
+    </div>
+  </div>;
 }
 
 export default Dashboard;

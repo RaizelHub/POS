@@ -2,25 +2,9 @@ import React, { useState, useRef } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import Google from "../images/google.png";
+import { FaArrowLeft, FaUser, FaEnvelope, FaLock, FaUsers, FaBox, FaChartLine, FaCheckCircle } from "react-icons/fa";
 import config from '../config';
-
-import {
-  Box,
-  Card,
-  Typography,
-  TextField,
-  Button,
-  Grid,
-  InputAdornment,
-  Alert,
-  Tooltip,
-  CircularProgress,
-  Divider,
-} from "@mui/material";
-import PersonIcon from "@mui/icons-material/Person";
-import EmailIcon from "@mui/icons-material/Email";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import novaLogo from '../images/nova_logo.png';
 
 function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -31,7 +15,6 @@ function RegisterPage() {
     confirmPin: ["", "", "", "", "", ""],
     image: null,
   });
-  // No need to store token in state for v2
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -46,16 +29,13 @@ function RegisterPage() {
     const { value, name } = e.target;
     const index = parseInt(name);
 
-    // Only allow numeric input - strictly enforce this
     if (value && !/^[0-9]$/.test(value)) {
-      // If non-numeric, don't update the state and prevent default behavior
       e.preventDefault();
       return;
     }
 
     const digit = value;
 
-    // If backspace is pressed (empty value) and not the first field, move focus to previous field
     if (digit === '' && index > 0) {
       const newPin = [...formData[field]];
       newPin[index] = '';
@@ -69,13 +49,11 @@ function RegisterPage() {
       return;
     }
 
-    // Update the pin array with the new digit
     if (digit.length <= 1) {
       const newPin = [...formData[field]];
       newPin[index] = digit;
       setFormData({ ...formData, [field]: newPin });
 
-      // Move to next input if a digit was entered and not the last field
       if (digit.length === 1 && index < 5) {
         if (field === "pin") {
           pinRefs.current[index + 1].current.focus();
@@ -86,25 +64,19 @@ function RegisterPage() {
     }
   };
 
-
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
-    // Collect missing fields
     const missingFields = [];
 
-    // Validate text fields
     if (!formData.firstname.trim()) missingFields.push("First Name");
     if (!formData.lastname.trim()) missingFields.push("Last Name");
     if (!formData.email.trim()) missingFields.push("Email");
 
-    // Validate PIN fields
     const pin = formData.pin.join("");
     const confirmPin = formData.confirmPin.join("");
 
-    // Check if PIN is complete
     if (pin.length !== 6) {
       missingFields.push("Complete 6-digit PIN");
     } else if (!/^\d+$/.test(pin)) {
@@ -112,41 +84,28 @@ function RegisterPage() {
       return;
     }
 
-    // Check if Confirm PIN is complete
     if (confirmPin.length !== 6) {
       missingFields.push("Confirm PIN");
     }
 
-    // Continue with PIN validation if both PINs are complete
     if (pin.length === 6 && confirmPin.length === 6) {
-      // Check if PINs match
       if (pin !== confirmPin) {
         setError("PINs do not match. Please try again.");
         return;
       }
     }
 
-    // Validate email domain
-    const allowedDomains = ["buksu.edu.ph", "student.buksu.edu.ph"];
-    const emailParts = formData.email.split("@");
 
-    if (emailParts.length !== 2 || !allowedDomains.includes(emailParts[1])) {
-      setError("Only emails from buksu.edu.ph or student.buksu.edu.ph are allowed.");
-      return;
-    }
-
-    // Final check for all missing fields
     if (missingFields.length > 0) {
       setError(`Please fill in all required fields: ${missingFields.join(", ")}.`);
       return;
     }
 
-    // Prepare data to send as JSON
     const dataToSend = {
       firstname: formData.firstname.trim(),
       lastname: formData.lastname.trim(),
       email: formData.email.trim(),
-      pin: pin // Send PIN as a string
+      pin: pin
     };
 
     try {
@@ -158,7 +117,6 @@ function RegisterPage() {
       setLoading(false);
       setMessage(response.data.message);
 
-      // Reset form
       setFormData({
         firstname: "",
         lastname: "",
@@ -168,8 +126,7 @@ function RegisterPage() {
         image: null,
       });
 
-      // Redirect after successful registration
-      setTimeout(() => navigate("/login-selection"), 5000);
+      setTimeout(() => navigate("/login-selection"), 4000);
     } catch (error) {
       setLoading(false);
       console.error("Registration error:", error);
@@ -179,410 +136,230 @@ function RegisterPage() {
 
   const googleAuth = () => {
     try {
-      // Use the full URL to avoid localhost issues with Google OAuth
-      window.open(`https://clean-u8gn.onrender.com/auth/google`, "_self");
+      // Fix google redirect URI to run dynamically using our server config API endpoint
+      window.open(`${config.apiUrl}/auth/google`, "_self");
     } catch (error) {
       setError("Google authentication failed. Please try again.");
     }
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2
-      }
-    }
-  };
-
   return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-      style={{
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, #1a2a6c 0%, #b21f1f 50%, #fdbb2d 100%)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "30px",
-      }}
-    >
-      <Card
-        sx={{
-          maxWidth: 900,
-          width: "100%",
-          borderRadius: "24px",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
-          background: "rgba(255,255,255,0.97)",
-          p: 0,
-          display: "flex",
-          flexDirection: { xs: "column", md: "row" },
-          overflow: "hidden",
-          position: "relative",
-        }}
-      >
-        {/* Left Side: Illustration or Branding */}
-        <Box
-          sx={{
-            flex: 1,
-            display: { xs: "none", md: "flex" },
-            alignItems: "center",
-            justifyContent: "center",
-            background: "linear-gradient(135deg, #1a2a6c 0%, #b21f1f 50%, #fdbb2d 100%)",
-            color: "white",
-            flexDirection: "column",
-            minWidth: 320,
-            p: 4,
-          }}
-        >
-          <Box sx={{ mb: 3 }}>
-            <i className="fas fa-user-plus" style={{ fontSize: 64, opacity: 0.9 }}></i>
-          </Box>
-          <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, letterSpacing: 1 }}>
-            Welcome!
-          </Typography>
-          <Typography variant="body1" sx={{ opacity: 0.85 }}>
-            Join our store community and enjoy exclusive features.
-          </Typography>
-        </Box>
-        {/* Right Side: Registration Form */}
-        <Box sx={{ flex: 2, p: { xs: 3, md: 5 }, position: "relative" }}>
-          <motion.button
-            onClick={() => navigate("/")}
-            style={{
-              position: "absolute",
-              top: 24,
-              left: 24,
-              background: "none",
-              border: "none",
-              color: "#1a2a6c",
-              fontSize: 20,
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-            }}
-            whileHover={{ scale: 1.05, x: -5 }}
-            whileTap={{ scale: 0.95 }}
+    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row font-sans text-slate-800 antialiased">
+      
+      {/* Left side: Premium branding & features highlight */}
+      <div className="w-full md:w-[420px] bg-slate-900 text-slate-350 p-8 flex flex-col justify-between border-r border-slate-800">
+        
+        {/* Top Logo link */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate(-1)}
+            className="hover:bg-slate-800 p-2 rounded-lg transition-all text-slate-400 hover:text-white"
           >
-            <i className="fas fa-arrow-left"></i> Back
-          </motion.button>
-          <Box sx={{ textAlign: "center", mb: 3, mt: 2 }}>
-            <Typography
-              variant="h4"
-              sx={{
-                fontWeight: 700,
-                background: "linear-gradient(45deg, #1a2a6c, #b21f1f)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                mb: 1,
-              }}
-            >
-              Register
-            </Typography>
-            <Typography variant="body1" sx={{ color: "#666" }}>
-              Create your account to access the store.
-            </Typography>
-          </Box>
-          <form onSubmit={handleSubmit}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="First Name"
-                  name="firstname"
-                  value={formData.firstname}
-                  onChange={(e) => setFormData({ ...formData, firstname: e.target.value })}
-                  fullWidth
-                  required
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <PersonIcon />
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Last Name"
-                  name="lastname"
-                  value={formData.lastname}
-                  onChange={(e) => setFormData({ ...formData, lastname: e.target.value })}
-                  fullWidth
-                  required
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <PersonIcon />
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label="Email"
-                  name="email"
+            <FaArrowLeft />
+          </button>
+          <div className="flex items-center gap-2">
+            <img src={novaLogo} alt="SUELTO Logo" className="h-8 w-auto object-contain rounded-lg" />
+            <span className="font-bold text-slate-100 tracking-tight text-base">
+              SUELTO POS
+            </span>
+          </div>
+        </div>
+
+        {/* Marketing detail blocks */}
+        <div className="space-y-6 my-12 md:my-0">
+          <div className="flex items-center gap-4">
+            <img src={novaLogo} alt="SUELTO Logo" className="h-14 w-auto object-contain rounded-xl shadow-sm" />
+          </div>
+          <h2 className="text-xl font-bold text-slate-100 tracking-tight">
+            Register Store Cashier
+          </h2>
+          <p className="text-xs leading-relaxed text-slate-450">
+            Create an employee profile to manage sales, track local held orders, settle GCash/Card transactions, and review analytics dashboards.
+          </p>
+
+          <div className="space-y-3.5 pt-4 text-xs font-semibold text-slate-400">
+            <div className="flex items-center gap-2.5">
+              <FaUsers className="text-slate-500" />
+              <span>Personalized cashier dashboard access</span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <FaBox className="text-slate-500" />
+              <span>Full local cart restoration logs</span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <FaChartLine className="text-slate-500" />
+              <span>Daily/Monthly visual report exports</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer legal */}
+        <div className="text-[11px] text-slate-500 font-medium">
+          © 2026 SUELTO POS System. SUELTO Retail Operations.
+        </div>
+      </div>
+
+      {/* Right side: Registration Form container */}
+      <div className="flex-1 bg-slate-50 p-6 md:p-12 flex flex-col justify-center items-center">
+        <div className="w-full max-w-xl bg-white border border-slate-200 rounded-xl p-6 md:p-8 shadow-sm space-y-6">
+          
+          <div className="text-center md:text-left">
+            <h3 className="font-bold text-slate-900 text-lg">Create Cashier Account</h3>
+            <p className="text-slate-400 text-xs mt-0.5">Please provide your details and create a 6-digit PIN</p>
+          </div>
+
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="bg-red-50 border border-red-100 text-red-700 px-3.5 py-2.5 rounded-lg text-xs font-medium text-center"
+              >
+                {error}
+              </motion.div>
+            )}
+            {message && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-emerald-50 border border-emerald-100 text-emerald-800 px-3.5 py-2.5 rounded-lg text-xs font-medium text-center flex items-center justify-center gap-2"
+              >
+                <FaCheckCircle className="text-emerald-500" />
+                <span>{message} (Redirecting to login...)</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            
+            {/* Account Details */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-slate-500 block uppercase">First Name</label>
+                <div className="relative">
+                  <FaUser className="absolute left-3 top-3 text-slate-400 text-xs" />
+                  <input
+                    type="text"
+                    required
+                    placeholder="John"
+                    value={formData.firstname}
+                    onChange={(e) => setFormData({ ...formData, firstname: e.target.value })}
+                    className="w-full pl-9 pr-3 py-2 border border-slate-200 focus:border-slate-400 focus:outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-slate-500 block uppercase">Last Name</label>
+                <div className="relative">
+                  <FaUser className="absolute left-3 top-3 text-slate-400 text-xs" />
+                  <input
+                    type="text"
+                    required
+                    placeholder="Doe"
+                    value={formData.lastname}
+                    onChange={(e) => setFormData({ ...formData, lastname: e.target.value })}
+                    className="w-full pl-9 pr-3 py-2 border border-slate-200 focus:border-slate-400 focus:outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[11px] font-semibold text-slate-500 block uppercase">Email Address</label>
+              <div className="relative">
+                <FaEnvelope className="absolute left-3 top-3 text-slate-400 text-xs" />
+                <input
                   type="email"
+                  required
+                  placeholder="cashier@example.com"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  fullWidth
-                  required
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <EmailIcon />
-                      </InputAdornment>
-                    ),
-                  }}
+                  className="w-full pl-9 pr-3 py-2 border border-slate-200 focus:border-slate-400 focus:outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
                 />
-              </Grid>
-              <Grid item xs={12}>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600, mr: 1 }}>
-                    PIN
-                  </Typography>
-                  <Tooltip title="6-digit numeric PIN for login security">
-                    <InfoOutlinedIcon fontSize="small" color="action" />
-                  </Tooltip>
-                </Box>
-                <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
+              </div>
+            </div>
+
+            {/* Custom security PIN Code Inputs */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              
+              <div className="space-y-2">
+                <label className="text-[11px] font-semibold text-slate-500 block uppercase">Choose 6-Digit PIN</label>
+                <div className="flex gap-1.5">
                   {formData.pin.map((digit, index) => (
-                    <TextField
+                    <input
                       key={index}
-                      type="password"
+                      ref={pinRefs.current[index]}
+                      type="text"
+                      maxLength="1"
                       name={index.toString()}
                       value={digit}
                       onChange={(e) => handleChange(e, "pin")}
-                      onKeyDown={(e) => {
-                        // Handle backspace to move to previous field
-                        if (e.key === 'Backspace' && index > 0 && digit === '') {
-                          pinRefs.current[index - 1].current.focus();
-                        }
-
-                        // Prevent non-numeric input - strictly enforce numeric only
-                        if (!/^[0-9]$/.test(e.key) &&
-                            e.key !== 'Backspace' &&
-                            e.key !== 'Delete' &&
-                            e.key !== 'ArrowLeft' &&
-                            e.key !== 'ArrowRight' &&
-                            e.key !== 'Tab' &&
-                            !e.ctrlKey &&
-                            !e.metaKey) {
-                          e.preventDefault();
-                        }
-                      }}
-                      inputProps={{
-                        maxLength: 1,
-                        inputMode: "numeric",
-                        pattern: "[0-9]*",
-                        style: {
-                          textAlign: "center",
-                          fontSize: "1.2rem",
-                          fontWeight: "bold"
-                        },
-                        // Additional attribute to enforce numeric input on mobile
-                        onInput: (e) => {
-                          e.target.value = e.target.value.replace(/[^0-9]/g, '');
-                        }
-                      }}
-                      inputRef={pinRefs.current[index]}
-                      required
-                      sx={{
-                        width: 48,
-                        height: 48,
-                        borderRadius: 2,
-                        background: digit ? "#e8f0fe" : "#f5f5f5",
-                        transition: "all 0.2s ease",
-                        "& .MuiOutlinedInput-root": {
-                          height: "100%",
-                          "& fieldset": {
-                            borderColor: digit ? "#1a2a6c" : "#e0e0e0",
-                            borderWidth: digit ? 2 : 1,
-                          },
-                          "&:hover fieldset": {
-                            borderColor: "#1a2a6c",
-                          },
-                          "&.Mui-focused fieldset": {
-                            borderColor: "#1a2a6c",
-                            borderWidth: 2,
-                          },
-                        }
-                      }}
+                      className="w-8 h-10 border border-slate-200 focus:border-slate-400 focus:outline-none rounded-md text-center text-sm font-bold bg-slate-50 focus:bg-white transition-all"
                     />
                   ))}
-                </Box>
-              </Grid>
-              <Grid item xs={12}>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600, mr: 1 }}>
-                    Confirm PIN
-                  </Typography>
-                  <Tooltip title="Re-enter your 6-digit PIN">
-                    <InfoOutlinedIcon fontSize="small" color="action" />
-                  </Tooltip>
-                </Box>
-                <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[11px] font-semibold text-slate-500 block uppercase">Confirm PIN</label>
+                <div className="flex gap-1.5">
                   {formData.confirmPin.map((digit, index) => (
-                    <TextField
+                    <input
                       key={index}
-                      type="password"
+                      ref={confirmPinRefs.current[index]}
+                      type="text"
+                      maxLength="1"
                       name={index.toString()}
                       value={digit}
                       onChange={(e) => handleChange(e, "confirmPin")}
-                      onKeyDown={(e) => {
-                        // Handle backspace to move to previous field
-                        if (e.key === 'Backspace' && index > 0 && digit === '') {
-                          confirmPinRefs.current[index - 1].current.focus();
-                        }
-
-                        // Prevent non-numeric input - strictly enforce numeric only
-                        if (!/^[0-9]$/.test(e.key) &&
-                            e.key !== 'Backspace' &&
-                            e.key !== 'Delete' &&
-                            e.key !== 'ArrowLeft' &&
-                            e.key !== 'ArrowRight' &&
-                            e.key !== 'Tab' &&
-                            !e.ctrlKey &&
-                            !e.metaKey) {
-                          e.preventDefault();
-                        }
-                      }}
-                      inputProps={{
-                        maxLength: 1,
-                        inputMode: "numeric",
-                        pattern: "[0-9]*",
-                        style: {
-                          textAlign: "center",
-                          fontSize: "1.2rem",
-                          fontWeight: "bold"
-                        },
-                        // Additional attribute to enforce numeric input on mobile
-                        onInput: (e) => {
-                          e.target.value = e.target.value.replace(/[^0-9]/g, '');
-                        }
-                      }}
-                      inputRef={confirmPinRefs.current[index]}
-                      required
-                      sx={{
-                        width: 48,
-                        height: 48,
-                        borderRadius: 2,
-                        background: digit ? "#e8f0fe" : "#f5f5f5",
-                        transition: "all 0.2s ease",
-                        "& .MuiOutlinedInput-root": {
-                          height: "100%",
-                          "& fieldset": {
-                            borderColor: digit ? "#1a2a6c" : "#e0e0e0",
-                            borderWidth: digit ? 2 : 1,
-                          },
-                          "&:hover fieldset": {
-                            borderColor: "#1a2a6c",
-                          },
-                          "&.Mui-focused fieldset": {
-                            borderColor: "#1a2a6c",
-                            borderWidth: 2,
-                          },
-                        }
-                      }}
+                      className="w-8 h-10 border border-slate-200 focus:border-slate-400 focus:outline-none rounded-md text-center text-sm font-bold bg-slate-50 focus:bg-white transition-all"
                     />
                   ))}
-                </Box>
-              </Grid>
+                </div>
+              </div>
 
-              <Grid item xs={12}>
-                <AnimatePresence>
-                  {error && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                    >
-                      <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-                <AnimatePresence>
-                  {message && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                    >
-                      <Alert severity="success" sx={{ mb: 2 }}>{message}</Alert>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </Grid>
-              <Grid item xs={12}>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  color="primary"
-                  fullWidth
-                  disabled={loading}
-                  sx={{
-                    borderRadius: "12px",
-                    padding: "12px 0",
-                    fontWeight: 600,
-                    fontSize: "1rem",
-                    textTransform: "none",
-                    boxShadow: "0 4px 12px rgba(26,42,108,0.08)",
-                    mb: 2
-                  }}
-                  startIcon={loading && <CircularProgress size={20} color="inherit" />}
-                >
-                  {loading ? "Registering..." : "Register"}
-                </Button>
-              </Grid>
-              <Grid item xs={12}>
-                <Button
-                  type="button"
-                  variant="outlined"
-                  fullWidth
-                  onClick={googleAuth}
-                  sx={{
-                    borderRadius: "12px",
-                    padding: "10px 0",
-                    fontWeight: 600,
-                    fontSize: "1rem",
-                    textTransform: "none",
-                    color: "#1a2a6c",
-                    borderColor: "#1a2a6c",
-                    mb: 2,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1.5,
-                    background: "#fff",
-                    '&:hover': {
-                      borderColor: "#b21f1f",
-                      color: "#b21f1f",
-                    },
-                  }}
-                  startIcon={<img src={Google} alt="Google" style={{ width: 24, height: 24 }} />}
-                >
-                  Continue with Google
-                </Button>
-              </Grid>
-              <Grid item xs={12}>
-                <Divider sx={{ my: 2 }} />
-                <Typography variant="body2" align="center">
-                  Already have an account?{' '}
-                  <Link to="/login-selection" style={{ color: "#1a2a6c", fontWeight: 600 }}>
-                    Login here
-                  </Link>
-                </Typography>
-              </Grid>
-            </Grid>
+            </div>
+
+            {/* Actions Buttons */}
+            <div className="space-y-3 pt-2">
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs transition-colors shadow-sm disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-slate-400 border-t-white rounded-full animate-spin" />
+                    <span>Creating account profile...</span>
+                  </>
+                ) : (
+                  <span>Register Account</span>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={googleAuth}
+                className="w-full py-2.5 border border-slate-200 hover:border-slate-350 text-slate-700 hover:bg-slate-50 font-bold rounded-lg text-xs transition-all flex items-center justify-center gap-2 active:scale-95"
+              >
+                <span>Google Single Sign-On</span>
+              </button>
+            </div>
+
           </form>
-        </Box>
-      </Card>
-    </motion.div>
+
+          <div className="border-t border-slate-100 pt-4 flex justify-between items-center text-xs">
+            <span className="text-slate-400">Already have an account?</span>
+            <Link to="/login-selection" className="font-bold text-slate-900 hover:underline">
+              Cashier Login
+            </Link>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
   );
 }
 

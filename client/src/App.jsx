@@ -6,7 +6,6 @@ import RegisterPage from './components/RegisterPage';
 import AdminLoginPage from './components/AdminLoginPage';
 import LoginSelectionPage from './components/LoginSelection';
 import VerifyEmailPage from './components/VerifyEmail';
-import GoogleCallbackPage from './components/GoogleCallbackPage';
 import Dashboard from './components/Dashboard';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import ScanPage from './components/ScanPage';
@@ -20,24 +19,24 @@ function App() {
   const theme = createTheme({
     palette: {
       primary: {
-        main: '#2563eb',
-        light: '#60a5fa',
-        dark: '#1e40af',
+        main: '#059669',
+        light: '#34d399',
+        dark: '#047857',
         contrastText: '#ffffff',
       },
       secondary: {
-        main: '#7c3aed',
-        light: '#a78bfa',
-        dark: '#5b21b6',
+        main: '#0f172a',
+        light: '#334155',
+        dark: '#020617',
         contrastText: '#ffffff',
       },
       success: {
-        main: '#10b981',
+        main: '#059669',
         light: '#34d399',
         dark: '#059669',
       },
       error: {
-        main: '#ef4444',
+        main: '#e11d48',
         light: '#f87171',
         dark: '#dc2626',
       },
@@ -51,7 +50,7 @@ function App() {
       },
     },
     typography: {
-      fontFamily: '"Poppins", "Helvetica", "Arial", sans-serif',
+      fontFamily: '"Inter", "Helvetica", "Arial", sans-serif',
       h1: {
         fontSize: '2.5rem',
         fontWeight: 600,
@@ -106,24 +105,20 @@ function App() {
             padding: '12px 24px',
             textTransform: 'none',
             fontWeight: 600,
-            transition: 'all 0.3s ease',
-            '&:hover': {
-              transform: 'translateY(-2px)',
-              boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-            },
+            transition: 'background-color .15s ease, border-color .15s ease, box-shadow .15s ease',
           },
           contained: {
-            background: 'linear-gradient(45deg, #1a2a6c, #b21f1f)',
+            background: '#059669',
             color: 'white',
             '&:hover': {
-              background: 'linear-gradient(45deg, #b21f1f, #1a2a6c)',
+              background: '#047857',
             },
           },
           outlined: {
-            borderColor: '#1a2a6c',
-            color: '#1a2a6c',
+            borderColor: '#059669',
+            color: '#047857',
             '&:hover': {
-              backgroundColor: '#1a2a6c',
+              backgroundColor: '#059669',
               color: 'white',
             },
           },
@@ -169,19 +164,17 @@ function App() {
     <Router>
       <ThemeProvider theme={theme}>
         <div className="app-container">
-          <ConditionalDashboard />
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/admin-login" element={<AdminLoginPage />} />
             <Route path="/login-selection" element={<LoginSelectionPage />} />
             <Route path="/verify-email" element={<VerifyEmailPage />} />
-            <Route path="/google/callback" element={<GoogleCallbackPage />} />
             <Route path="/scan" element={<ScanPage />} />
             <Route path="/payment" element={<PaymentPage />} />
             <Route path="/thank-you" element={<ThankYou />} />
             <Route path='/edit-profile/:id' element={<EditProfile />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard/*" element={<Dashboard />} />
             <Route path="/reset-pin/:token" element={<ResetPinPage />} />
           </Routes>
         </div>
@@ -190,22 +183,7 @@ function App() {
   );
 }
 
-// Conditional rendering of Dashboard based on current path
-function ConditionalDashboard() {
-  const location = useLocation();
-  const dashboardPaths = [
-    "/dashboard",
-    "/user-list",
-    "/product-list",
-    "/total-sales",
-    "/admin-profile",
-  ];
-
-  return dashboardPaths.includes(location.pathname) ? <Dashboard /> : null;
-}
-
 export default App;
-
 
 
 

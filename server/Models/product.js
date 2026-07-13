@@ -25,6 +25,10 @@ const productSchema = new mongoose.Schema(
       enum: ['drinks', 'junkfood','others'],  // Only these categories are allowed
       required: true
     },
+    lowStockThreshold: {
+      type: Number,
+      default: 5,
+    },
     barcode: {
       type: String,
       unique: true,

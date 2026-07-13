@@ -1,77 +1,10 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  Box,
-  Button,
-  TextField,
-  Typography,
-  Alert,
-  IconButton,
-  Tooltip,
-  ThemeProvider,
-  createTheme,
-  InputAdornment,
-  CircularProgress,
-} from "@mui/material";
+import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import LockIcon from "@mui/icons-material/Lock";
-import EmailIcon from "@mui/icons-material/Email";
+import { FaArrowLeft, FaShieldAlt, FaEnvelope, FaLock, FaUsers, FaBox, FaChartLine } from "react-icons/fa";
 import axios from "axios";
-import bsuLogo from "../images/BSU LOGO.png";
-import cotLogo from "../images/COT.png";
 import config from '../config';
-
-// Theme setup
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: "#1a2a6c",
-    },
-    secondary: {
-      main: "#b21f1f",
-    },
-    background: {
-      default: "#f4f6f8",
-    },
-  },
-  typography: {
-    fontFamily: "'Poppins', sans-serif",
-    h5: {
-      fontWeight: 600,
-    },
-    h6: {
-      fontWeight: 500,
-    },
-    body1: {
-      fontWeight: 400,
-    },
-    body2: {
-      fontWeight: 300,
-    },
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          textTransform: "none",
-          borderRadius: "12px",
-          padding: "12px 24px",
-          fontWeight: 600,
-        },
-      },
-    },
-    MuiTextField: {
-      styleOverrides: {
-        root: {
-          "& .MuiOutlinedInput-root": {
-            borderRadius: "12px",
-          },
-        },
-      },
-    },
-  },
-});
+import novaLogo from '../images/nova_logo.png';
 
 const AdminLoginPage = () => {
   const [email, setEmail] = useState("");
@@ -80,7 +13,6 @@ const AdminLoginPage = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -96,23 +28,18 @@ const AdminLoginPage = () => {
 
     try {
       setLoading(true);
+      setErrorMessage("");
       const response = await axios.post(`${config.apiUrl}/api/admin/login`, {
         email,
         pin,
       });
 
-      console.log(response.data); // Check if the token is being returned in the response.
+      console.log(response.data);
 
       if (response.status === 200) {
-
-       console.log(localStorage.getItem("token")); // Check if token is set
-
-        // Store the new token and admin data
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("adminData", JSON.stringify(response.data.admin));
-
-        // Navigate to the dashboard
-        navigate("/dashboard");
+        navigate("/dashboard"); // Redirects to the admin control panel dashboard
       } else {
         setErrorMessage(response.data.message || "Invalid login credentials.");
       }
@@ -134,282 +61,159 @@ const AdminLoginPage = () => {
     }
   };
 
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        duration: 0.5,
-        ease: "easeOut"
-      }
-    }
-  };
-
   return (
-    <ThemeProvider theme={theme}>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "100vh",
-          padding: 3,
-          position: "relative",
-          background: "linear-gradient(135deg, #1a2a6c 0%, #b21f1f 50%, #fdbb2d 100%)",
-          overflow: "hidden",
-        }}
-      >
-        {/* Background Animation */}
-        <motion.div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.3) 100%)",
-            zIndex: 1,
-          }}
-        />
-
-        {/* Back Button */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
-          style={{ position: "absolute", top: 20, left: 20, zIndex: 2 }}
-        >
-          <Tooltip title="Go Back" arrow>
-            <IconButton
-              sx={{
-                bgcolor: "rgba(255,255,255,0.25)",
-                color: "#ffffff",
-                width: "40px",
-                height: "40px",
-                padding: "12px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: "50%",
-                boxShadow: "0 0 15px rgba(255,255,255,0.5)",
-                textShadow: "0 0 12px rgba(255,255,255,0.9), 0 0 20px rgba(255,255,255,0.7)",
-                filter: "brightness(1.5) drop-shadow(0 0 5px rgba(255,255,255,0.8))",
-                transition: "all 0.3s ease",
-                "&:hover": {
-                  bgcolor: "rgba(255,255,255,0.4)",
-                  transform: "translateY(-2px) scale(1.1)",
-                  boxShadow: "0 0 20px rgba(255,255,255,0.7)",
-                  filter: "brightness(1.8) drop-shadow(0 0 8px rgba(255,255,255,0.9))"
-                }
-              }}
-              onClick={() => navigate(-1)}
-            >
-              <ArrowBackIcon fontSize="medium" sx={{ color: "#ffffff" }} />
-            </IconButton>
-          </Tooltip>
-        </motion.div>
-
-        {/* Login Box */}
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          style={{ width: "100%", maxWidth: 500, zIndex: 2 }}
-        >
-          <Box
-            sx={{
-              bgcolor: "white",
-              borderRadius: 5,
-              boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
-              p: 4,
-              textAlign: "center",
-              backdropFilter: "blur(10px)",
-              border: "1px solid rgba(255,255,255,0.2)",
-            }}
+    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row font-sans text-slate-800 antialiased">
+      
+      {/* Left side: Premium Admin panel layout */}
+      <div className="w-full md:w-[420px] bg-slate-900 text-slate-350 p-8 flex flex-col justify-between border-r border-slate-800">
+        
+        {/* Top Logo link */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate(-1)}
+            className="hover:bg-slate-800 p-2 rounded-lg transition-all text-slate-400 hover:text-white"
           >
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-            >
-              {/* Logos */}
+            <FaArrowLeft />
+          </button>
+          <div className="flex items-center gap-2">
+            <div className="bg-white text-slate-900 w-8 h-8 rounded-lg flex items-center justify-center font-bold text-base">
+              A
+            </div>
+            <span className="font-semibold text-slate-100 tracking-tight text-base">
+              Admin Gateway
+            </span>
+          </div>
+        </div>
+
+        {/* Mid marketing text */}
+        <div className="space-y-6 my-12 md:my-0">
+          <div className="flex items-center gap-4">
+            <img src={novaLogo} alt="SUELTO Logo" className="h-14 w-auto object-contain rounded-xl shadow-sm" />
+          </div>
+          <h2 className="text-xl font-bold text-slate-100 tracking-tight">
+            Security Control Console
+          </h2>
+          <p className="text-xs leading-relaxed text-slate-450">
+            Administrative credentials are required to configure product settings, audit registers, evaluate cash flow, and manage employee accounts.
+          </p>
+
+          <div className="space-y-3.5 pt-4 text-xs font-semibold text-slate-400">
+            <div className="flex items-center gap-2.5">
+              <FaUsers className="text-slate-500" />
+              <span>Modify cashiers registry</span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <FaBox className="text-slate-500" />
+              <span>Configure pricing catalog lists</span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <FaChartLine className="text-slate-500" />
+              <span>Review detailed transaction histories</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer info */}
+        <div className="text-[11px] text-slate-500 font-medium">
+          © 2026 SUELTO Admin Panel. SUELTO Retail Operations.
+        </div>
+      </div>
+
+      {/* Right side: Login credentials form */}
+      <div className="flex-1 bg-slate-50 p-6 md:p-12 flex flex-col justify-center items-center">
+        <div className="w-full max-w-md bg-white border border-slate-200 rounded-xl p-6 md:p-8 shadow-sm space-y-6">
+          
+          <div className="text-center md:text-left">
+            <h3 className="font-bold text-slate-900 text-lg flex items-center justify-center md:justify-start gap-2">
+              <FaShieldAlt className="text-slate-700" />
+              <span>Administrator Login</span>
+            </h3>
+            <p className="text-slate-400 text-xs mt-0.5">Please fill in your admin credentials below</p>
+          </div>
+
+          <AnimatePresence>
+            {errorMessage && (
               <motion.div
-                variants={itemVariants}
-                style={{ marginBottom: "24px", display: "flex", justifyContent: "center", gap: "16px" }}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="bg-red-50 border border-red-100 text-red-700 px-3.5 py-2.5 rounded-lg text-xs font-medium text-center"
               >
-                <motion.img
-                  src={bsuLogo}
-                  alt="BSU Logo"
-                  style={{ height: 60 }}
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ duration: 0.3 }}
-                />
-                <motion.img
-                  src={cotLogo}
-                  alt="COT Logo"
-                  style={{ height: 60 }}
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ duration: 0.3 }}
-                />
+                {errorMessage}
               </motion.div>
+            )}
+          </AnimatePresence>
 
-              {/* Titles */}
-              <motion.div variants={itemVariants}>
-                <Typography
-                  variant="h5"
-                  gutterBottom
-                  sx={{
-                    fontWeight: 700,
-                    background: "linear-gradient(45deg, #1a2a6c, #b21f1f)",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                  }}
-                >
-                  Bukidnon State University
-                </Typography>
-                <Typography
-                  variant="subtitle1"
-                  color="text.secondary"
-                  gutterBottom
-                  sx={{ fontWeight: 500 }}
-                >
-                  College of Technologies
-                </Typography>
-                <Typography
-                  variant="h6"
-                  gutterBottom
-                  sx={{
-                    color: "primary.main",
-                    fontWeight: 600,
-                    marginTop: "16px",
-                  }}
-                >
-                  Markie Store Admin
-                </Typography>
-              </motion.div>
-
-              {/* Error Alert */}
-              <AnimatePresence>
-                {errorMessage && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <Alert
-                      severity="error"
-                      sx={{
-                        mb: 2,
-                        fontSize: "0.9rem",
-                        fontWeight: 500,
-                        borderRadius: "12px",
-                      }}
-                    >
-                      {errorMessage}
-                    </Alert>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Login Form */}
-              <motion.form
-                variants={itemVariants}
-                onSubmit={handleSubmit}
-                style={{ marginTop: "24px" }}
-              >
-                <TextField
-                  fullWidth
-                  label="Email"
-                  variant="outlined"
+          <form onSubmit={handleSubmit} className="space-y-4">
+            
+            {/* Email Address */}
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-semibold text-slate-550 block uppercase tracking-wider">Email Address</label>
+              <div className="relative">
+                <FaEnvelope className="absolute left-3.5 top-3.5 text-slate-400 text-sm" />
+                <input
+                  type="email"
+                  required
+                  placeholder="admin@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  margin="normal"
-                  required
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <EmailIcon color="primary" />
-                      </InputAdornment>
-                    ),
-                  }}
+                  className="w-full pl-11 pr-4 py-2.5 border border-slate-200 focus:border-slate-450 focus:outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
                 />
-                <TextField
-                  fullWidth
-                  label="PIN"
-                  variant="outlined"
+              </div>
+            </div>
+
+            {/* PIN Code */}
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-semibold text-slate-550 block uppercase tracking-wider">Security PIN</label>
+              <div className="relative">
+                <FaLock className="absolute left-3.5 top-3.5 text-slate-400 text-sm" />
+                <input
                   type="password"
+                  required
+                  placeholder="Enter 6-digit PIN"
                   value={pin}
                   onChange={(e) => {
-                    // Only allow numeric input
                     const numericValue = e.target.value.replace(/\D/g, '');
-                    // Limit to 6 digits
-                    if (numericValue.length <= 6) {
-                      setPin(numericValue);
-                    }
+                    if (numericValue.length <= 6) setPin(numericValue);
                   }}
-                  margin="normal"
-                  required
-                  inputProps={{
-                    maxLength: 6,
-                    inputMode: "numeric",
-                    pattern: "[0-9]*"
-                  }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <LockIcon color="primary" />
-                      </InputAdornment>
-                    ),
-                  }}
-                  helperText="Enter a 6-digit PIN"
+                  maxLength={6}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  className="w-full pl-11 pr-4 py-2.5 border border-slate-200 focus:border-slate-450 focus:outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold tracking-wider transition-all"
                 />
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  style={{ marginTop: "24px" }}
-                >
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    fullWidth
-                    disabled={loading}
-                    sx={{
-                      padding: "12px 24px",
-                      borderRadius: "12px",
-                      textTransform: "none",
-                      transition: "all 0.3s ease",
-                      "&:hover": {
-                        transform: "translateY(-2px)",
-                      },
-                    }}
-                  >
-                    {loading ? (
-                      <CircularProgress size={24} color="inherit" />
-                    ) : (
-                      "Login"
-                    )}
-                  </Button>
-                </motion.div>
-              </motion.form>
-            </motion.div>
-          </Box>
-        </motion.div>
-      </Box>
-    </ThemeProvider>
+              </div>
+              <span className="text-[10px] text-slate-450 block pl-1">Must be exactly 6 numeric digits</span>
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs transition-colors shadow-sm disabled:opacity-50 flex items-center justify-center gap-2 mt-6"
+            >
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-slate-400 border-t-white rounded-full animate-spin" />
+                  <span>Authenticating Gateway...</span>
+                </>
+              ) : (
+                <span>Access Console</span>
+              )}
+            </button>
+
+          </form>
+
+          <div className="border-t border-slate-100 pt-4 flex justify-between items-center text-xs">
+            <span className="text-slate-400">Not an administrator?</span>
+            <Link to="/login-selection" className="font-bold text-slate-900 hover:underline">
+              Cashier Login
+            </Link>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
   );
 };
 

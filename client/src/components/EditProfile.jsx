@@ -2,28 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Box,
-  Button,
-  TextField,
-  Typography,
-  Avatar,
-  IconButton,
-  Tooltip,
-  CircularProgress,
-  Alert,
-  Snackbar,
-  useTheme,
-  useMediaQuery,
-} from '@mui/material';
-import {
-  PhotoCamera,
-  Save,
-  ArrowBack,
-  Email,
-  Lock,
-  Person,
-} from '@mui/icons-material';
+import { FaUser, FaSave, FaCamera, FaEnvelope, FaLock, FaCheckCircle, FaExclamationCircle, FaArrowLeft } from 'react-icons/fa';
 import { uploadToCloudinary } from '../config/cloudinary';
 import config from '../config';
 
@@ -41,14 +20,12 @@ function EditProfile() {
   const [success, setSuccess] = useState('');
   const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     const fetchUserData = async () => {
       const token = localStorage.getItem('token');
       if (!token) {
-        navigate('/login');
+        navigate('/login-selection');
         return;
       }
 
@@ -64,7 +41,7 @@ function EditProfile() {
         console.error('Error fetching user data:', err);
         setError('Failed to load user data. Please log in again.');
         setLoading(false);
-        navigate('/login');
+        navigate('/login-selection');
       }
     };
 
@@ -140,293 +117,170 @@ function EditProfile() {
     }
   };
 
-  const handleBack = () => {
-    navigate(-1);
-  };
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        duration: 0.5,
-        ease: "easeOut"
-      }
-    }
-  };
+  if (loading) {
+    return (
+      <div className="flex flex-col justify-center items-center py-20 gap-3 min-h-screen bg-slate-50">
+        <div className="w-8 h-8 border-3 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
+        <span className="text-xs font-semibold text-slate-500">Retrieving cashier profile settings...</span>
+      </div>
+    );
+  }
 
   return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-      style={{
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, #1a2a6c 0%, #b21f1f 50%, #fdbb2d 100%)",
-        padding: "20px",
-      }}
-    >
-      <Box
-        sx={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: "radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.1) 100%)",
-          pointerEvents: "none",
-        }}
-      />
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-800 flex items-center justify-center p-6 antialiased">
+      <div className="w-full max-w-xl bg-white border border-slate-200 rounded-xl p-6 md:p-8 shadow-sm space-y-6">
+        
+        {/* Back and title bar */}
+        <div className="flex items-center gap-3 pb-2 border-b border-slate-100">
+          <button
+            onClick={() => navigate(-1)}
+            className="hover:bg-slate-100 p-2 rounded-lg text-slate-550 hover:text-slate-800 transition-all border border-slate-200"
+          >
+            <FaArrowLeft className="text-xs" />
+          </button>
+          <div>
+            <h2 className="text-base font-bold text-slate-900">Edit Cashier Profile</h2>
+            <p className="text-[10px] text-slate-400">Configure personal account details and photo.</p>
+          </div>
+        </div>
 
-      <Box
-        sx={{
-          position: "relative",
-          maxWidth: "800px",
-          margin: "0 auto",
-          backgroundColor: "rgba(255, 255, 255, 0.95)",
-          borderRadius: "24px",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
-          backdropFilter: "blur(10px)",
-          overflow: "hidden",
-          padding: isMobile ? "20px" : "40px",
-        }}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            marginBottom: "30px",
-          }}
-        >
-          <IconButton
-            onClick={handleBack}
-            sx={{
-              marginRight: "16px",
-              color: "#1a2a6c",
-              "&:hover": {
-                backgroundColor: "rgba(26, 42, 108, 0.1)",
-              },
-            }}
-          >
-            <ArrowBack />
-          </IconButton>
-          <Typography
-            variant="h4"
-            sx={{
-              fontWeight: "600",
-              background: "linear-gradient(45deg, #1a2a6c, #b21f1f)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}
-          >
-            Edit Profile
-          </Typography>
-        </Box>
-
-        {loading ? (
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              minHeight: "400px",
-            }}
-          >
-            <CircularProgress />
-          </Box>
-        ) : (
-          <motion.form
-            variants={itemVariants}
-            onSubmit={handleSubmit}
-            style={{ display: "flex", flexDirection: "column", gap: "24px" }}
-          >
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: "16px",
-              }}
-            >
-              <Box
-                sx={{
-                  position: "relative",
-                  width: "120px",
-                  height: "120px",
-                }}
-              >
-                <Avatar
-                  src={previewImage}
-                  sx={{
-                    width: "100%",
-                    height: "100%",
-                    border: "4px solid #1a2a6c",
-                  }}
-                />
-                <Tooltip title="Change Photo">
-                  <IconButton
-                    component="label"
-                    sx={{
-                      position: "absolute",
-                      bottom: 0,
-                      right: 0,
-                      backgroundColor: "#1a2a6c",
-                      color: "white",
-                      "&:hover": {
-                        backgroundColor: "#b21f1f",
-                      },
-                    }}
-                  >
+        <form onSubmit={handleSubmit} className="space-y-6">
+          
+          {/* Picture Upload Grid */}
+          <div className="flex flex-col items-center space-y-4">
+            <div className="relative group cursor-pointer">
+              <div className="w-24 h-24 rounded-full border border-slate-250 overflow-hidden shadow-sm flex items-center justify-center bg-slate-50 relative">
+                {previewImage ? (
+                  <img src={previewImage} alt="Cashier Profile Preview" className="w-full h-full object-cover" />
+                ) : (
+                  <FaUser className="text-slate-400 text-2xl" />
+                )}
+              </div>
+              
               <input
                 type="file"
-                      hidden
                 accept="image/*"
                 onChange={handleImageChange}
-                    />
-                    <PhotoCamera />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-            </Box>
+                style={{ display: "none" }}
+                id="cashier-photo-input"
+              />
+              <label htmlFor="cashier-photo-input" className="absolute bottom-0.5 right-0.5 bg-slate-900 hover:bg-slate-800 text-white p-2 rounded-full cursor-pointer shadow border border-slate-800 transition-all hover:scale-105 active:scale-95">
+                <FaCamera className="text-[10px]" />
+              </label>
+            </div>
+          </div>
 
-            <TextField
-              label="First Name"
+          {/* Core Text Inputs */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-[11px] font-semibold text-slate-500 block uppercase">First Name</label>
+              <input
+                type="text"
                 name="firstname"
+                required
                 value={user.firstname}
                 onChange={handleInputChange}
-              fullWidth
-              InputProps={{
-                startAdornment: <Person sx={{ color: "#1a2a6c", mr: 1 }} />,
-              }}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: "12px",
-                },
-              }}
-            />
-
-            <TextField
-              label="Last Name"
+                className="w-full px-3 py-2.5 border border-slate-200 focus:border-slate-450 focus:outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[11px] font-semibold text-slate-500 block uppercase">Last Name</label>
+              <input
+                type="text"
                 name="lastname"
+                required
                 value={user.lastname}
                 onChange={handleInputChange}
-              fullWidth
-              InputProps={{
-                startAdornment: <Person sx={{ color: "#1a2a6c", mr: 1 }} />,
-              }}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: "12px",
-                },
-              }}
-            />
+                className="w-full px-3 py-2.5 border border-slate-200 focus:border-slate-450 focus:outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
+              />
+            </div>
+          </div>
 
-            <TextField
-              label="Email"
-                name="email"
+          <div className="space-y-1">
+            <label className="text-[11px] font-semibold text-slate-500 block uppercase">Email Address (Read-only)</label>
+            <div className="relative">
+              <FaEnvelope className="absolute left-3.5 top-3.5 text-slate-400 text-xs" />
+              <input
+                type="email"
+                readOnly
                 value={user.email}
-              fullWidth
-              InputProps={{
-                startAdornment: <Email sx={{ color: "#1a2a6c", mr: 1 }} />,
-                readOnly: true,
-              }}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: "12px",
-                },
-              }}
-            />
+                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg text-xs bg-slate-100 font-semibold cursor-not-allowed text-slate-450"
+              />
+            </div>
+          </div>
 
-            <TextField
-              label="New PIN (optional)"
-              name="pin"
-    type="password"
-    value={pin}
-    onChange={(e) => {
-      const value = e.target.value;
-      if (/^\d*$/.test(value) && value.length <= 6) {
-        setPin(value);
-      }
-    }}
-              fullWidth
-              InputProps={{
-                startAdornment: <Lock sx={{ color: "#1a2a6c", mr: 1 }} />,
-              }}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: "12px",
-                },
-              }}
-              inputProps={{
-                maxLength: 6,
-                pattern: "[0-9]*",
-                inputMode: "numeric",
-              }}
-            />
+          <div className="space-y-1">
+            <label className="text-[11px] font-semibold text-slate-500 block uppercase">New Cashier PIN (Optional)</label>
+            <div className="relative">
+              <FaLock className="absolute left-3.5 top-3.5 text-slate-400 text-xs" />
+              <input
+                type="password"
+                name="pin"
+                placeholder="Leave blank to keep existing PIN"
+                value={pin}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (/^\d*$/.test(val) && val.length <= 6) setPin(val);
+                }}
+                maxLength={6}
+                inputMode="numeric"
+                pattern="[0-9]*"
+                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 focus:border-slate-450 focus:outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
+              />
+            </div>
+          </div>
 
-            <AnimatePresence>
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                >
-                  <Alert severity="error" sx={{ borderRadius: "12px" }}>
-                    {error}
-                  </Alert>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <AnimatePresence>
-              {success && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                >
-                  <Alert severity="success" sx={{ borderRadius: "12px" }}>
-                    {success}
-                  </Alert>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <Button
-              type="submit"
-              variant="contained"
-              disabled={saving}
-              startIcon={saving ? <CircularProgress size={20} /> : <Save />}
-              sx={{
-                padding: "12px 24px",
-                borderRadius: "12px",
-                textTransform: "none",
-                background: "linear-gradient(45deg, #1a2a6c, #b21f1f)",
-                "&:hover": {
-                  background: "linear-gradient(45deg, #b21f1f, #1a2a6c)",
-                },
-              }}
+          {/* Action buttons */}
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={handleBack}
+              className="px-4 py-2.5 border border-slate-200 rounded-lg text-slate-650 hover:bg-slate-50 text-xs font-bold transition-all active:scale-95"
             >
-              {saving ? "Saving..." : "Save Changes"}
-            </Button>
-          </motion.form>
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="flex items-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs transition-colors shadow-sm disabled:opacity-50"
+            >
+              <FaSave />
+              <span>{saving ? "Saving Changes..." : "Save Changes"}</span>
+            </button>
+          </div>
+
+        </form>
+
+      </div>
+
+      <AnimatePresence>
+        {success && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 12 }}
+            className="fixed bottom-6 right-6 bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-lg text-xs font-semibold shadow flex items-center gap-2 z-55"
+          >
+            <FaCheckCircle className="text-emerald-500 text-sm" />
+            <span>{success}</span>
+          </motion.div>
         )}
-      </Box>
-    </motion.div>
+
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 12 }}
+            className="fixed bottom-6 right-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-xs font-semibold shadow flex items-center gap-2 z-55"
+          >
+            <FaExclamationCircle className="text-red-500 text-sm" />
+            <span>{error}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+    </div>
   );
 }
 
 export default EditProfile;
-

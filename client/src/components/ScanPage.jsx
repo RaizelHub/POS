@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaBox, FaShoppingCart, FaTrash } from 'react-icons/fa';
-import { Grid, Badge } from '@mui/material';
+import { FaBox, FaShoppingCart, FaTrash, FaUserCircle, FaEdit, FaBarcode, FaSignOutAlt, FaCheckCircle, FaClock, FaPlus, FaMinus, FaSearch, FaChevronRight, FaMoneyBillWave, FaReceipt } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import config from '../config';
+import novaLogo from '../images/nova_logo.png';
 import {
   Box,
   Button,
@@ -12,8 +12,6 @@ import {
   IconButton,
   Tooltip,
   CircularProgress,
-  useTheme,
-  useMediaQuery,
   Alert,
   Snackbar,
   List,
@@ -22,16 +20,6 @@ import {
   Divider,
   Paper,
 } from '@mui/material';
-import {
-  FaUserCircle,
-  FaEdit,
-  FaBarcode,
-  FaSignOutAlt,
-  FaCheckCircle,
-  FaClock,
-  FaPlus,
-  FaMinus,
-} from 'react-icons/fa';
 import {
   completeDraft,
   createActiveDraftId,
@@ -44,12 +32,12 @@ import {
   saveDraftLocal,
   syncPendingDrafts,
 } from '../utils/draftStorage';
+import TransactionsLedger from './TransactionsLedger';
 
 function ScanPage() {
   const [user, setUser] = useState(null);
   const [barcode, setBarcode] = useState('');
   const [error, setError] = useState('');
-  const [showScanner, setShowScanner] = useState(false);
   const [paidItems, setPaidItems] = useState([]);
   const [payLaterItems, setPayLaterItems] = useState([]);
   const [selectedPayLaterItem, setSelectedPayLaterItem] = useState(null);
@@ -59,18 +47,227 @@ function ScanPage() {
   const navigate = useNavigate();
   const inputRef = useRef();
   const [loading, setLoading] = useState(true);
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [availableProducts, setAvailableProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(true);
 
   // Cart state
   const [cart, setCart] = useState([]);
-  const [showCartModal, setShowCartModal] = useState(false);
   const [restoreDrafts, setRestoreDrafts] = useState([]);
   const [showRestoreModal, setShowRestoreModal] = useState(false);
   const cartRecoveryReadyRef = useRef(false);
   const cartSaveTimerRef = useRef(null);
+
+  // Redesign filter and search states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState('all');
+
+  // Shift state
+  const [activeShift, setActiveShift] = useState(null);
+  const [showShiftModal, setShowShiftModal] = useState(false);
+  const [startingCash, setStartingCash] = useState(1000);
+  const [showCloseShiftModal, setShowCloseShiftModal] = useState(false);
+  const [endingCash, setEndingCash] = useState(0);
+
+  // Cash Adjustment drawer states
+  const [showCashAdjustmentModal, setShowCashAdjustmentModal] = useState(false);
+  const [cashAdjustmentType, setCashAdjustmentType] = useState('Cash-In');
+  const [cashAdjustmentAmount, setCashAdjustmentAmount] = useState(0);
+  const [cashAdjustmentReason, setCashAdjustmentReason] = useState('');
+  const [loggingAdjustment, setLoggingAdjustment] = useState(false);
+  const [showLedgerModal, setShowLedgerModal] = useState(false);
+
+  // Customer & Loyalty state
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [customerSearchQuery, setCustomerSearchQuery] = useState('');
+  const [customerResults, setCustomerResults] = useState([]);
+  const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
+  const [newCustomerName, setNewCustomerName] = useState('');
+  const [newCustomerPhone, setNewCustomerPhone] = useState('');
+  const [newCustomerEmail, setNewCustomerEmail] = useState('');
+
+  const handleCustomerSearch = async (val) => {
+    setCustomerSearchQuery(val);
+    if (!val.trim()) {
+      setCustomerResults([]);
+      return;
+    }
+    try {
+      const res = await fetch(`${config.apiUrl}/api/customers/search?query=${val}`);
+      if (res.ok) {
+        const data = await res.json();
+        setCustomerResults(data);
+      }
+    } catch (err) {
+      console.error("Error searching customers:", err);
+    }
+  };
+
+  const handleLogCashAdjustment = async () => {
+    if (!activeShift) {
+      setSnackbarMessage("Error: No active shift started.");
+      setSnackbarOpen(true);
+      return;
+    }
+    if (cashAdjustmentAmount <= 0) {
+      setSnackbarMessage("Error: Amount must be greater than zero.");
+      setSnackbarOpen(true);
+      return;
+    }
+    if (!cashAdjustmentReason.trim()) {
+      setSnackbarMessage("Error: A reason is required.");
+      setSnackbarOpen(true);
+      return;
+    }
+
+    try {
+      setLoggingAdjustment(true);
+      const res = await fetch(`${config.apiUrl}/api/shifts/${activeShift._id}/cash-logs`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cashierId: user._id,
+          type: cashAdjustmentType,
+          amount: Number(cashAdjustmentAmount),
+          reason: cashAdjustmentReason
+        })
+      });
+
+      if (res.ok) {
+        setSnackbarMessage("Cash drawer adjustment logged successfully!");
+        setSnackbarOpen(true);
+        setShowCashAdjustmentModal(false);
+      } else {
+        const errData = await res.json();
+        setSnackbarMessage(`Error: ${errData.message || 'Failed to log adjustment.'}`);
+        setSnackbarOpen(true);
+      }
+    } catch (err) {
+      console.error("Error logging cash adjustment:", err);
+      setSnackbarMessage("Error connecting to server.");
+      setSnackbarOpen(true);
+    } finally {
+      setLoggingAdjustment(false);
+    }
+  };
+
+  const handleAddCustomer = async () => {
+    if (!newCustomerName.trim()) {
+      setError("Customer name is required.");
+      return;
+    }
+    try {
+      const res = await fetch(`${config.apiUrl}/api/customers`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newCustomerName,
+          phone: newCustomerPhone,
+          email: newCustomerEmail,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to create customer.");
+      }
+      setSelectedCustomer(data.customer);
+      setShowAddCustomerModal(false);
+      setNewCustomerName('');
+      setNewCustomerPhone('');
+      setNewCustomerEmail('');
+      setCustomerSearchQuery('');
+      setCustomerResults([]);
+      setSnackbarMessage("Customer profile registered successfully!");
+      setSnackbarOpen(true);
+      setError('');
+    } catch (err) {
+      console.error("Error registering customer:", err);
+      setError(err.message);
+    }
+  };
+
+  const checkActiveShift = async (userId) => {
+    try {
+      const res = await fetch(`${config.apiUrl}/api/shifts/active/${userId}`);
+      if (res.ok) {
+        const shiftData = await res.json();
+        if (shiftData) {
+          setActiveShift(shiftData);
+          localStorage.setItem('activeShiftId', shiftData._id);
+          setShowShiftModal(false);
+        } else {
+          setActiveShift(null);
+          localStorage.removeItem('activeShiftId');
+          setShowShiftModal(true);
+        }
+      }
+    } catch (err) {
+      console.error("Error checking active shift:", err);
+    }
+  };
+
+  const handleOpenShift = async () => {
+    if (!user?._id || startingCash === undefined || startingCash < 0) {
+      setError('Please enter a valid starting cash float.');
+      return;
+    }
+    try {
+      const response = await fetch(`${config.apiUrl}/api/shifts/open`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cashierId: user._id,
+          cashierName: `${user.firstname} ${user.lastname}`,
+          startingCash: Number(startingCash),
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to open shift.');
+      }
+      setActiveShift(data.shift);
+      localStorage.setItem('activeShiftId', data.shift._id);
+      setShowShiftModal(false);
+      setSnackbarMessage('Shift started successfully!');
+      setSnackbarOpen(true);
+      setError('');
+    } catch (err) {
+      console.error('Error starting shift:', err);
+      setError(err.message);
+    }
+  };
+
+  const handleCloseShift = async () => {
+    const shiftId = activeShift?._id;
+    if (!shiftId || endingCash === undefined || endingCash < 0) {
+      setError('Please enter a valid ending cash amount.');
+      return;
+    }
+    try {
+      const response = await fetch(`${config.apiUrl}/api/shifts/close`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          shiftId,
+          endingCash: Number(endingCash),
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to close shift.');
+      }
+      setActiveShift(null);
+      localStorage.removeItem('activeShiftId');
+      setShowCloseShiftModal(false);
+      setSnackbarMessage(`Shift closed successfully! Discrepancy: ₱${data.discrepancy.toFixed(2)}`);
+      setSnackbarOpen(true);
+      setError('');
+      // Trigger new shift dialog
+      setShowShiftModal(true);
+    } catch (err) {
+      console.error('Error closing shift:', err);
+      setError(err.message);
+    }
+  };
 
   // Fetch user data and transactions
   const fetchUserData = async () => {
@@ -85,7 +282,6 @@ function ScanPage() {
     try {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
-      // Fetch transactions from the API after user data is set
       await fetchTransactions(parsedUser._id);
     } catch (err) {
       console.error('Error parsing user data:', err);
@@ -94,7 +290,7 @@ function ScanPage() {
   };
 
   const fetchTransactions = async (userId) => {
-    setLoading(true); // Set loading state to true while fetching data
+    setLoading(true);
 
     try {
       const response = await fetch(`${config.apiUrl}/api/${userId}/transactions`);
@@ -104,10 +300,9 @@ function ScanPage() {
       }
 
       const data = await response.json();
-      console.log('Fetched Transactions:', data); // Debug log for transactions
+      console.log('Fetched Transactions:', data);
 
       if (data?.paid && data?.payLater) {
-        // Filter the products based on paymentStatus
         const paidItems = data.paid.filter(item => item.paymentStatus === 'Paid');
         const payLaterItems = data.payLater.filter(item => item.paymentStatus === 'Pay Later');
 
@@ -123,7 +318,7 @@ function ScanPage() {
       setPaidItems([]);
       setPayLaterItems([]);
     } finally {
-      setLoading(false); // Set loading to false after the data fetch is done
+      setLoading(false);
     }
   };
 
@@ -135,11 +330,10 @@ function ScanPage() {
     }
 
     if (user) {
-      // Fetch transactions only if the user exists
       fetchTransactions(user._id);
       fetchAvailableProducts();
+      checkActiveShift(user._id);
     } else {
-      // Fetch user data to populate the user state
       fetchUserData();
     }
   }, [navigate, user]);
@@ -227,17 +421,6 @@ function ScanPage() {
     }
   };
 
-
-
-  const handleScanClick = () => {
-    setShowScanner(true);
-    setTimeout(() => inputRef.current?.focus(), 0);
-  };
-
-  const handleBlur = () => {
-    setShowScanner(false);
-  };
-
   const fetchProductDetails = async () => {
     const trimmedBarcode = barcode.trim();
 
@@ -259,16 +442,13 @@ function ScanPage() {
       const product = await response.json();
       console.log('Successfully fetched product:', product);
 
-      // Check if product is in stock
       if (product.quantity <= 0) {
         setError(`${product.name} is out of stock.`);
         return;
       }
 
-      // Add product to cart with quantity 1
       addToCart(product);
 
-      // Show enhanced success message with price
       setSnackbarMessage(`${product.name} (₱${product.price.toFixed(2)}) added to cart!`);
       setSnackbarOpen(true);
       setError('');
@@ -276,40 +456,38 @@ function ScanPage() {
       console.error('Error fetching product:', error);
       const errorMessage = error.message || 'Failed to fetch product details. Please try again.';
       setError(errorMessage);
-
-      // Show error in snackbar
       setSnackbarMessage(`Error: ${errorMessage}`);
       setSnackbarOpen(true);
     } finally {
       setBarcode('');
-      setShowScanner(false);
     }
   };
 
-  // Function to add product to cart
   const addToCart = (product) => {
     setCart(prevCart => {
-      // Check if product is already in cart
       const existingProductIndex = prevCart.findIndex(item => item.product._id === product._id);
 
       if (existingProductIndex >= 0) {
-        // Product exists, increment quantity
+        const currentQtyInCart = prevCart[existingProductIndex].quantity;
+        if (currentQtyInCart >= product.quantity) {
+          setError(`Cannot add more of ${product.name}. Only ${product.quantity} in stock.`);
+          setSnackbarMessage(`Warning: Only ${product.quantity} in stock.`);
+          setSnackbarOpen(true);
+          return prevCart;
+        }
         const updatedCart = [...prevCart];
         updatedCart[existingProductIndex].quantity += 1;
         return updatedCart;
       } else {
-        // Product doesn't exist, add new item
         return [...prevCart, { product, quantity: 1 }];
       }
     });
   };
 
-  // Function to remove product from cart
   const removeFromCart = (productId) => {
     setCart(prevCart => prevCart.filter(item => item.product._id !== productId));
   };
 
-  // Function to update product quantity in cart
   const updateCartItemQuantity = (productId, newQuantity) => {
     if (newQuantity <= 0) {
       removeFromCart(productId);
@@ -319,7 +497,6 @@ function ScanPage() {
     setCart(prevCart => {
       return prevCart.map(item => {
         if (item.product._id === productId) {
-          // Make sure we don't exceed available stock
           const maxQuantity = item.product.quantity;
           const safeQuantity = Math.min(newQuantity, maxQuantity);
           return { ...item, quantity: safeQuantity };
@@ -329,10 +506,16 @@ function ScanPage() {
     });
   };
 
-  // Function to proceed to checkout
   const proceedToCheckout = () => {
+    if (!activeShift) {
+      setError('You must start a shift to proceed.');
+      setSnackbarMessage('Error: Start a cashier shift first.');
+      setSnackbarOpen(true);
+      setShowShiftModal(true);
+      return;
+    }
     if (cart.length === 0) {
-      setError('Your cart is empty. Please scan products first.');
+      setError('Your cart is empty. Please scan or select products first.');
       return;
     }
 
@@ -341,13 +524,15 @@ function ScanPage() {
         cart,
         draftType: DRAFT_TYPES.SAVED_CART,
         draftId: createActiveDraftId(user._id, DRAFT_TYPES.SAVED_CART),
+        shiftId: activeShift._id,
+        customer: selectedCustomer,
       },
     });
   };
 
   const handleHoldOrder = async () => {
     if (!user?._id || cart.length === 0) {
-      setError('Your cart is empty. Please scan products first.');
+      setError('Your cart is empty. Please scan or select products first.');
       return;
     }
 
@@ -372,8 +557,7 @@ function ScanPage() {
       });
 
       setCart([]);
-      setShowCartModal(false);
-      setSnackbarMessage('Order held successfully. It can be restored on this cashier account.');
+      setSnackbarMessage('Order held successfully.');
       setSnackbarOpen(true);
     } catch (error) {
       console.error('Unable to hold order:', error);
@@ -399,7 +583,6 @@ function ScanPage() {
       return;
     }
 
-    setShowCartModal(true);
     setSnackbarMessage('Previous transaction restored.');
     setSnackbarOpen(true);
   };
@@ -436,23 +619,25 @@ function ScanPage() {
   };
 
   const handlePayLaterClick = (item) => {
-    console.log('Selected Pay Later Item:', item);
     setSelectedPayLaterItem(item);
     setShowPaymentModal(true);
   };
 
   const handleConfirmPayment = async () => {
-    if (!selectedPayLaterItem) {
-      console.error('No item selected for payment.');
+    if (!activeShift) {
+      setError('You must start a shift to proceed.');
+      setSnackbarMessage('Error: Start a cashier shift first.');
+      setSnackbarOpen(true);
+      setShowShiftModal(true);
       return;
     }
+    if (!selectedPayLaterItem) return;
 
     const payload = {
       userId: user?._id,
       itemId: selectedPayLaterItem?._id,
+      shiftId: activeShift?._id,
     };
-
-    console.log('Payload being sent:', payload);
 
     try {
       const response = await fetch(`${config.apiUrl}/api/transactions/pay-later/confirm`, {
@@ -467,23 +652,14 @@ function ScanPage() {
       }
 
       const data = await response.json();
-      console.log('Payment Confirmed:', data);
-
-      // Update the lists
       setPayLaterItems((prev) => prev.filter((i) => i._id !== selectedPayLaterItem._id));
       setPaidItems((prev) => [...prev, selectedPayLaterItem]);
-
-      // Close the modal
       setShowPaymentModal(false);
 
-      // Store the item name for the success message
       const itemName = selectedPayLaterItem.name;
       const itemPrice = selectedPayLaterItem.price.toFixed(2);
-
-      // Reset the selected item
       setSelectedPayLaterItem(null);
 
-      // Show success message with item details
       setSnackbarMessage(`Payment successful! ₱${itemPrice} paid for ${itemName}`);
       setSnackbarOpen(true);
     } catch (error) {
@@ -493,777 +669,808 @@ function ScanPage() {
     }
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2
-      }
-    }
-  };
+  // Redesign custom logic: Filter product list by category and search query
+  const filteredProducts = availableProducts.filter((product) => {
+    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.barcode.includes(searchQuery);
+    const matchesCategory = activeCategory === 'all' || product.category === activeCategory;
+    return matchesSearch && matchesCategory;
+  });
 
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        duration: 0.5,
-        ease: "easeOut"
-      }
-    }
-  };
+  const cartTotal = cart.reduce((total, item) => total + (item.product.price * item.quantity), 0);
 
   return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-      style={{
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, #1a2a6c 0%, #b21f1f 50%, #fdbb2d 100%)",
-        padding: "20px",
-      }}
-    >
-      <Box
-        sx={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: "radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.1) 100%)",
-          pointerEvents: "none",
-        }}
-      />
-
-      <Box
-        sx={{
-          position: "relative",
-          maxWidth: "1400px",
-          margin: "0 auto",
-          backgroundColor: "rgba(255, 255, 255, 0.95)",
-          borderRadius: "24px",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
-          backdropFilter: "blur(10px)",
-          overflow: "hidden",
-        }}
-      >
-        <Box
-          sx={{
-            position: "absolute",
-            top: "20px",
-            right: "20px",
-            zIndex: 1,
-            display: "flex",
-            gap: 2
-          }}
-        >
-          <Tooltip title={`Shopping Cart (${cart.length})`}>
-            <IconButton
-              onClick={() => setShowCartModal(true)}
-              sx={{
-                backgroundColor: "rgba(25, 118, 210, 0.1)",
-                color: "#1976d2",
-                "&:hover": {
-                  backgroundColor: "rgba(25, 118, 210, 0.2)",
-                },
-              }}
-            >
-              <Badge badgeContent={cart.length} color="primary">
-                <FaShoppingCart />
-              </Badge>
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Logout">
-            <IconButton
-              onClick={handleLogout}
-              sx={{
-                backgroundColor: "rgba(244, 67, 54, 0.1)",
-                color: "#f44336",
-                "&:hover": {
-                  backgroundColor: "rgba(244, 67, 54, 0.2)",
-                },
-              }}
-            >
-              <FaSignOutAlt />
-            </IconButton>
-          </Tooltip>
-        </Box>
-
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: isMobile ? "column" : "row",
-            minHeight: "100vh",
-          }}
-        >
-          {/* Left Section */}
-          <motion.div
-            variants={itemVariants}
-            style={{
-              flex: 1,
-              padding: "30px",
-              background: "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)",
-            }}
+    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans">
+      {/* Top Navbar */}
+      <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
+        <div className="flex items-center gap-3">
+          <img src={novaLogo} alt="SUELTO Logo" className="h-8 w-auto object-contain rounded-lg" />
+          <h1 className="font-bold text-slate-900 tracking-tight text-lg">
+            SUELTO POS Console
+          </h1>
+        </div>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={handleEditProfile}
+            className="flex items-center gap-2 hover:bg-slate-50 border border-transparent hover:border-slate-200 px-3 py-1.5 rounded-lg transition-all"
           >
-            {/* User Section */}
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                marginBottom: "30px",
-                padding: "20px",
-                backgroundColor: "white",
-                borderRadius: "16px",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-              }}
-            >
-              {user?.image ? (
-                <Box
-                  component="img"
-                  src={user.image}
-                  alt="User"
-                  sx={{
-                    width: 80,
-                    height: 80,
-                    borderRadius: "50%",
-                    objectFit: "cover",
-                    border: "4px solid #1a2a6c",
-                    marginRight: "20px",
-                  }}
-                />
-              ) : (
-                <FaUserCircle
-                  style={{
-                    fontSize: "80px",
-                    color: "#1a2a6c",
-                    marginRight: "20px",
-                  }}
-                />
-              )}
-              <Box>
-                <Typography
-                  variant="h5"
-                  sx={{
-                    fontWeight: "600",
-                    color: "#333",
-                    marginBottom: "8px",
-                  }}
-                >
-                  {user?.firstname} {user?.lastname}
-                </Typography>
-                <Button
-                  startIcon={<FaEdit />}
-                  onClick={handleEditProfile}
-                  sx={{
-                    borderRadius: "12px",
-                    textTransform: "none",
-                    color: "#1a2a6c",
-                    borderColor: "#1a2a6c",
-                    "&:hover": {
-                      backgroundColor: "#1a2a6c",
-                      color: "white",
-                    },
-                  }}
-                >
-                  Edit Profile
-                </Button>
-              </Box>
-            </Box>
-
-            {/* Items Section */}
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: isMobile ? "column" : "row",
-                gap: "20px",
-              }}
-            >
-              {/* Paid Items */}
-              <motion.div
-                variants={itemVariants}
-                style={{
-                  flex: 1,
-                  backgroundColor: "white",
-                  borderRadius: "16px",
-                  padding: "20px",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-                }}
+            {user?.image ? (
+              <img src={user.image} alt="User" className="w-7 h-7 rounded-full object-cover border border-slate-200" />
+            ) : (
+              <FaUserCircle className="text-slate-400 text-lg" />
+            )}
+            <span className="text-sm font-medium text-slate-700">{user?.firstname} {user?.lastname}</span>
+          </button>
+          {activeShift && (
+            <>
+              <button
+                onClick={() => setShowLedgerModal(true)}
+                className="flex items-center gap-1.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900 px-3 py-1.5 rounded-lg font-medium transition-all border border-slate-200 active:scale-95"
               >
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    marginBottom: "20px",
-                  }}
-                >
-                  <FaCheckCircle
-                    style={{
-                      fontSize: "24px",
-                      color: "#4caf50",
-                      marginRight: "10px",
-                    }}
-                  />
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontWeight: "600",
-                      color: "#333",
-                    }}
-                  >
-                    Paid Items
-                  </Typography>
-                </Box>
-                <Box
-                  sx={{
-                    maxHeight: "400px",
-                    overflowY: "auto",
-                    "&::-webkit-scrollbar": {
-                      width: "8px",
-                    },
-                    "&::-webkit-scrollbar-track": {
-                      background: "#f1f1f1",
-                      borderRadius: "4px",
-                    },
-                    "&::-webkit-scrollbar-thumb": {
-                      background: "#888",
-                      borderRadius: "4px",
-                    },
-                  }}
-                >
-                  {loading ? (
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "center",
-                        padding: "20px",
-                      }}
-                    >
-                      <CircularProgress />
-                    </Box>
-                  ) : paidItems.length > 0 ? (
-                    paidItems.map((item) => (
-                      <motion.div
-                        key={item._id}
-                        variants={itemVariants}
-                        style={{
-                          padding: "15px",
-                          marginBottom: "10px",
-                          backgroundColor: "#f8f9fa",
-                          borderRadius: "12px",
-                          border: "1px solid #e9ecef",
-                        }}
-                      >
-                        <Typography
-                          sx={{
-                            fontWeight: "500",
-                            color: "#333",
-                          }}
-                        >
-                          {item.name}
-                        </Typography>
-                        <Typography
-                          sx={{
-                            color: "#4caf50",
-                            fontWeight: "600",
-                          }}
-                        >
-                          ₱{item.price.toFixed(2)}
-                        </Typography>
-                      </motion.div>
-                    ))
-                  ) : (
-                    <Typography
-                      sx={{
-                        textAlign: "center",
-                        color: "#888",
-                        padding: "20px",
-                      }}
-                    >
-                      No paid items
-                    </Typography>
-                  )}
-                </Box>
-              </motion.div>
-
-              {/* Pay Later Items */}
-              <motion.div
-                variants={itemVariants}
-                style={{
-                  flex: 1,
-                  backgroundColor: "white",
-                  borderRadius: "16px",
-                  padding: "20px",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+                <FaReceipt />
+                <span>Ledger & Credits</span>
+              </button>
+              <button
+                onClick={() => {
+                  setCashAdjustmentAmount(0);
+                  setCashAdjustmentReason('');
+                  setCashAdjustmentType('Cash-In');
+                  setShowCashAdjustmentModal(true);
                 }}
+                className="flex items-center gap-1.5 text-sm text-indigo-650 hover:bg-indigo-50 hover:text-indigo-750 px-3 py-1.5 rounded-lg font-medium transition-all border border-indigo-200 active:scale-95"
               >
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    marginBottom: "20px",
-                  }}
-                >
-                  <FaClock
-                    style={{
-                      fontSize: "24px",
-                      color: "#ff9800",
-                      marginRight: "10px",
-                    }}
-                  />
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontWeight: "600",
-                      color: "#333",
-                    }}
-                  >
-                    Pay Later Items
-                  </Typography>
-                </Box>
-                <Box
-                  sx={{
-                    maxHeight: "400px",
-                    overflowY: "auto",
-                    "&::-webkit-scrollbar": {
-                      width: "8px",
-                    },
-                    "&::-webkit-scrollbar-track": {
-                      background: "#f1f1f1",
-                      borderRadius: "4px",
-                    },
-                    "&::-webkit-scrollbar-thumb": {
-                      background: "#888",
-                      borderRadius: "4px",
-                    },
-                  }}
-                >
-                  {loading ? (
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "center",
-                        padding: "20px",
-                      }}
-                    >
-                      <CircularProgress />
-                    </Box>
-                  ) : payLaterItems.length > 0 ? (
-                    payLaterItems.map((item) => (
-                      <motion.div
-                        key={item._id}
-                        variants={itemVariants}
-                        onClick={() => handlePayLaterClick(item)}
-                        style={{
-                          padding: "15px",
-                          marginBottom: "10px",
-                          backgroundColor: "#fff3e0",
-                          borderRadius: "12px",
-                          border: "1px solid #ffe0b2",
-                          cursor: "pointer",
-                          transition: "all 0.3s ease",
-                        }}
-                        whileHover={{
-                          scale: 1.02,
-                          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                        }}
-                      >
-                        <Typography
-                          sx={{
-                            fontWeight: "500",
-                            color: "#333",
-                          }}
-                        >
-                          {item.name}
-                        </Typography>
-                        <Typography
-                          sx={{
-                            color: "#ff9800",
-                            fontWeight: "600",
-                          }}
-                        >
-                          ₱{item.price.toFixed(2)}
-                        </Typography>
-                      </motion.div>
-                    ))
-                  ) : (
-                    <Typography
-                      sx={{
-                        textAlign: "center",
-                        color: "#888",
-                        padding: "20px",
-                      }}
-                    >
-                      No pay later items
-                    </Typography>
-                  )}
-                </Box>
-              </motion.div>
-            </Box>
-            {/* Available Products Section with Images */}
-<motion.div
-  variants={itemVariants}
-  style={{
-    backgroundColor: "white",
-    borderRadius: "16px",
-    padding: "20px",
-    marginTop: "30px",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-  }}
->
-  <Box sx={{ display: "flex", alignItems: "center", marginBottom: "20px" }}>
-    <FaBox style={{ fontSize: "24px", color: "#1a2a6c", marginRight: "10px" }} />
-    <Typography variant="h6" sx={{ fontWeight: "600", color: "#333" }}>
-      Available Products
-    </Typography>
-  </Box>
-
-  <Box
-    sx={{
-      maxHeight: "400px",
-      overflowY: "auto",
-      "&::-webkit-scrollbar": { width: "8px" },
-      "&::-webkit-scrollbar-track": { background: "#f1f1f1", borderRadius: "4px" },
-      "&::-webkit-scrollbar-thumb": { background: "#888", borderRadius: "4px" },
-    }}
-  >
-    {productsLoading ? (
-      <Box sx={{ display: "flex", justifyContent: "center", padding: "20px" }}>
-        <CircularProgress />
-      </Box>
-    ) : availableProducts.length > 0 ? (
-      <Grid container spacing={2}>
-        {availableProducts.map((product) => (
-          <Grid item xs={12} sm={6} key={product._id}>
-            <motion.div
-              variants={itemVariants}
-              whileHover={{ scale: 1.02 }}
-              style={{
-                padding: "15px",
-                backgroundColor: "#f8f9fa",
-                borderRadius: "12px",
-                border: "1px solid #e9ecef",
-                height: "100%",
-              }}
-            >
-              <Box sx={{ display: "flex", gap: "15px", alignItems: "center" }}>
-                {product.image ? (
-                  <Box
-                    component="img"
-                    src={product.image}
-                    alt={product.name}
-                    sx={{
-                      width: "60px",
-                      height: "60px",
-                      borderRadius: "8px",
-                      objectFit: "cover",
-                      border: "1px solid #ddd",
-                    }}
-                  />
-                ) : (
-                  <FaBox style={{ fontSize: "40px", color: "#ccc" }} />
-                )}
-                <Box sx={{ flex: 1 }}>
-                  <Typography sx={{ fontWeight: "600", color: "#333" }}>
-                    {product.name}
-                  </Typography>
-                  <Typography
-                    sx={{
-                      color: product.quantity > 0 ? "#27ae60" : "#e74c3c",
-                      fontSize: "0.9rem",
-                      fontWeight: "500",
-                    }}
-                  >
-                    Stock: {product.quantity}
-                  </Typography>
-                  <Typography sx={{ color: "#666", fontSize: "0.9rem" }}>
-                    Barcode: {product.barcode}
-                  </Typography>
-                </Box>
-                <Typography
-                  sx={{ color: "#1a2a6c", fontWeight: "600", fontSize: "1.1rem" }}
-                >
-                  ₱{product.price?.toFixed(2)}
-                </Typography>
-              </Box>
-            </motion.div>
-          </Grid>
-        ))}
-      </Grid>
-    ) : (
-      <Typography sx={{ textAlign: "center", color: "#888", padding: "20px" }}>
-        No products available
-      </Typography>
-    )}
-  </Box>
-</motion.div>
-
-          </motion.div>
-
-          {/* Right Section */}
-          <motion.div
-            variants={itemVariants}
-            style={{
-              flex: 1,
-              padding: "30px",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              alignItems: "center",
-              background: "white",
-            }}
+                <FaMoneyBillWave />
+                <span>Drawer Adjust</span>
+              </button>
+              <button
+                onClick={() => {
+                  setEndingCash(0);
+                  setShowCloseShiftModal(true);
+                }}
+                className="flex items-center gap-1.5 text-sm text-amber-600 hover:bg-amber-50 hover:text-amber-700 px-3 py-1.5 rounded-lg font-medium transition-all border border-amber-200 active:scale-95"
+              >
+                <FaClock />
+                <span>Close Shift</span>
+              </button>
+            </>
+          )}
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-1.5 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 px-3 py-1.5 rounded-lg font-medium transition-all"
           >
-            <Box
-              sx={{
-                textAlign: "center",
-                width: "100%",
-                maxWidth: "500px",
-              }}
-            >
-              <Typography
-                variant="h4"
-                sx={{
-                  fontWeight: "600",
-                  marginBottom: "30px",
-                  background: "linear-gradient(45deg, #1a2a6c, #b21f1f)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                }}
-              >
-                Scan Product
-              </Typography>
+            <FaSignOutAlt />
+            <span>Logout</span>
+          </button>
+        </div>
+      </header>
 
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Button
-                  variant="contained"
-                  startIcon={<FaBarcode />}
-                  onClick={handleScanClick}
-                  sx={{
-                    padding: "12px 24px",
-                    fontSize: "18px",
-                    borderRadius: "12px",
-                    textTransform: "none",
-                    transition: "all 0.3s ease",
-                    "&:hover": {
-                      transform: "translateY(-2px)",
-                    },
-                  }}
-                >
-                  Start Scanning
-                </Button>
-              </motion.div>
+      {/* Main Container */}
+      <main className="flex-1 max-w-[1600px] w-full mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-              {showScanner && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  style={{ marginTop: "20px" }}
-                >
+        {/* Left Panel: Catalog (Span 8) */}
+        <section className="lg:col-span-8 space-y-6">
+
+          {/* Product Catalog Card */}
+          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm flex flex-col min-h-[500px]">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+              <div className="flex items-center gap-2">
+                <FaBox className="text-slate-600 text-lg" />
+                <h2 className="font-semibold text-slate-900 text-lg">Product Catalog</h2>
+              </div>
+
+              {/* Catalog Search & Category Filters */}
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="relative">
+                  <FaSearch className="absolute left-3 top-3 text-slate-400 text-sm" />
                   <input
-  ref={inputRef}
-  type="text"
-  value={barcode}
-  onChange={(e) => setBarcode(e.target.value)} // ONLY use this to manage input state
-  onKeyDown={handleKeyDown}
-  onBlur={handleBlur}
-  placeholder="Scan barcode or enter manually"
-  style={{
-    width: "100%",
-    padding: "15px",
-    fontSize: "16px",
-    border: "2px solid #1a2a6c",
-    borderRadius: "12px",
-    outline: "none",
-    transition: "all 0.3s ease",
-  }}
-/>
+                    type="text"
+                    placeholder="Search name or barcode..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:bg-white focus:outline-none focus:border-slate-400 w-[200px] transition-all"
+                  />
+                </div>
+                <div className="flex items-center gap-1.5 bg-slate-50 p-1 border border-slate-200 rounded-lg">
+                  {['all', 'drinks', 'junkfood', 'others'].map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setActiveCategory(cat)}
+                      className={`text-xs font-semibold px-3 py-1.5 rounded-md transition-all ${activeCategory === cat
+                        ? 'bg-slate-900 text-white shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900'
+                        }`}
+                    >
+                      {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
 
-                </motion.div>
+            {/* Catalog Grid */}
+            <div className="flex-1 overflow-y-auto max-h-[550px] pr-1">
+              {productsLoading ? (
+                <div className="flex justify-center items-center py-20"><CircularProgress /></div>
+              ) : filteredProducts.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {filteredProducts.map((product) => {
+                    const isOutOfStock = product.quantity <= 0;
+                    const isLowStock = product.quantity <= (product.lowStockThreshold || 5) && !isOutOfStock;
+
+                    return (
+                      <div
+                        key={product._id}
+                        onClick={() => {
+                          if (!isOutOfStock) {
+                            addToCart(product);
+                            setSnackbarMessage(`${product.name} added to cart.`);
+                            setSnackbarOpen(true);
+                            setError('');
+                          } else {
+                            setError(`${product.name} is out of stock.`);
+                            setSnackbarMessage(`Error: ${product.name} is out of stock.`);
+                            setSnackbarOpen(true);
+                          }
+                        }}
+                        className={`flex gap-4 p-4 border rounded-xl transition-all ${isOutOfStock
+                          ? 'bg-slate-50/50 border-slate-100 cursor-not-allowed opacity-60'
+                          : 'bg-white hover:bg-slate-50/50 border-slate-200 hover:border-slate-300 cursor-pointer hover:shadow-sm'
+                          }`}
+                      >
+                        {/* Image */}
+                        <div className="w-[70px] h-[70px] bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                          {product.image ? (
+                            <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <FaBox className="text-slate-300 text-2xl" />
+                          )}
+                        </div>
+
+                        {/* Details */}
+                        <div className="flex-1 min-w-0 flex flex-col justify-between">
+                          <div>
+                            <h4 className="font-semibold text-slate-800 truncate text-sm">{product.name}</h4>
+                            <span className="text-xs text-slate-400 font-mono block mt-0.5">BC: {product.barcode}</span>
+                          </div>
+
+                          <div className="flex items-center gap-2 mt-2">
+                            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${isOutOfStock
+                              ? 'bg-red-50 text-red-600 border border-red-100'
+                              : isLowStock
+                                ? 'bg-amber-50 text-amber-600 border border-amber-100'
+                                : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                              }`}>
+                              {isOutOfStock ? 'Out of Stock' : isLowStock ? `Low Stock: ${product.quantity}` : `Stock: ${product.quantity}`}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Price */}
+                        <div className="text-right flex flex-col justify-between items-end flex-shrink-0">
+                          <span className="font-bold text-slate-900 text-base">₱{product.price.toFixed(2)}</span>
+                          <span className="text-slate-400 text-xs flex items-center gap-0.5 hover:text-slate-700 transition-colors">
+                            Add <FaChevronRight className="text-[10px]" />
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-20 text-slate-400">
+                  <FaBox className="mx-auto text-4xl mb-4 text-slate-300" />
+                  <p className="text-sm">No products found matching your filters.</p>
+                </div>
               )}
+            </div>
+          </div>
 
-              {error && (
-                <Typography
-                  sx={{
-                    color: "#f44336",
-                    marginTop: "10px",
-                    textAlign: "center",
-                  }}
+        </section>
+
+        {/* Right Panel: Checkout Panel (Span 4) */}
+        <section className="lg:col-span-4 bg-white border border-slate-200 rounded-xl p-5 shadow-sm flex flex-col h-[calc(100vh-140px)] sticky top-24 overflow-hidden">
+
+          {/* Section Header */}
+          <div className="flex items-center gap-2 mb-4 flex-shrink-0">
+            <FaShoppingCart className="text-slate-700 text-lg" />
+            <h2 className="font-semibold text-slate-900 text-lg">Active Order</h2>
+          </div>
+
+          {/* Barcode / Scan Input Field */}
+          <div className="relative mb-5 flex-shrink-0">
+            <FaBarcode className="absolute left-3.5 top-3.5 text-slate-400 text-lg" />
+            <input
+              ref={inputRef}
+              type="text"
+              placeholder="Scan barcode or enter manually (Enter)"
+              value={barcode}
+              onChange={(e) => setBarcode(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="w-full pl-11 pr-4 py-3 border border-slate-200 focus:border-slate-400 focus:outline-none rounded-lg text-sm bg-slate-50 focus:bg-white transition-all font-mono placeholder:font-sans"
+            />
+            {error && (
+              <span className="text-red-500 text-xs block mt-1.5 font-medium pl-1">{error}</span>
+            )}
+          </div>
+
+          {/* Customer Selection Field */}
+          <div className="mb-4 flex-shrink-0 relative">
+            {selectedCustomer ? (
+              <div className="bg-emerald-50/50 border border-emerald-100 rounded-lg p-3 flex items-center justify-between">
+                <div>
+                  <h4 className="font-semibold text-slate-800 text-xs">👤 {selectedCustomer.name}</h4>
+                  <span className="text-[10px] text-emerald-700 font-bold block mt-0.5">Points: {selectedCustomer.loyaltyPoints} | Phone: {selectedCustomer.phone || 'N/A'}</span>
+                </div>
+                <button
+                  onClick={() => setSelectedCustomer(null)}
+                  className="text-slate-400 hover:text-slate-600 text-sm font-bold bg-white w-6 h-6 border border-slate-200/60 shadow-sm rounded-full flex items-center justify-center transition-all"
                 >
-                  {error}
-                </Typography>
-              )}
-            </Box>
-          </motion.div>
-        </Box>
-      </Box>
+                  ×
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest pl-1">Assign Customer</label>
+                  <button
+                    onClick={() => {
+                      setError('');
+                      setShowAddCustomerModal(true);
+                    }}
+                    className="text-[10px] font-bold text-emerald-700 hover:text-emerald-800 transition-colors"
+                  >
+                    + Register Profile
+                  </button>
+                </div>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search by phone number or name..."
+                    value={customerSearchQuery}
+                    onChange={(e) => handleCustomerSearch(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-200 focus:border-slate-350 focus:outline-none rounded-lg text-xs bg-slate-50 focus:bg-white transition-all"
+                  />
+                  {customerResults.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 bg-white border border-slate-200 rounded-lg shadow-lg mt-1 max-h-[150px] overflow-y-auto z-20 divide-y divide-slate-50">
+                      {customerResults.map((cust) => (
+                        <div
+                          key={cust._id}
+                          onClick={() => {
+                            setSelectedCustomer(cust);
+                            setCustomerSearchQuery('');
+                            setCustomerResults([]);
+                          }}
+                          className="px-3 py-2 text-xs hover:bg-slate-50 cursor-pointer flex justify-between items-center"
+                        >
+                          <span className="font-semibold text-slate-700">{cust.name}</span>
+                          <span className="text-slate-400 font-medium font-mono">{cust.phone || 'No Phone'}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
 
-      {/* Payment Confirmation Modal */}
+          {/* Active Cart list scroll wrapper */}
+          <div className="flex-1 overflow-y-auto border-t border-b border-slate-100 py-4 space-y-3 scrollbar-thin">
+            {cart.length > 0 ? (
+              cart.map((item) => (
+                <div key={item.product._id} className="flex gap-3 bg-slate-50 border border-slate-100 rounded-lg p-3">
+                  {/* Cart Thumbnail */}
+                  <div className="w-[50px] h-[50px] bg-white border border-slate-200 rounded-md overflow-hidden flex-shrink-0 flex items-center justify-center">
+                    {item.product.image ? (
+                      <img src={item.product.image} alt={item.product.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <FaBox className="text-slate-300" />
+                    )}
+                  </div>
+
+                  {/* Info and Quantity Controls */}
+                  <div className="flex-1 min-w-0 flex flex-col justify-between">
+                    <div>
+                      <h5 className="font-semibold text-slate-800 text-xs truncate">{item.product.name}</h5>
+                      <span className="text-slate-400 text-[10px]">₱{item.product.price.toFixed(2)} each</span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 mt-1.5">
+                      <button
+                        onClick={() => updateCartItemQuantity(item.product._id, item.quantity - 1)}
+                        className="w-6 h-6 border border-slate-200 hover:border-slate-300 rounded bg-white hover:bg-slate-50 flex items-center justify-center text-slate-600 transition-all active:scale-95"
+                      >
+                        <FaMinus className="text-[9px]" />
+                      </button>
+                      <span className="text-slate-800 text-xs font-semibold w-6 text-center">{item.quantity}</span>
+                      <button
+                        onClick={() => updateCartItemQuantity(item.product._id, item.quantity + 1)}
+                        disabled={item.quantity >= item.product.quantity}
+                        className="w-6 h-6 border border-slate-200 hover:border-slate-300 rounded bg-white hover:bg-slate-50 flex items-center justify-center text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
+                      >
+                        <FaPlus className="text-[9px]" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Total and Trash */}
+                  <div className="text-right flex flex-col justify-between items-end flex-shrink-0 min-w-[70px]">
+                    <span className="font-bold text-slate-800 text-sm">₱{(item.product.price * item.quantity).toFixed(2)}</span>
+                    <button
+                      onClick={() => removeFromCart(item.product._id)}
+                      className="text-red-500 hover:text-red-600 hover:bg-red-50 p-1 rounded transition-all"
+                    >
+                      <FaTrash className="text-xs" />
+                    </button>
+                  </div>
+
+                </div>
+              ))
+            ) : (
+              <div className="h-full flex flex-col justify-center items-center py-20 text-slate-400 text-center">
+                <FaShoppingCart className="text-4xl mb-3 text-slate-300" />
+                <h4 className="font-medium text-sm text-slate-500">Cart is Empty</h4>
+                <p className="text-xs text-slate-400 mt-1 max-w-[200px]">Scan a barcode or click catalog products to add them to this order.</p>
+              </div>
+            )}
+          </div>
+
+          {/* Pricing Totals & Checkout Button */}
+          <div className="pt-4 mt-auto flex-shrink-0 space-y-4">
+            <div className="flex justify-between items-center text-slate-800">
+              <span className="text-sm font-medium">Cart Subtotal:</span>
+              <span className="text-lg font-bold text-slate-900">₱{cartTotal.toFixed(2)}</span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={handleHoldOrder}
+                disabled={cart.length === 0}
+                className="w-full py-2.5 border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold rounded-lg text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-98"
+              >
+                Hold Order
+              </button>
+              <button
+                onClick={proceedToCheckout}
+                disabled={cart.length === 0}
+                className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-lg text-sm shadow-sm hover:shadow transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-98"
+              >
+                Proceed
+              </button>
+            </div>
+          </div>
+
+        </section>
+
+      </main>
+
+      {/* Recover Drafts Modal */}
       <Modal
         open={showRestoreModal}
         onClose={() => setShowRestoreModal(false)}
         aria-labelledby="restore-transaction-title"
       >
         <Box
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: isMobile ? "92%" : 520,
-            maxHeight: "80vh",
-            bgcolor: "background.paper",
-            borderRadius: "16px",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.15)",
-            p: 4,
-            overflow: "auto",
-          }}
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-lg max-w-[500px] w-[92%] p-6 focus:outline-none"
         >
-          <Typography id="restore-transaction-title" variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
+          <h3 id="restore-transaction-title" className="font-bold text-slate-900 text-lg mb-1">
             Restore Previous Transaction
-          </Typography>
-          <Typography variant="body2" sx={{ color: "#666", mb: 3 }}>
-            Unfinished carts and held orders were found for this cashier.
-          </Typography>
+          </h3>
+          <p className="text-sm text-slate-500 mb-4">
+            Held orders and saved carts were found. Select an order to resume.
+          </p>
 
-          <List sx={{ border: "1px solid #eee", borderRadius: 2, mb: 3 }}>
-            {restoreDrafts.map((draft, index) => {
+          <div className="border border-slate-100 rounded-lg overflow-hidden max-h-[300px] overflow-y-auto mb-4 space-y-1 pr-1 scrollbar-thin">
+            {restoreDrafts.map((draft, idx) => {
               const draftCart = draft.cartItems || [];
               const total = draftCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
               const label = draft.draftType === DRAFT_TYPES.HELD_ORDER ? "Held Order" : "Saved Cart";
 
               return (
-                <React.Fragment key={draft.localKey || draft.draftId}>
-                  <ListItem
-                    secondaryAction={
-                      <Button size="small" variant="contained" onClick={() => handleRestoreDraft(draft)}>
-                        Restore
-                      </Button>
-                    }
+                <div key={draft.localKey || draft.draftId} className="flex items-center justify-between p-3 hover:bg-slate-50 border-b border-slate-50 last:border-0 text-sm">
+                  <div>
+                    <h5 className="font-semibold text-slate-800">{label} ({draftCart.length} item{draftCart.length === 1 ? '' : 's'})</h5>
+                    <span className="text-xs text-slate-400 font-medium">Total: ₱{total.toFixed(2)} | {new Date(draft.updatedAt).toLocaleTimeString()}</span>
+                  </div>
+                  <button
+                    onClick={() => handleRestoreDraft(draft)}
+                    className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-3 py-1.5 rounded-md transition-all active:scale-95"
                   >
-                    <ListItemText
-                      primary={`${label} - ${draftCart.length} item${draftCart.length === 1 ? "" : "s"}`}
-                      secondary={`Total: ₱${total.toFixed(2)} | Last saved: ${new Date(draft.updatedAt).toLocaleString()}`}
-                    />
-                  </ListItem>
-                  {index < restoreDrafts.length - 1 && <Divider />}
-                </React.Fragment>
+                    Restore
+                  </button>
+                </div>
               );
             })}
-          </List>
+          </div>
 
-          <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
-            <Button variant="outlined" onClick={() => setShowRestoreModal(false)}>
+          <div className="flex justify-end">
+            <button
+              onClick={() => setShowRestoreModal(false)}
+              className="text-slate-500 hover:text-slate-800 text-sm font-semibold transition-colors"
+            >
               Continue Without Restoring
-            </Button>
-          </Box>
+            </button>
+          </div>
         </Box>
       </Modal>
 
-      {/* Payment Confirmation Modal */}
+      {/* Pay Later Payment Confirmation Modal */}
       <Modal
         open={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}
         aria-labelledby="payment-modal-title"
-        aria-describedby="payment-modal-description"
       >
         <Box
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: isMobile ? "90%" : 400,
-            bgcolor: "background.paper",
-            borderRadius: "16px",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
-            p: 4,
-          }}
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-lg max-w-[400px] w-[90%] p-6 focus:outline-none"
         >
-          <Typography
-            id="payment-modal-title"
-            variant="h6"
-            component="h2"
-            sx={{
-              marginBottom: "24px",
-              fontWeight: "600",
-              color: "#333",
-            }}
-          >
-            Confirm Payment
-          </Typography>
+          <h3 id="payment-modal-title" className="font-bold text-slate-900 text-lg mb-3">
+            Confirm Payment Settlement
+          </h3>
           {selectedPayLaterItem && (
-            <Box>
-              <Typography variant="body1" sx={{ marginBottom: "16px" }}>
-                Are you sure you want to pay for:
-              </Typography>
-              <Typography
-                variant="h6"
-                sx={{
-                  fontWeight: "600",
-                  color: "#1a2a6c",
-                  marginBottom: "8px",
-                }}
-              >
-                {selectedPayLaterItem.name}
-              </Typography>
-              <Typography
-                variant="h5"
-                sx={{
-                  fontWeight: "600",
-                  color: "#b21f1f",
-                  marginBottom: "24px",
-                }}
-              >
-                ₱{selectedPayLaterItem.price.toFixed(2)}
-              </Typography>
-            </Box>
+            <div className="space-y-4 mb-6">
+              <p className="text-sm text-slate-500">
+                Proceeding will change payment status to Paid for:
+              </p>
+              <div className="bg-slate-50 border border-slate-100 p-3 rounded-lg flex justify-between items-center text-sm font-semibold">
+                <span className="text-slate-850 truncate mr-2">{selectedPayLaterItem.name}</span>
+                <span className="text-slate-900 font-bold">₱{selectedPayLaterItem.price.toFixed(2)}</span>
+              </div>
+            </div>
           )}
-          <Box
-            sx={{
-              display: "flex",
-              gap: "16px",
-              justifyContent: "flex-end",
-            }}
-          >
-            <Button
+          <div className="flex justify-end gap-3">
+            <button
               onClick={() => setShowPaymentModal(false)}
-              variant="text"
-              sx={{
-                borderRadius: "12px",
-                textTransform: "none",
-                transition: "all 0.3s ease",
-                "&:hover": {
-                  transform: "translateY(-2px)",
-                },
-              }}
+              className="text-slate-500 hover:text-slate-800 font-semibold text-sm px-3 py-1.5 transition-colors"
             >
               Cancel
-            </Button>
-            <Button
-              variant="contained"
+            </button>
+            <button
               onClick={handleConfirmPayment}
-              sx={{
-                borderRadius: "12px",
-                textTransform: "none",
-                transition: "all 0.3s ease",
-                "&:hover": {
-                  transform: "translateY(-2px)",
-                },
-              }}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm px-4 py-2 rounded-lg transition-all active:scale-95 shadow-sm"
             >
-              Confirm Payment
-            </Button>
-          </Box>
+              Confirm Settlement
+            </button>
+          </div>
         </Box>
       </Modal>
 
-      {/* Enhanced Snackbar */}
+      {/* Open Shift Modal */}
+      <Modal
+        open={showShiftModal}
+        onClose={(event, reason) => {
+          if (activeShift) {
+            setShowShiftModal(false);
+          }
+        }}
+        aria-labelledby="shift-modal-title"
+        disableEscapeKeyDown={!activeShift}
+      >
+        <Box
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-lg max-w-[450px] w-[90%] p-6 focus:outline-none border border-slate-200"
+        >
+          <h3 id="shift-modal-title" className="font-extrabold text-slate-900 text-lg mb-1 flex items-center gap-2">
+            🚀 Initialize Cashier Shift
+          </h3>
+          <p className="text-xs text-slate-500 mb-4">
+            Before scanning items or collecting payments, please declare the starting cash float in your drawer.
+          </p>
+
+          {error && (
+            <div className="bg-red-50 border border-red-100 text-red-650 text-xs rounded-lg p-3 mb-4 font-medium">
+              {error}
+            </div>
+          )}
+
+          <div className="space-y-4 mb-6">
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                Cashier Operator
+              </label>
+              <input
+                type="text"
+                disabled
+                value={user ? `${user.firstname} ${user.lastname}` : 'Loading...'}
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-500 cursor-not-allowed"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                Starting Cash Float (₱)
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={startingCash}
+                onChange={(e) => setStartingCash(e.target.value)}
+                className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none transition-all"
+                placeholder="Enter starting cash, e.g. 1000"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3">
+            {!activeShift && (
+              <button
+                onClick={handleLogout}
+                className="text-red-600 hover:bg-red-50 font-semibold text-sm px-3.5 py-2.5 rounded-lg transition-colors border border-transparent hover:border-red-100"
+              >
+                Logout
+              </button>
+            )}
+            <button
+              onClick={handleOpenShift}
+              className="bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm px-4 py-2.5 rounded-lg transition-all active:scale-95 shadow-sm"
+            >
+              Start Active Shift
+            </button>
+          </div>
+        </Box>
+      </Modal>
+
+      {/* Close Shift Modal */}
+      <Modal
+        open={showCloseShiftModal}
+        onClose={() => setShowCloseShiftModal(false)}
+        aria-labelledby="close-shift-title"
+      >
+        <Box
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-lg max-w-[450px] w-[90%] p-6 focus:outline-none border border-slate-200"
+        >
+          <h3 id="close-shift-title" className="font-extrabold text-slate-900 text-lg mb-1 flex items-center gap-2">
+            🛑 Close Cashier Shift
+          </h3>
+          <p className="text-xs text-slate-500 mb-4">
+            Record ending cash in your physical drawer to calculate shift sales reconciliation logs.
+          </p>
+
+          {error && (
+            <div className="bg-red-50 border border-red-100 text-red-650 text-xs rounded-lg p-3 mb-4 font-medium">
+              {error}
+            </div>
+          )}
+
+          <div className="bg-slate-50 border border-slate-250/60 rounded-xl p-4 mb-5 text-sm space-y-2.5">
+            <div className="flex justify-between items-center text-slate-650 text-xs font-semibold">
+              <span>Shift Started</span>
+              <span className="text-slate-850 font-bold font-mono">
+                {activeShift ? new Date(activeShift.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-slate-650 text-xs font-semibold">
+              <span>Opening Float</span>
+              <span className="text-slate-850 font-bold">
+                ₱{activeShift ? activeShift.startingCash.toFixed(2) : '0.00'}
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-slate-650 text-xs font-semibold">
+              <span>Logged Transactions</span>
+              <span className="text-slate-850 font-bold">
+                {activeShift ? activeShift.transactionsCount : 0}
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-4 mb-6">
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                Physical Cash in Drawer (₱)
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={endingCash}
+                onChange={(e) => setEndingCash(e.target.value)}
+                className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none transition-all"
+                placeholder="Enter ending drawer cash"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setShowCloseShiftModal(false)}
+              className="text-slate-500 hover:bg-slate-50 font-semibold text-sm px-3.5 py-2.5 rounded-lg transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleCloseShift}
+              className="bg-red-600 hover:bg-red-700 text-white font-semibold text-sm px-4 py-2.5 rounded-lg transition-all active:scale-95 shadow-sm"
+            >
+              Confirm Close Shift
+            </button>
+          </div>
+        </Box>
+      </Modal>
+
+      {/* Register Customer Modal */}
+      <Modal
+        open={showAddCustomerModal}
+        onClose={() => setShowAddCustomerModal(false)}
+        aria-labelledby="add-customer-title"
+      >
+        <Box
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-lg max-w-[450px] w-[90%] p-6 focus:outline-none border border-slate-200"
+        >
+          <h3 id="add-customer-title" className="font-extrabold text-slate-900 text-lg mb-1 flex items-center gap-2">
+            👤 Register Customer Profile
+          </h3>
+          <p className="text-xs text-slate-500 mb-4">
+            Create a profile to log loyalty points and purchase stats.
+          </p>
+
+          {error && (
+            <div className="bg-red-50 border border-red-100 text-red-650 text-xs rounded-lg p-3 mb-4 font-medium">
+              {error}
+            </div>
+          )}
+
+          <div className="space-y-4 mb-6">
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                Full Name *
+              </label>
+              <input
+                type="text"
+                value={newCustomerName}
+                onChange={(e) => setNewCustomerName(e.target.value)}
+                className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none transition-all"
+                placeholder="Enter customer name"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                Phone Number
+              </label>
+              <input
+                type="text"
+                value={newCustomerPhone}
+                onChange={(e) => setNewCustomerPhone(e.target.value)}
+                className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none transition-all"
+                placeholder="e.g. 09123456789"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                Email Address
+              </label>
+              <input
+                type="email"
+                value={newCustomerEmail}
+                onChange={(e) => setNewCustomerEmail(e.target.value)}
+                className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none transition-all"
+                placeholder="e.g. customer@example.com"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setShowAddCustomerModal(false)}
+              className="text-slate-500 hover:bg-slate-50 font-semibold text-sm px-3.5 py-2.5 rounded-lg transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleAddCustomer}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm px-4 py-2.5 rounded-lg transition-colors shadow-sm"
+            >
+              Register Customer
+            </button>
+          </div>
+        </Box>
+      </Modal>
+
+      {/* Cash Drawer Adjustments Modal */}
+      <Modal
+        open={showCashAdjustmentModal}
+        onClose={() => !loggingAdjustment && setShowCashAdjustmentModal(false)}
+        aria-labelledby="cash-adjust-title"
+      >
+        <Box
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-lg max-w-[450px] w-[90%] p-6 focus:outline-none border border-slate-200"
+        >
+          <h3 id="cash-adjust-title" className="font-extrabold text-slate-900 text-lg mb-1 flex items-center gap-2">
+            💵 Cash Drawer Adjustment
+          </h3>
+          <p className="text-xs text-slate-500 mb-4">
+            Record mid-shift cash transactions (change drop-in, coin load, supplier payouts).
+          </p>
+
+          <div className="space-y-4 mb-6">
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                Adjustment Type
+              </label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCashAdjustmentType('Cash-In')}
+                  className={`flex-1 py-2 border rounded-lg text-xs font-bold transition-all ${cashAdjustmentType === 'Cash-In' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-350'}`}
+                >
+                  Cash-In (Deposit)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCashAdjustmentType('Cash-Out')}
+                  className={`flex-1 py-2 border rounded-lg text-xs font-bold transition-all ${cashAdjustmentType === 'Cash-Out' ? 'bg-rose-600 text-white border-rose-600' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-350'}`}
+                >
+                  Cash-Out (Payout)
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                Amount (₱) *
+              </label>
+              <input
+                type="number"
+                min="0.01"
+                step="0.01"
+                value={cashAdjustmentAmount || ''}
+                onChange={(e) => setCashAdjustmentAmount(Number(e.target.value))}
+                className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none transition-all"
+                placeholder="0.00"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                Reason *
+              </label>
+              <input
+                type="text"
+                value={cashAdjustmentReason}
+                onChange={(e) => setCashAdjustmentReason(e.target.value)}
+                className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none transition-all"
+                placeholder="e.g. Change replenishment, supplier payment"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setShowCashAdjustmentModal(false)}
+              disabled={loggingAdjustment}
+              className="text-slate-500 hover:bg-slate-50 font-semibold text-sm px-3.5 py-2.5 rounded-lg transition-colors disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleLogCashAdjustment}
+              disabled={loggingAdjustment}
+              className={`text-white font-semibold text-sm px-4 py-2.5 rounded-lg transition-colors shadow-sm disabled:opacity-50 ${cashAdjustmentType === 'Cash-In' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'}`}
+            >
+              {loggingAdjustment ? 'Logging...' : 'Submit Log'}
+            </button>
+          </div>
+        </Box>
+      </Modal>
+
+      {/* Fullscreen Ledger Modal */}
+      <Modal
+        open={showLedgerModal}
+        onClose={() => setShowLedgerModal(false)}
+        aria-labelledby="ledger-title"
+        sx={{
+          '& .MuiBackdrop-root': {
+            backgroundColor: 'rgba(248, 250, 252, 0.98)',
+          }
+        }}
+      >
+        <Box
+          className="absolute inset-4 md:inset-8 bg-white rounded-2xl shadow-2xl p-6 focus:outline-none border border-slate-200 overflow-y-auto"
+        >
+          <TransactionsLedger isModalView={true} onClose={() => setShowLedgerModal(false)} />
+        </Box>
+      </Modal>
+
+      {/* Enhanced Snackbar Alert */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={4000}
@@ -1273,230 +1480,19 @@ function ScanPage() {
         <Alert
           onClose={() => setSnackbarOpen(false)}
           severity={snackbarMessage.includes('Error') ? "error" : "success"}
-          icon={snackbarMessage.includes('Payment successful') ? <FaCheckCircle /> : undefined}
           variant="filled"
           sx={{
-            borderRadius: "16px",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.15)",
-            minWidth: "300px",
-            padding: "16px 24px",
-            "& .MuiAlert-icon": {
-              fontSize: "24px",
-              marginRight: "16px",
-            },
-            "& .MuiAlert-message": {
-              fontSize: "16px",
-              fontWeight: "500",
-            },
-            "& .MuiAlert-action": {
-              paddingTop: "8px",
-            },
-            ...(snackbarMessage.includes('Payment successful') && {
-              background: "linear-gradient(135deg, #2ecc71, #27ae60)",
-            }),
-            ...(snackbarMessage.includes('Error') && {
-              background: "linear-gradient(135deg, #e74c3c, #c0392b)",
-            }),
-            animation: "slideUp 0.5s ease-out forwards",
-            "@keyframes slideUp": {
-              "0%": {
-                opacity: 0,
-                transform: "translateY(20px)",
-              },
-              "100%": {
-                opacity: 1,
-                transform: "translateY(0)",
-              },
-            },
+            borderRadius: "12px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+            fontSize: "14px",
+            fontWeight: "500",
           }}
         >
           {snackbarMessage}
         </Alert>
       </Snackbar>
 
-      {/* Shopping Cart Modal */}
-      <Modal
-        open={showCartModal}
-        onClose={() => setShowCartModal(false)}
-        aria-labelledby="cart-modal-title"
-      >
-        <Box
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: isMobile ? '90%' : 600,
-            maxHeight: '80vh',
-            bgcolor: 'background.paper',
-            borderRadius: 3,
-            boxShadow: 24,
-            p: 4,
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden'
-          }}
-        >
-          <Typography id="cart-modal-title" variant="h5" component="h2" sx={{ mb: 2, fontWeight: 'bold' }}>
-            Shopping Cart
-          </Typography>
-
-          {cart.length === 0 ? (
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', my: 4 }}>
-              <FaShoppingCart style={{ fontSize: 60, color: '#ccc', marginBottom: 16 }} />
-              <Typography variant="h6" color="text.secondary">
-                Your cart is empty
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                Scan products to add them to your cart
-              </Typography>
-            </Box>
-          ) : (
-            <>
-              <Paper
-                elevation={0}
-                sx={{
-                  flex: 1,
-                  overflow: 'auto',
-                  maxHeight: '50vh',
-                  mb: 3,
-                  border: '1px solid #eee',
-                  borderRadius: 2
-                }}
-              >
-                <List>
-                  {cart.map((item, index) => (
-                    <React.Fragment key={item.product._id}>
-                      <ListItem>
-                        <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                          {item.product.image ? (
-                            <Box
-                              component="img"
-                              src={item.product.image}
-                              alt={item.product.name}
-                              sx={{
-                                width: 50,
-                                height: 50,
-                                borderRadius: 1,
-                                objectFit: 'cover',
-                                mr: 2
-                              }}
-                            />
-                          ) : (
-                            <Box
-                              sx={{
-                                width: 50,
-                                height: 50,
-                                borderRadius: 1,
-                                backgroundColor: '#f0f0f0',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                mr: 2
-                              }}
-                            >
-                              <FaBox />
-                            </Box>
-                          )}
-
-                          <Box sx={{ flex: 1 }}>
-                            <ListItemText
-                              primary={item.product.name}
-                              secondary={`₱${item.product.price.toFixed(2)} each`}
-                            />
-
-                            <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                              <IconButton
-                                size="small"
-                                onClick={() => updateCartItemQuantity(item.product._id, item.quantity - 1)}
-                                sx={{ border: '1px solid #ddd' }}
-                              >
-                                <FaMinus size={12} />
-                              </IconButton>
-
-                              <Typography sx={{ mx: 2 }}>
-                                {item.quantity}
-                              </Typography>
-
-                              <IconButton
-                                size="small"
-                                onClick={() => updateCartItemQuantity(item.product._id, item.quantity + 1)}
-                                sx={{ border: '1px solid #ddd' }}
-                                disabled={item.quantity >= item.product.quantity}
-                              >
-                                <FaPlus size={12} />
-                              </IconButton>
-                            </Box>
-                          </Box>
-
-                          <Box sx={{ textAlign: 'right', minWidth: 80 }}>
-                            <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
-                              ₱{(item.product.price * item.quantity).toFixed(2)}
-                            </Typography>
-
-                            <IconButton
-                              size="small"
-                              color="error"
-                              onClick={() => removeFromCart(item.product._id)}
-                              sx={{ mt: 1 }}
-                            >
-                              <FaTrash size={14} />
-                            </IconButton>
-                          </Box>
-                        </Box>
-                      </ListItem>
-                      {index < cart.length - 1 && <Divider />}
-                    </React.Fragment>
-                  ))}
-                </List>
-              </Paper>
-
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h6">
-                  Total:
-                </Typography>
-                <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-                  ₱{cart.reduce((total, item) => total + (item.product.price * item.quantity), 0).toFixed(2)}
-                </Typography>
-              </Box>
-
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1, flexWrap: 'wrap' }}>
-                <Button
-                  variant="outlined"
-                  onClick={() => setShowCartModal(false)}
-                  sx={{ borderRadius: 2 }}
-                >
-                  Continue Shopping
-                </Button>
-
-                <Button
-                  variant="outlined"
-                  color="warning"
-                  onClick={handleHoldOrder}
-                  sx={{ borderRadius: 2 }}
-                >
-                  Hold Order
-                </Button>
-
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={proceedToCheckout}
-                  startIcon={<FaCheckCircle />}
-                  sx={{
-                    borderRadius: 2,
-                    background: 'linear-gradient(45deg, #1a2a6c, #b21f1f)',
-                    boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
-                  }}
-                >
-                  Proceed to Checkout
-                </Button>
-              </Box>
-            </>
-          )}
-        </Box>
-      </Modal>
-    </motion.div>
+    </div>
   );
 }
 

@@ -1,32 +1,17 @@
 import React, { useState, useEffect } from "react";
 import {
   Box,
-  Button,
-  Card,
-  CardContent,
-  Grid,
-  TextField,
   Typography,
+  Grid,
   Modal,
-  Select,
-  MenuItem,
-  InputLabel,
-  FormControl,
-  InputAdornment,
   Snackbar,
-  IconButton,
-  Tooltip,
-  CircularProgress,
-  useTheme,
-  useMediaQuery,
   Alert,
-  Divider,
+  Tooltip,
 } from "@mui/material";
-import { Search as SearchIcon, Add as AddIcon, Edit as EditIcon } from "@mui/icons-material";
+import { FaBox, FaSearch, FaPlus, FaTimes, FaTags, FaBarcode, FaCheckCircle, FaTrashAlt } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { uploadToCloudinary } from "../config/cloudinary";
-import { FaBox } from "react-icons/fa";
 import config from '../config';
 
 function ProductList() {
@@ -47,8 +32,6 @@ function ProductList() {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const API_BASE_URL = `${config.apiUrl}/api`;
 
@@ -104,8 +87,8 @@ function ProductList() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedProduct(null);
+    setImage(null);
     setFormValues({ name: "", price: "", quantity: "", barcode: "", category: "", image: "" });
-    document.querySelector('input[type="file"]').value = '';
   };
 
   const handleSubmit = async () => {
@@ -133,15 +116,13 @@ function ProductList() {
         image: imageUrl
       };
 
-      let productResponse;
-
       if (selectedProduct) {
-        productResponse = await axios.put(
+        await axios.put(
           `${API_BASE_URL}/products/${selectedProduct._id}`,
           productData
         );
       } else {
-        productResponse = await axios.post(
+        await axios.post(
           `${API_BASE_URL}/registerProduct`,
           productData
         );
@@ -158,429 +139,311 @@ function ProductList() {
     }
   };
 
-  const handleCategoryChange = (e) => {
-    setSelectedCategory(e.target.value);
-  };
-
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
-  };
-
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2
-      }
+      transition: { staggerChildren: 0.08, delayChildren: 0.1 }
     }
   };
 
   const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
+    hidden: { y: 15, opacity: 0 },
     visible: {
       y: 0,
       opacity: 1,
-      transition: {
-        duration: 0.5,
-        ease: "easeOut"
-      }
+      transition: { duration: 0.4, ease: "easeOut" }
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex flex-col justify-center items-center py-20 gap-3">
+        <div className="w-8 h-8 border-3 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
+        <span className="text-xs font-semibold text-slate-500">Loading catalog inventory...</span>
+      </div>
+    );
+  }
+
   return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-      style={{
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, #1a2a6c 0%, #b21f1f 50%, #fdbb2d 100%)",
-        padding: "30px",
-      }}
-    >
-      <Box
-        sx={{
-          maxWidth: "1400px",
-          margin: "0 auto",
-          backgroundColor: "rgba(255, 255, 255, 0.95)",
-          borderRadius: "24px",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
-          backdropFilter: "blur(10px)",
-          padding: "30px",
-        }}
+    <div className="w-full max-w-5xl mx-auto font-sans text-slate-800 space-y-6">
+      
+      {/* Title & Actions Row Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+        <div>
+          <h2 className="text-xl font-bold text-slate-900">Products Inventory</h2>
+          <p className="text-slate-500 text-sm mt-0.5">Maintain cafe items catalog, pricing list, and stock counts.</p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Category Filter dropdown */}
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="px-3 py-2 border border-slate-200 focus:border-slate-450 focus:outline-none rounded-lg text-xs bg-white font-semibold transition-all"
+          >
+            <option value="all">All Categories</option>
+            <option value="drinks">Drinks</option>
+            <option value="junkfood">Junk Food</option>
+            <option value="others">Others</option>
+          </select>
+
+          {/* Search bar */}
+          <div className="relative max-w-[200px]">
+            <FaSearch className="absolute left-3 top-3 text-slate-400 text-xs" />
+            <input
+              type="text"
+              placeholder="Search product..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-8 pr-3.5 py-2 border border-slate-200 focus:border-slate-400 focus:outline-none rounded-lg text-xs bg-white font-semibold transition-all"
+            />
+          </div>
+
+          <button
+            onClick={() => handleOpenModal()}
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg text-xs transition-all shadow-sm active:scale-97"
+          >
+            <FaPlus />
+            <span>Add Item</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Catalog items Cards list Grid */}
+      <AnimatePresence mode="wait">
+        {products.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-16 bg-white border border-slate-200 rounded-xl space-y-4"
+          >
+            <FaBox className="text-4xl text-slate-300 mx-auto" />
+            <div className="space-y-1">
+              <h4 className="font-bold text-slate-900 text-sm">No Products Found</h4>
+              <p className="text-slate-450 text-xs max-w-xs mx-auto">There are no items recorded in this category or matching your search.</p>
+            </div>
+            <button
+              onClick={() => handleOpenModal()}
+              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg text-xs transition-all active:scale-95 shadow-sm"
+            >
+              Add Your First Product
+            </button>
+          </motion.div>
+        ) : (
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={containerVariants}
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"
+          >
+            {products.map((product) => {
+              const isOutOfStock = product.quantity === 0;
+              return (
+                <motion.div
+                  key={product._id}
+                  variants={itemVariants}
+                  className="bg-white border border-slate-200 hover:border-slate-350 rounded-xl p-4 shadow-sm hover:shadow transition-all space-y-4 flex flex-col justify-between"
+                >
+                  <div className="flex gap-4 items-start">
+                    <div className="w-16 h-16 rounded-lg overflow-hidden border border-slate-200 flex-shrink-0 flex items-center justify-center bg-slate-50">
+                      {product.image ? (
+                        <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <FaBox className="text-slate-300 text-lg" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <span className="font-bold text-slate-900 text-xs truncate block">{product.name}</span>
+                      <span className="text-[10px] text-slate-400 font-semibold block uppercase mt-0.5">{product.category}</span>
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className={`px-2 py-0.5 rounded-full font-bold text-[9px] ${
+                          isOutOfStock ? 'bg-red-50 text-red-650 border border-red-100' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                        }`}>
+                          {isOutOfStock ? 'Out of Stock' : `Qty: ${product.quantity}`}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-slate-100 pt-3 flex justify-between items-center">
+                    <span className="font-extrabold text-slate-900 text-sm">₱{Number(product.price).toFixed(2)}</span>
+                    <button
+                      onClick={() => handleOpenModal(product)}
+                      className="px-3 py-1.5 border border-slate-250 hover:border-slate-350 hover:bg-slate-50 text-slate-700 font-bold rounded-lg text-xs transition-all active:scale-97"
+                    >
+                      Configure Item
+                    </button>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Product Add/Edit Modal */}
+      <Modal
+        open={isModalOpen}
+        onClose={handleCloseModal}
+        aria-labelledby="product-modal-title"
       >
-        <Typography
-          variant="h4"
+        <Box
           sx={{
-            fontWeight: "600",
-            marginBottom: "30px",
-            background: "linear-gradient(45deg, #1a2a6c, #b21f1f)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "90%",
+            maxWidth: 420,
+            bgcolor: "white",
+            borderRadius: "16px",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.06)",
+            p: 4,
+            outline: "none",
           }}
         >
-          Product Management
-        </Typography>
-
-        <motion.div variants={itemVariants}>
-          <TextField
-            label="Search Products"
-            variant="outlined"
-            value={searchQuery}
-            onChange={handleSearchChange}
-            fullWidth
-            size="small"
-            sx={{
-              maxWidth: isMobile ? "100%" : "400px",
-              marginBottom: "24px",
-              "& .MuiOutlinedInput-root": {
-                borderRadius: "12px",
-              },
-            }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
-        </motion.div>
-
-        <Grid container spacing={3}>
-          {loading ? (
-            <Grid item xs={12} sx={{ textAlign: "center", padding: "40px" }}>
-              <CircularProgress />
-            </Grid>
-          ) : (
-            products.map((product) => (
-              <Grid item xs={12} sm={6} md={4} key={product._id}>
-                <motion.div
-                  variants={itemVariants}
-                  whileHover={{ scale: 1.02 }}
-                  style={{ height: "100%" }}
-                >
-                  <Card
-                    sx={{
-                      height: "100%",
-                      display: "flex",
-                      flexDirection: "column",
-                      borderRadius: "16px",
-                      overflow: "hidden",
-                      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                      transition: "all 0.3s ease",
-                      "&:hover": {
-                        boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
-                      },
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        padding: "20px",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "15px",
-                      }}
-                    >
-                      <img
-                        src={product.image || '/default-avatar.png'}
-                        alt={product.name}
-                        style={{
-                          width: 80,
-                          height: 80,
-                          borderRadius: "12px",
-                          objectFit: "cover",
-                          border: "3px solid #1a2a6c",
-                        }}
-                      />
-                      <Box sx={{ flex: 1 }}>
-                        <Typography
-                          variant="h6"
-                          sx={{
-                            fontWeight: "600",
-                            color: "#333",
-                            marginBottom: "4px",
-                          }}
-                        >
-                          {product.name}
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            color: "#666",
-                            marginBottom: "8px",
-                          }}
-                        >
-                          {product.category}
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            color: product.quantity > 0 ? "#4caf50" : "#f44336",
-                            fontWeight: "500",
-                          }}
-                        >
-                          Stock: {product.quantity}
-                        </Typography>
-                      </Box>
-                      <Box sx={{ textAlign: "right" }}>
-                        <Typography
-                          variant="h6"
-                          sx={{
-                            color: "#1a2a6c",
-                            fontWeight: "600",
-                          }}
-                        >
-                          ₱{product.price}
-                        </Typography>
-                        <Box sx={{ display: "flex", gap: "8px", marginTop: "8px" }}>
-                          <Tooltip title="Edit">
-                            <IconButton
-                              onClick={() => handleOpenModal(product)}
-                              sx={{
-                                color: "#1a2a6c",
-                                "&:hover": {
-                                  backgroundColor: "rgba(26, 42, 108, 0.1)",
-                                },
-                              }}
-                            >
-                              <EditIcon />
-                            </IconButton>
-                          </Tooltip>
-
-                        </Box>
-                      </Box>
-                    </Box>
-                  </Card>
-                </motion.div>
-              </Grid>
-            ))
-          )}
-        </Grid>
-
-        <motion.div variants={itemVariants} style={{ marginTop: "30px", textAlign: "right" }}>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenModal()}
-            sx={{
-              borderRadius: "12px",
-              textTransform: "none",
-              transition: "all 0.3s ease",
-              "&:hover": {
-                transform: "translateY(-2px)",
-              },
-            }}
-          >
-            Add New Product
-          </Button>
-        </motion.div>
-
-        {/* Add/Edit Product Modal */}
-        <Modal
-          open={isModalOpen}
-          onClose={handleCloseModal}
-          aria-labelledby="product-modal-title"
-          aria-describedby="product-modal-description"
-        >
-          <Box
-            sx={{
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              width: isMobile ? "90%" : 400,
-              bgcolor: "background.paper",
-              borderRadius: "16px",
-              boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
-              p: 4,
-            }}
-          >
-            <Typography
-              id="product-modal-title"
-              variant="h6"
-              component="h2"
-              sx={{
-                marginBottom: "24px",
-                fontWeight: "600",
-                color: "#333",
-              }}
+          <div className="flex justify-between items-center pb-3 border-b border-slate-100 mb-6">
+            <h3 className="font-bold text-slate-900 text-sm" id="product-modal-title">
+              {selectedProduct ? "Modify Product Details" : "Register Catalog Item"}
+            </h3>
+            <button
+              onClick={handleCloseModal}
+              className="p-1.5 border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-400 hover:text-slate-800 transition-colors"
             >
-              {selectedProduct ? "Edit Product" : "Add New Product"}
-            </Typography>
-            <Box component="form" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <TextField
-                    label="Product Name"
-                    name="name"
-                    value={formValues.name}
-                    onChange={handleInputChange}
-                    fullWidth
-                    required
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: "12px",
-                      },
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    label="Price"
-                    name="price"
-                    type="number"
-                    value={formValues.price}
-                    onChange={handleInputChange}
-                    fullWidth
-                    required
-                    InputProps={{
-                      startAdornment: <InputAdornment position="start">₱</InputAdornment>,
-                    }}
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: "12px",
-                      },
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    label="Quantity"
-                    name="quantity"
-                    type="number"
-                    value={formValues.quantity}
-                    onChange={handleInputChange}
-                    fullWidth
-                    required
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: "12px",
-                      },
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    label="Barcode"
-                    name="barcode"
-                    value={formValues.barcode}
-                    onChange={handleInputChange}
-                    fullWidth
-                    required
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: "12px",
-                      },
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <FormControl fullWidth required>
-                    <InputLabel>Category</InputLabel>
-                    <Select
-                      name="category"
-                      value={formValues.category}
-                      onChange={handleInputChange}
-                      label="Category"
-                      sx={{
-                        borderRadius: "12px",
-                      }}
-                    >
-                      <MenuItem value="drinks">Drinks</MenuItem>
-                      <MenuItem value="junkfood">Junk Food</MenuItem>
-                      <MenuItem value="others">Others</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12}>
-                  <Button
-                    variant="outlined"
-                    component="label"
-                    fullWidth
-                    sx={{
-                      borderRadius: "12px",
-                      textTransform: "none",
-                      transition: "all 0.3s ease",
-                      "&:hover": {
-                        transform: "translateY(-2px)",
-                      },
-                    }}
-                  >
-                    Upload Product Image
-                    <input
-                      type="file"
-                      hidden
-                      accept="image/*"
-                      onChange={handleImageChange}
-                    />
-                  </Button>
-                </Grid>
-                <Grid item xs={12}>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      gap: "16px",
-                      justifyContent: "flex-end",
-                    }}
-                  >
-                    <Button
-                      onClick={handleCloseModal}
-                      variant="text"
-                      sx={{
-                        borderRadius: "12px",
-                        textTransform: "none",
-                        transition: "all 0.3s ease",
-                        "&:hover": {
-                          transform: "translateY(-2px)",
-                        },
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      variant="contained"
-                      onClick={handleSubmit}
-                      sx={{
-                        borderRadius: "12px",
-                        textTransform: "none",
-                        transition: "all 0.3s ease",
-                        "&:hover": {
-                          transform: "translateY(-2px)",
-                        },
-                      }}
-                    >
-                      {selectedProduct ? "Update" : "Add"}
-                    </Button>
-                  </Box>
-                </Grid>
-              </Grid>
-            </Box>
-          </Box>
-        </Modal>
+              <FaTimes size={14} />
+            </button>
+          </div>
 
-        {/* Snackbar */}
-        <Snackbar
-          open={snackbarOpen}
-          autoHideDuration={3000}
+          <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-4">
+            
+            {/* Name */}
+            <div className="space-y-1">
+              <label className="text-[11px] font-semibold text-slate-500 block uppercase">Product Name</label>
+              <input
+                type="text"
+                name="name"
+                required
+                placeholder="San Miguel Pale Pilsen"
+                value={formValues.name}
+                onChange={handleInputChange}
+                className="w-full px-3.5 py-2.5 border border-slate-200 focus:border-slate-400 focus:outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
+              />
+            </div>
+
+            {/* Price & Quantity Grid */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-slate-500 block uppercase">Price (₱)</label>
+                <input
+                  type="number"
+                  name="price"
+                  required
+                  placeholder="₱0.00"
+                  value={formValues.price}
+                  onChange={handleInputChange}
+                  className="w-full px-3.5 py-2.5 border border-slate-200 focus:border-slate-400 focus:outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-slate-500 block uppercase">Initial Stock</label>
+                <input
+                  type="number"
+                  name="quantity"
+                  required
+                  placeholder="24"
+                  value={formValues.quantity}
+                  onChange={handleInputChange}
+                  className="w-full px-3.5 py-2.5 border border-slate-200 focus:border-slate-400 focus:outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
+                />
+              </div>
+            </div>
+
+            {/* Barcode & Category */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-slate-500 block uppercase flex items-center gap-1">
+                  <FaBarcode />
+                  <span>Barcode SKU</span>
+                </label>
+                <input
+                  type="text"
+                  name="barcode"
+                  required
+                  placeholder="480001234567"
+                  value={formValues.barcode}
+                  onChange={handleInputChange}
+                  className="w-full px-3.5 py-2.5 border border-slate-200 focus:border-slate-400 focus:outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-slate-500 block uppercase">Category</label>
+                <select
+                  name="category"
+                  required
+                  value={formValues.category}
+                  onChange={handleInputChange}
+                  className="w-full px-3.5 py-2.5 border border-slate-200 focus:border-slate-400 focus:outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
+                >
+                  <option value="">Select...</option>
+                  <option value="drinks">Drinks</option>
+                  <option value="junkfood">Junk Food</option>
+                  <option value="others">Others</option>
+                </select>
+              </div>
+            </div>
+
+            {/* File Upload Image */}
+            <div className="space-y-2">
+              <label className="text-[11px] font-semibold text-slate-500 block uppercase">Product Photo</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border file:border-slate-200 file:text-xs file:font-semibold file:bg-white file:text-slate-700 hover:file:bg-slate-50 transition-all cursor-pointer"
+              />
+            </div>
+
+            {/* Footer Buttons */}
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={handleCloseModal}
+                className="px-4 py-2 border border-slate-200 rounded-lg text-slate-650 hover:bg-slate-50 text-xs font-bold transition-all active:scale-95"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSubmit}
+                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg text-xs transition-all shadow-sm active:scale-95"
+              >
+                {selectedProduct ? "Save Changes" : "Create Item"}
+              </button>
+            </div>
+
+          </form>
+
+        </Box>
+      </Modal>
+
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert
           onClose={() => setSnackbarOpen(false)}
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+          severity="success"
+          variant="filled"
+          sx={{ borderRadius: "12px", fontSize: "12px", fontWeight: "650" }}
         >
-          <Alert
-            onClose={() => setSnackbarOpen(false)}
-            severity="success"
-            sx={{
-              borderRadius: "12px",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-            }}
-          >
-            {snackbarMessage}
-          </Alert>
-        </Snackbar>
-      </Box>
-    </motion.div>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
+
+    </div>
   );
 }
 

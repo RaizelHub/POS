@@ -7,6 +7,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { v4 as uuidv4 } from 'uuid';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import ReceiptSettings from '../Models/receiptSettings.js';
 
 // Get the directory name from the module URL
 const __filename = fileURLToPath(import.meta.url);
@@ -45,49 +46,78 @@ const generatePDFReceipt = (receiptData) => {
 
   doc.pipe(writeStream);
 
-  // Add custom font and styling
-  doc.fontSize(20).fillColor('#4CAF50').text('Receipt', { align: 'center' });
-  doc.moveDown(2);
+  const settings = receiptData.settings || {};
+  const storeName = settings.storeName || 'SUELTO Store';
+  const address = settings.address || 'SUELTO Retail Station';
+  const contact = settings.contactNumber || '09123456789';
+  const vat = settings.vatNumber || '123-456-789-000';
+  const headerMsg = settings.headerMessage || 'Thank you for shopping!';
+  const footerMsg = settings.footerMessage || 'Please come again!';
+  const fontSizeMode = settings.fontSize || 'medium';
+
+  let fontSizes = { title: 20, subtitle: 12, body: 10 };
+  if (fontSizeMode === 'small') {
+    fontSizes = { title: 16, subtitle: 10, body: 8 };
+  } else if (fontSizeMode === 'large') {
+    fontSizes = { title: 24, subtitle: 14, body: 12 };
+  }
+
+  // Header Logo/Title
+  doc.fontSize(fontSizes.title).fillColor('#10B981').text(storeName, { align: 'center' }); // Emerald brand color for SUELTO
+  doc.fontSize(fontSizes.body).fillColor('#4B5563')
+     .text(address, { align: 'center' })
+     .text(`Contact: ${contact}`, { align: 'center' })
+     .text(`VAT: ${vat}`, { align: 'center' });
+  doc.moveDown();
+  doc.fontSize(fontSizes.subtitle).fillColor('#1F2937').text(headerMsg, { align: 'center' });
+  doc.moveDown(1.5);
+
+  // Line separator
+  doc.rect(50, doc.y, 500, 1).fill('#E5E7EB');
+  doc.moveDown();
 
   // Add user details with styling
-  doc.fontSize(14).fillColor('#000000')
-     .text(`Purchased By: ${receiptData.userName}`, { underline: true });
+  doc.fontSize(fontSizes.body).fillColor('#1F2937')
+     .text(`Served By: ${receiptData.userName}`);
   doc.moveDown();
 
   // Handle multiple products or single product
   if (receiptData.isMultipleProducts) {
     // Display multiple products
-    doc.fontSize(14).text('Items Purchased:', { underline: true });
-    doc.moveDown();
+    doc.fontSize(fontSizes.body).text('Items Purchased:', { underline: true });
+    doc.moveDown(0.5);
 
-    // Create a table-like structure for products
     receiptData.products.forEach((product, index) => {
-      doc.fontSize(12)
-         .text(`${index + 1}. ${product.name}`)
-         .text(`   Quantity: ${product.quantity}`)
-         .text(`   Price: ₱${product.price.toFixed(2)}`)
-         .text(`   Subtotal: ₱${product.totalPrice.toFixed(2)}`);
-      doc.moveDown(0.5);
+      doc.fontSize(fontSizes.body)
+         .text(`${index + 1}. ${product.name} x${product.quantity} @ ₱${product.price.toFixed(2)}: ₱${product.totalPrice.toFixed(2)}`);
+      doc.moveDown(0.2);
     });
   } else {
     // Display single product
-    doc.text(`Product: ${receiptData.productName}`);
-    doc.text(`Quantity: ${receiptData.quantity}`);
-    doc.text(`Price: ₱${receiptData.productPrice.toFixed(2)}`);
+    doc.fontSize(fontSizes.body)
+       .text(`Product: ${receiptData.productName}`)
+       .text(`Quantity: ${receiptData.quantity}`)
+       .text(`Price: ₱${receiptData.productPrice.toFixed(2)}`)
+       .text(`Subtotal: ₱${receiptData.totalPrice.toFixed(2)}`);
   }
 
   // Add total price and payment method
   doc.moveDown();
-  doc.fontSize(14).text(`Total Price: ₱${receiptData.totalPrice.toFixed(2)}`, { underline: true });
-  doc.text(`Payment Method: ${receiptData.paymentMethod}`);
+  doc.fontSize(fontSizes.subtitle).text(`Total Amount: ₱${receiptData.totalPrice.toFixed(2)}`, { underline: true });
+  doc.fontSize(fontSizes.body).text(`Payment Method: ${receiptData.paymentMethod}`);
 
   // Add border and some more visual separation
   doc.moveDown();
-  doc.rect(50, doc.y, 500, 2).fill('#4CAF50');  // Green separator line
+  doc.rect(50, doc.y, 500, 1).fill('#E5E7EB');
 
   doc.moveDown();
-  doc.text(`Transaction ID: ${receiptData.transactionId}`);
-  doc.text(`Transaction Date: ${receiptData.transactionDate}`);
+  doc.fontSize(fontSizes.body).fillColor('#4B5563')
+     .text(`Transaction ID: ${receiptData.transactionId}`)
+     .text(`Date: ${receiptData.transactionDate}`);
+  doc.moveDown(1.5);
+
+  // Footer Message
+  doc.fontSize(fontSizes.subtitle).fillColor('#10B981').text(footerMsg, { align: 'center' });
 
   doc.end();
 
@@ -250,6 +280,13 @@ const createReceipt = async (req, res) => {
     }
   }
 
+  // Get custom receipt settings or fallback to default
+  let settings = await ReceiptSettings.findOne();
+  if (!settings) {
+    settings = new ReceiptSettings();
+    await settings.save();
+  }
+
   // Create receipt data object
   let receiptData = {
     userName: `${user.firstname} ${user.lastname}`,
@@ -257,7 +294,8 @@ const createReceipt = async (req, res) => {
     paymentMethod: paymentMethod,
     transactionId: transactionId,
     transactionDate: transactionDate,
-    isMultipleProducts: isMultipleProducts
+    isMultipleProducts: isMultipleProducts,
+    settings: settings
   };
 
   // Add product-specific data based on whether it's a single product or multiple products
@@ -329,6 +367,48 @@ const createReceipt = async (req, res) => {
       details: errorDetails,
       error: error.toString()
     });
+  }
+};
+
+// Get receipt settings
+export const getReceiptSettings = async (req, res) => {
+  try {
+    let settings = await ReceiptSettings.findOne();
+    if (!settings) {
+      // Create default settings if none exist
+      settings = new ReceiptSettings();
+      await settings.save();
+    }
+    res.json(settings);
+  } catch (error) {
+    console.error('Error fetching receipt settings:', error);
+    res.status(500).json({ message: 'Server error fetching receipt settings.', error: error.message });
+  }
+};
+
+// Update receipt settings
+export const updateReceiptSettings = async (req, res) => {
+  try {
+    const { storeName, address, contactNumber, vatNumber, headerMessage, footerMessage, showLogo, fontSize } = req.body;
+    let settings = await ReceiptSettings.findOne();
+    if (!settings) {
+      settings = new ReceiptSettings();
+    }
+
+    settings.storeName = storeName !== undefined ? storeName : settings.storeName;
+    settings.address = address !== undefined ? address : settings.address;
+    settings.contactNumber = contactNumber !== undefined ? contactNumber : settings.contactNumber;
+    settings.vatNumber = vatNumber !== undefined ? vatNumber : settings.vatNumber;
+    settings.headerMessage = headerMessage !== undefined ? headerMessage : settings.headerMessage;
+    settings.footerMessage = footerMessage !== undefined ? footerMessage : settings.footerMessage;
+    settings.showLogo = showLogo !== undefined ? showLogo : settings.showLogo;
+    settings.fontSize = fontSize !== undefined ? fontSize : settings.fontSize;
+
+    await settings.save();
+    res.json({ message: 'Receipt settings updated successfully!', settings });
+  } catch (error) {
+    console.error('Error updating receipt settings:', error);
+    res.status(500).json({ message: 'Server error updating receipt settings.', error: error.message });
   }
 };
 

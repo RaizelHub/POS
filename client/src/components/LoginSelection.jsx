@@ -1,13 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import '@fortawesome/fontawesome-free/css/all.min.css';
-import BSULOGO from '../images/BSU LOGO.png';
-import COTLOGO from '../images/COT.png';
-import styles from './css/LoginSelection.module.css';
-import { formatDistanceToNow } from 'date-fns';
-import { Modal, Typography } from '@mui/material';
+import { FaUserCircle, FaArrowLeft, FaBarcode, FaTags, FaExchangeAlt, FaLock } from 'react-icons/fa';
 import { getApiUrl } from '../utils/getApiUrl';
+import novaLogo from '../images/nova_logo.png';
 
 function LoginSelectionPage() {
   const [users, setUsers] = useState([]);
@@ -27,6 +23,7 @@ function LoginSelectionPage() {
     const queryParams = new URLSearchParams(location.search);
     if (queryParams.get('pinReset') === 'true') {
       setSnackbarMessage('PIN reset successful!');
+      setTimeout(() => setSnackbarMessage(null), 4000);
     }
     fetchUsers();
   }, [location]);
@@ -55,6 +52,7 @@ function LoginSelectionPage() {
       setEmail('');
     } else {
       setError('This user is not verified. Please verify your account first.');
+      setTimeout(() => setError(null), 4000);
     }
   };
 
@@ -100,9 +98,7 @@ function LoginSelectionPage() {
       const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/api/forgot-pin`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: selectedUser.email }),
       });
 
@@ -111,15 +107,14 @@ function LoginSelectionPage() {
       }
 
       setSnackbarMessage('Reset link sent to your email!');
-
-      // Close the modal after a short delay
       setTimeout(() => {
         closeModal();
+        setSnackbarMessage(null);
       }, 1500);
-
     } catch (error) {
       setResetError('There was an issue resetting the PIN.');
       setSnackbarMessage('Error resetting PIN.');
+      setTimeout(() => setSnackbarMessage(null), 3000);
     } finally {
       setLoading(false);
     }
@@ -133,685 +128,284 @@ function LoginSelectionPage() {
     setEmail('');
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        duration: 0.5,
-        ease: "easeOut"
-      }
-    }
-  };
-
   return (
-    <motion.div
-      className={styles.container}
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-      style={{
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, #1a2a6c 0%, #b21f1f 50%, #fdbb2d 100%)",
-        padding: "20px",
-      }}
-    >
-      <motion.header
-        className={styles.header}
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          padding: "20px",
-          backgroundColor: "rgba(255, 255, 255, 0.1)",
-          backdropFilter: "blur(10px)",
-          borderRadius: "16px",
-          marginBottom: "30px",
-        }}
-      >
-        <motion.div className={styles.logoContainer} style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-          <Link to="/" className={styles.backIcon}>
-            <motion.i
-              className="fas fa-arrow-left"
-              whileHover={{ scale: 1.2, rotate: -10 }}
-              whileTap={{ scale: 0.9 }}
-              style={{ color: "white", fontSize: "24px" }}
-            ></motion.i>
+    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row font-sans text-slate-800 antialiased">
+      
+      {/* Left side: Premium branding & marketing illustration panel */}
+      <div className="w-full md:w-[420px] bg-slate-900 text-slate-350 p-8 flex flex-col justify-between border-r border-slate-800">
+        
+        {/* Top Logo marker */}
+        <div className="flex items-center gap-3">
+          <Link to="/" className="hover:bg-slate-800 p-2 rounded-lg transition-all text-slate-400 hover:text-white">
+            <FaArrowLeft />
           </Link>
-          <motion.img
-            src={BSULOGO}
-            alt="Bukidnon State University"
-            className={styles.logo}
-            whileHover={{ scale: 1.05 }}
-            transition={{ duration: 0.3 }}
-            style={{ height: "60px", objectFit: "contain" }}
-          />
-          <motion.img
-            src={COTLOGO}
-            alt="College of Technologies"
-            className={styles.logo}
-            whileHover={{ scale: 1.05 }}
-            transition={{ duration: 0.3 }}
-            style={{ height: "60px", objectFit: "contain" }}
-          />
-        </motion.div>
-        <Link to="/register">
-          <motion.button
-            className={styles.registerButton}
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-            style={{
-              padding: "12px 24px",
-              backgroundColor: "rgba(255, 255, 255, 0.2)",
-              border: "2px solid white",
-              borderRadius: "12px",
-              color: "white",
-              fontSize: "16px",
-              fontWeight: "600",
-              cursor: "pointer",
-              transition: "all 0.3s ease",
-            }}
-          >
-            Register
-          </motion.button>
-        </Link>
-      </motion.header>
+          <div className="flex items-center gap-2">
+            <img src={novaLogo} alt="SUELTO Logo" className="h-8 w-auto object-contain rounded-lg" />
+            <span className="font-bold text-slate-100 tracking-tight text-base">
+              SUELTO POS
+            </span>
+          </div>
+        </div>
 
-      {loading && (
-        <motion.p
-          className={styles.loadingMessage}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          Loading users...
-        </motion.p>
-      )}
+        {/* Branding summary text */}
+        <div className="space-y-6 my-12 md:my-0">
+          <div className="flex items-center gap-4">
+            <img src={novaLogo} alt="SUELTO Logo" className="h-14 w-auto object-contain rounded-xl shadow-sm" />
+          </div>
+          <h2 className="text-xl font-bold text-slate-100 tracking-tight">
+            Workstation Login
+          </h2>
+          <p className="text-xs leading-relaxed text-slate-400">
+            Please select your cashier profile from the dashboard list and key in your 6-digit PIN code to initialize terminal operations.
+          </p>
 
-      {!loading && !error && (
-        <motion.div
-          variants={containerVariants}
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-            gap: "20px",
-            padding: "20px",
-            width: "100%",
-            maxWidth: "1200px",
-            margin: "0 auto"
-          }}
-        >
-          {users.map((user) => (
-            <motion.div
-              key={user._id}
-              variants={itemVariants}
-              whileHover={{ scale: 1.04 }}
-              onClick={() => handleUserClick(user)}
-              style={{
-                backgroundColor: "rgba(255, 255, 255, 0.1)",
-                backdropFilter: "blur(10px)",
-                borderRadius: "20px",
-                padding: "20px",
-                cursor: "pointer",
-                border: "2px solid rgba(255, 255, 255, 0.25)",
-                transition: "all 0.3s ease",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                minHeight: "200px",
-                marginBottom: "16px",
-                textAlign: "center",
-                overflow: "hidden",
-              }}
-            >
-              <motion.img
-                src={user.image ? (user.image.startsWith('http') ? user.image : `${getApiUrl()}/${user.image}`) : ''}
-                alt={`${user.firstname}'s avatar`}
-                style={{
-                  width: "80px",
-                  height: "80px",
-                  borderRadius: "50%",
-                  objectFit: "cover",
-                  border: "4px solid white",
-                  boxShadow: "0 4px 16px rgba(0,0,0,0.10)",
-                  marginBottom: "16px",
-                }}
-              />
-              <div style={{ width: "100%" }}>
-                <Typography
-                  style={{
-                    color: "white",
-                    fontSize: "1.2rem",
-                    fontWeight: "700",
-                    marginBottom: "8px",
-                    textOverflow: "ellipsis",
-                    overflow: "hidden",
-                    whiteSpace: "nowrap"
-                  }}
-                >
-                  {user.firstname} {user.lastname}
-                </Typography>
-                <Typography
-                  style={{
-                    color: "rgba(255, 255, 255, 0.9)",
-                    fontSize: "0.9rem",
-                    textOverflow: "ellipsis",
-                    overflow: "hidden",
-                    whiteSpace: "nowrap",
-                    maxWidth: "100%"
-                  }}
-                >
-                  {user.email}
-                </Typography>
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
-      )}
+          {/* Quick instructions bullet points */}
+          <div className="space-y-3.5 pt-4 text-xs font-semibold text-slate-400">
+            <div className="flex items-center gap-2.5">
+              <FaBarcode className="text-slate-500" />
+              <span>Real-time Barcode scanning enabled</span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <FaTags className="text-slate-500" />
+              <span>Low-stock warnings configured</span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <FaExchangeAlt className="text-slate-500" />
+              <span>Multi-payment split checkouts ready</span>
+            </div>
+          </div>
+        </div>
 
-      <Modal
-        open={!!selectedUser}
-        onClose={closeModal}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          style={{
-            backgroundColor: "white",
-            padding: "30px",
-            borderRadius: "20px",
-            width: "90%",
-            maxWidth: "400px",
-            boxShadow: "0 10px 40px rgba(0,0,0,0.15)",
-            overflow: "hidden",
-            position: "relative",
-          }}
-        >
-          {selectedUser && (
-            <div
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                height: "120px",
-                background: "linear-gradient(135deg, #1a2a6c 0%, #b21f1f 100%)",
-                borderTopLeftRadius: "20px",
-                borderTopRightRadius: "20px",
-                zIndex: 0
-              }}
-            />
-          )}
-          {!isForgotPin ? (
-            <>
-              <div style={{ position: "relative", zIndex: 1, marginBottom: "40px", textAlign: "center" }}>
-                {selectedUser && (
-                  <motion.div
-                    initial={{ y: -20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.2, duration: 0.5 }}
-                    style={{ marginBottom: "15px" }}
-                  >
-                    <img
-                      src={selectedUser.image ? (selectedUser.image.startsWith('http') ? selectedUser.image : `${getApiUrl()}/${selectedUser.image}`) : ''}
-                      alt={`${selectedUser.firstname}'s avatar`}
-                      style={{
-                        width: "100px",
-                        height: "100px",
-                        borderRadius: "50%",
-                        objectFit: "cover",
-                        border: "4px solid white",
-                        boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
-                        margin: "0 auto",
-                        display: "block",
-                        marginTop: "20px"
-                      }}
-                    />
-                    <Typography
-                      variant="h5"
-                      style={{
-                        marginTop: "15px",
-                        fontWeight: "700",
-                        color: "#1a2a6c",
-                        textAlign: "center"
-                      }}
-                    >
-                      {selectedUser.firstname} {selectedUser.lastname}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      style={{
-                        color: "#666",
-                        marginTop: "5px",
-                        textAlign: "center"
-                      }}
-                    >
-                      {selectedUser.email}
-                    </Typography>
-                  </motion.div>
-                )}
-                <Typography
-                  variant="h6"
-                  style={{
-                    marginTop: "20px",
-                    fontWeight: "600",
-                    color: "#333",
-                    textAlign: "center"
-                  }}
-                >
-                  Enter Your PIN
-                </Typography>
-              </div>
+        {/* Footer info */}
+        <div className="text-[11px] text-slate-500 font-medium">
+          © 2026 SUELTO POS System. SUELTO Retail Operations.
+        </div>
+      </div>
 
-              <div style={{ position: "relative", zIndex: 1 }}>
-                <input
-                  type="password"
-                  value={pin}
-                  onChange={(e) => {
-                    // Only allow numeric input
-                    const numericValue = e.target.value.replace(/\D/g, '');
-                    // Limit to 6 digits
-                    if (numericValue.length <= 6) {
-                      setPin(numericValue);
-                    }
-                  }}
-                  placeholder="Enter your 6-digit PIN"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  maxLength="6"
-                  style={{
-                    width: "100%",
-                    padding: "15px",
-                    borderRadius: "12px",
-                    border: "2px solid #e0e0e0",
-                    marginBottom: "15px",
-                    fontSize: "18px",
-                    textAlign: "center",
-                    letterSpacing: "8px",
-                    backgroundColor: "#f8f9fa",
-                    transition: "all 0.3s ease",
-                    outline: "none",
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.borderColor = "#1a2a6c";
-                    e.target.style.boxShadow = "0 0 0 3px rgba(26, 42, 108, 0.1)";
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = "#e0e0e0";
-                    e.target.style.boxShadow = "none";
-                  }}
-                />
-
-                {/* PIN indicator dots */}
-                <div style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  gap: "10px",
-                  marginBottom: "20px"
-                }}>
-                  {[...Array(6)].map((_, index) => (
-                    <div
-                      key={index}
-                      style={{
-                        width: "12px",
-                        height: "12px",
-                        borderRadius: "50%",
-                        backgroundColor: index < pin.length ? "#1a2a6c" : "#e0e0e0",
-                        transition: "all 0.2s ease"
-                      }}
-                    />
-                  ))}
-                </div>
-
-                {error && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    style={{
-                      backgroundColor: "rgba(220, 53, 69, 0.1)",
-                      padding: "10px 15px",
-                      borderRadius: "8px",
-                      marginBottom: "20px"
-                    }}
-                  >
-                    <Typography color="error" style={{ fontSize: "14px", textAlign: "center" }}>
-                      {error}
-                    </Typography>
-                  </motion.div>
-                )}
-
-                <div style={{ display: "flex", gap: "15px", justifyContent: "center", marginTop: "10px" }}>
-                  <motion.button
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={closeModal}
-                    style={{
-                      padding: "12px 24px",
-                      borderRadius: "12px",
-                      border: "1px solid #e0e0e0",
-                      backgroundColor: "white",
-                      cursor: "pointer",
-                      fontWeight: "600",
-                      fontSize: "15px",
-                      color: "#666",
-                      transition: "all 0.3s ease",
-                      width: "45%",
-                    }}
-                  >
-                    Cancel
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: loading ? 1 : 1.03 }}
-                    whileTap={{ scale: loading ? 1 : 0.98 }}
-                    onClick={handlePinSubmit}
-                    disabled={loading}
-                    style={{
-                      padding: "12px 24px",
-                      borderRadius: "12px",
-                      border: "none",
-                      background: "linear-gradient(135deg, #1a2a6c 0%, #b21f1f 100%)",
-                      color: "white",
-                      cursor: loading ? "not-allowed" : "pointer",
-                      fontWeight: "600",
-                      fontSize: "15px",
-                      transition: "all 0.3s ease",
-                      width: "45%",
-                      boxShadow: "0 4px 10px rgba(26, 42, 108, 0.2)",
-                      opacity: loading ? 0.8 : 1,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "8px"
-                    }}
-                  >
-                    {loading ? (
-                      <>
-                        <div
-                          style={{
-                            width: "16px",
-                            height: "16px",
-                            border: "2px solid rgba(255,255,255,0.3)",
-                            borderTop: "2px solid white",
-                            borderRadius: "50%",
-                            animation: "spin 1s linear infinite",
-                          }}
-                        />
-                        <span>Logging in...</span>
-                      </>
-                    ) : (
-                      "Login"
-                    )}
-                  </motion.button>
-                </div>
-
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  onClick={() => setIsForgotPin(true)}
-                  className={styles.forgotPinButton}
-                  style={{
-                    marginTop: "20px",
-                    width: "100%",
-                    textAlign: "center",
-                    background: "none",
-                    border: "none",
-                    color: "#1a2a6c",
-                    cursor: "pointer",
-                    fontSize: "14px",
-                    fontWeight: "500",
-                    textDecoration: "underline",
-                    padding: "8px 0",
-                  }}
-                >
-                  Forgot PIN?
-                </motion.button>
-              </div>
-            </>
-          ) : (
-            <>
-              <div style={{ position: "relative", zIndex: 1, marginBottom: "30px", textAlign: "center" }}>
-                {selectedUser && (
-                  <motion.div
-                    initial={{ y: -20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.2, duration: 0.5 }}
-                    style={{ marginBottom: "15px" }}
-                  >
-                    <img
-                      src={selectedUser.image ? (selectedUser.image.startsWith('http') ? selectedUser.image : `${getApiUrl()}/${selectedUser.image}`) : ''}
-                      alt={`${selectedUser.firstname}'s avatar`}
-                      style={{
-                        width: "100px",
-                        height: "100px",
-                        borderRadius: "50%",
-                        objectFit: "cover",
-                        border: "4px solid white",
-                        boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
-                        margin: "0 auto",
-                        display: "block",
-                        marginTop: "20px"
-                      }}
-                    />
-                    <Typography
-                      variant="h5"
-                      style={{
-                        marginTop: "15px",
-                        fontWeight: "700",
-                        color: "#1a2a6c",
-                        textAlign: "center"
-                      }}
-                    >
-                      {selectedUser.firstname} {selectedUser.lastname}
-                    </Typography>
-                  </motion.div>
-                )}
-                <Typography
-                  variant="h6"
-                  style={{
-                    marginTop: "20px",
-                    fontWeight: "600",
-                    color: "#333",
-                    textAlign: "center"
-                  }}
-                >
-                  Forgot Your PIN?
-                </Typography>
-                <Typography
-                  style={{
-                    marginTop: "10px",
-                    fontSize: "14px",
-                    color: "#666",
-                    textAlign: "center",
-                    maxWidth: "90%",
-                    margin: "0 auto"
-                  }}
-                >
-                  Please enter your email address to receive a PIN reset link.
-                </Typography>
-              </div>
-
-              <div style={{ position: "relative", zIndex: 1 }}>
-                <motion.div
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email address"
-                    style={{
-                      width: "100%",
-                      padding: "15px",
-                      borderRadius: "12px",
-                      border: "2px solid #e0e0e0",
-                      marginBottom: "20px",
-                      fontSize: "16px",
-                      backgroundColor: "#f8f9fa",
-                      transition: "all 0.3s ease",
-                      outline: "none",
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = "#1a2a6c";
-                      e.target.style.boxShadow = "0 0 0 3px rgba(26, 42, 108, 0.1)";
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = "#e0e0e0";
-                      e.target.style.boxShadow = "none";
-                    }}
-                  />
-
-                  {resetError && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      style={{
-                        backgroundColor: "rgba(220, 53, 69, 0.1)",
-                        padding: "10px 15px",
-                        borderRadius: "8px",
-                        marginBottom: "20px"
-                      }}
-                    >
-                      <Typography color="error" style={{ fontSize: "14px", textAlign: "center" }}>
-                        {resetError}
-                      </Typography>
-                    </motion.div>
-                  )}
-
-                  <div style={{ display: "flex", gap: "15px", justifyContent: "center", marginTop: "10px" }}>
-                    <motion.button
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => setIsForgotPin(false)}
-                      style={{
-                        padding: "12px 24px",
-                        borderRadius: "12px",
-                        border: "1px solid #e0e0e0",
-                        backgroundColor: "white",
-                        cursor: "pointer",
-                        fontWeight: "600",
-                        fontSize: "15px",
-                        color: "#666",
-                        transition: "all 0.3s ease",
-                        width: "45%",
-                      }}
-                    >
-                      Back
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: loading ? 1 : 1.03 }}
-                      whileTap={{ scale: loading ? 1 : 0.98 }}
-                      onClick={handleForgotPin}
-                      disabled={loading}
-                      style={{
-                        padding: "12px 24px",
-                        borderRadius: "12px",
-                        border: "none",
-                        background: "linear-gradient(135deg, #1a2a6c 0%, #b21f1f 100%)",
-                        color: "white",
-                        cursor: loading ? "not-allowed" : "pointer",
-                        fontWeight: "600",
-                        fontSize: "15px",
-                        transition: "all 0.3s ease",
-                        width: "45%",
-                        boxShadow: "0 4px 10px rgba(26, 42, 108, 0.2)",
-                        opacity: loading ? 0.8 : 1,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "8px"
-                      }}
-                    >
-                      {loading ? (
-                        <>
-                          <div
-                            style={{
-                              width: "16px",
-                              height: "16px",
-                              border: "2px solid rgba(255,255,255,0.3)",
-                              borderTop: "2px solid white",
-                              borderRadius: "50%",
-                              animation: "spin 1s linear infinite",
-                            }}
-                          />
-                          <span>Sending...</span>
-                        </>
-                      ) : (
-                        "Reset PIN"
-                      )}
-                    </motion.button>
-                  </div>
-                </motion.div>
-              </div>
-            </>
-          )}
-        </motion.div>
-      </Modal>
-
-      <AnimatePresence>
+      {/* Right side: PIN Pad or Cashier profiles list container */}
+      <div className="flex-1 bg-slate-50 p-6 md:p-12 flex flex-col justify-center items-center">
+        
+        {/* Alert banners if any */}
         {snackbarMessage && (
-          <motion.div
-            className={`${styles.snackbar} ${snackbarMessage.includes('success') || snackbarMessage.includes('sent') ? styles.success : styles.error}`}
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 50 }}
-            transition={{ type: "spring", stiffness: 400, damping: 30 }}
-            style={{
-              position: "fixed",
-              bottom: "30px",
-              left: "50%",
-              transform: "translateX(-50%)",
-              backgroundColor: snackbarMessage.includes('success') || snackbarMessage.includes('sent')
-                ? "rgba(46, 204, 113, 0.95)"
-                : "rgba(231, 76, 60, 0.95)",
-              color: "white",
-              padding: "16px 24px",
-              borderRadius: "12px",
-              boxShadow: "0 6px 20px rgba(0, 0, 0, 0.15)",
-              backdropFilter: "blur(10px)",
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-              zIndex: 2000,
-              minWidth: "280px",
-              textAlign: "center",
-              justifyContent: "center"
-            }}
-          >
-            <i
-              className={snackbarMessage.includes('success') || snackbarMessage.includes('sent')
-                ? "fas fa-check-circle"
-                : "fas fa-exclamation-circle"}
-              style={{ fontSize: "20px" }}
-            />
-            <span style={{ fontWeight: "500" }}>{snackbarMessage}</span>
-          </motion.div>
+          <div className="mb-6 w-full max-w-md bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-lg text-sm font-semibold flex items-center gap-2">
+            <FaCheckCircle className="text-emerald-500" />
+            <span>{snackbarMessage}</span>
+          </div>
         )}
-      </AnimatePresence>
-    </motion.div>
+
+        <div className="w-full max-w-md bg-white border border-slate-200 rounded-xl p-6 md:p-8 shadow-sm">
+          
+          <AnimatePresence mode="wait">
+            {!selectedUser ? (
+              /* Cashier Selection view */
+              <motion.div
+                key="selection"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-6"
+              >
+                <div className="text-center md:text-left">
+                  <h3 className="font-bold text-slate-900 text-lg">Select Cashier</h3>
+                  <p className="text-slate-400 text-xs mt-0.5">Click your cashier profile card to enter PIN</p>
+                </div>
+
+                {loading ? (
+                  <div className="flex justify-center items-center py-20">
+                    <div className="w-8 h-8 border-3 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
+                  </div>
+                ) : (
+                  <div className="space-y-2.5 max-h-[360px] overflow-y-auto pr-1 scrollbar-thin">
+                    {users.length > 0 ? (
+                      users.map((user) => (
+                        <button
+                          key={user._id}
+                          onClick={() => handleUserClick(user)}
+                          className="w-full flex items-center gap-3.5 p-3.5 border border-slate-200 hover:border-slate-350 rounded-xl text-left bg-white hover:bg-slate-50 transition-all hover:translate-x-0.5 active:scale-99"
+                        >
+                          <div className="w-10 h-10 rounded-full border border-slate-200 overflow-hidden flex-shrink-0 flex items-center justify-center bg-slate-50">
+                            {user.image ? (
+                              <img
+                                src={user.image.startsWith('http') ? user.image : `${getApiUrl()}/${user.image}`}
+                                alt={user.firstname}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <FaUserCircle className="text-slate-400 text-lg" />
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <span className="font-semibold text-slate-800 text-sm block truncate">
+                              {user.firstname} {user.lastname}
+                            </span>
+                            <span className="text-[11px] text-slate-400 block truncate mt-0.5">
+                              {user.email}
+                            </span>
+                          </div>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="text-center py-12 text-slate-400">
+                        <FaUserCircle className="mx-auto text-3xl mb-2 text-slate-300" />
+                        <p className="text-xs">No cashier profiles created yet.</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="border-t border-slate-100 pt-4 flex justify-between items-center text-xs">
+                  <span className="text-slate-400">Need to create an account?</span>
+                  <Link to="/register" className="font-bold text-slate-900 hover:underline">
+                    Register Store
+                  </Link>
+                </div>
+              </motion.div>
+            ) : (
+              /* PIN entry screen */
+              <motion.div
+                key="pin-pad"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-6"
+              >
+                
+                {/* Header Back & Profile avatar */}
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={closeModal}
+                    className="hover:bg-slate-100 p-2 rounded-lg text-slate-500 hover:text-slate-800 transition-all border border-slate-200"
+                  >
+                    <FaArrowLeft className="text-xs" />
+                  </button>
+                  <div className="w-9 h-9 rounded-full border border-slate-200 overflow-hidden flex-shrink-0">
+                    <img
+                      src={selectedUser.image ? (selectedUser.image.startsWith('http') ? selectedUser.image : `${getApiUrl()}/${selectedUser.image}`) : ''}
+                      alt={selectedUser.firstname}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="font-bold text-slate-800 text-sm truncate">{selectedUser.firstname} {selectedUser.lastname}</h4>
+                    <span className="text-slate-400 text-[10px] block truncate">{selectedUser.email}</span>
+                  </div>
+                </div>
+
+                {!isForgotPin ? (
+                  /* PIN keypad section */
+                  <div className="space-y-5">
+                    <div className="text-center">
+                      <h4 className="font-bold text-slate-950 text-base">Key in security PIN</h4>
+                      <p className="text-slate-400 text-[11px] mt-0.5">Please provide your 6-digit cashier PIN</p>
+                    </div>
+
+                    <input
+                      type="password"
+                      value={pin}
+                      onChange={(e) => {
+                        const numericValue = e.target.value.replace(/\D/g, '');
+                        if (numericValue.length <= 6) setPin(numericValue);
+                      }}
+                      placeholder="••••••"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength="6"
+                      className="w-full py-3 border-2 border-slate-200 focus:border-slate-400 focus:outline-none rounded-xl text-center text-xl font-bold tracking-[8px] bg-slate-50 focus:bg-white transition-all"
+                    />
+
+                    {/* Circle Indicators */}
+                    <div className="flex justify-center gap-2">
+                      {[...Array(6)].map((_, idx) => (
+                        <div
+                          key={idx}
+                          className={`w-2.5 h-2.5 rounded-full transition-all duration-200 ${
+                            idx < pin.length ? 'bg-slate-900 scale-110' : 'bg-slate-200'
+                          }`}
+                        />
+                      ))}
+                    </div>
+
+                    {error && (
+                      <div className="bg-red-50 border border-red-100 text-red-700 px-3 py-2.5 rounded-lg text-xs font-medium text-center">
+                        {error}
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        onClick={closeModal}
+                        className="py-2.5 border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold rounded-lg text-xs transition-all active:scale-95"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handlePinSubmit}
+                        disabled={pin.length < 6 || loading}
+                        className="py-2.5 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-200 text-white disabled:text-slate-400 font-bold rounded-lg text-xs transition-all shadow-sm active:scale-95 disabled:cursor-not-allowed"
+                      >
+                        {loading ? 'Submitting...' : 'Login'}
+                      </button>
+                    </div>
+
+                    <button
+                      onClick={() => setIsForgotPin(true)}
+                      className="w-full text-center text-xs font-semibold text-slate-500 hover:text-slate-800 hover:underline transition-colors pt-2 block"
+                    >
+                      Forgot cashier security PIN?
+                    </button>
+                  </div>
+                ) : (
+                  /* Forgot PIN password reset requester */
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-bold text-slate-950 text-base">Security PIN Reset</h4>
+                      <p className="text-slate-400 text-xs mt-0.5">Please specify your account email address to send reset instructions</p>
+                    </div>
+
+                    <div className="space-y-3">
+                      <label className="text-[11px] font-semibold text-slate-500 block uppercase">Account Email</label>
+                      <input
+                        type="email"
+                        placeholder="cashier@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full px-3.5 py-2.5 border border-slate-200 focus:border-slate-400 focus:outline-none rounded-lg text-xs bg-slate-50 focus:bg-white transition-all font-semibold"
+                      />
+                    </div>
+
+                    {resetError && (
+                      <div className="bg-red-50 border border-red-100 text-red-700 px-3 py-2.5 rounded-lg text-xs font-medium text-center">
+                        {resetError}
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-3 pt-2">
+                      <button
+                        onClick={() => setIsForgotPin(false)}
+                        className="py-2.5 border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold rounded-lg text-xs transition-all active:scale-95"
+                      >
+                        Back
+                      </button>
+                      <button
+                        onClick={handleForgotPin}
+                        disabled={loading}
+                        className="py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs transition-colors shadow-sm disabled:opacity-50"
+                      >
+                        {loading ? 'Sending...' : 'Request PIN link'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+        </div>
+      </div>
+
+    </div>
   );
 }
 

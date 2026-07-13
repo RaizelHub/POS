@@ -209,3 +209,17 @@ export const deleteAllProducts = async (req, res) => {
     return res.status(500).json({ message: "Server error, could not delete products." });
   }
 };
+
+// Get all low stock products
+export const getLowStockProducts = async (req, res) => {
+  try {
+    // Find products where quantity <= lowStockThreshold
+    const lowStockItems = await Product.find({
+      $expr: { $lte: ['$quantity', '$lowStockThreshold'] }
+    });
+    res.json(lowStockItems);
+  } catch (error) {
+    console.error('Error fetching low stock products:', error);
+    res.status(500).json({ message: 'Server error, could not fetch low stock products.', error: error.message });
+  }
+};

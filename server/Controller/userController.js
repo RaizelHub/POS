@@ -6,6 +6,9 @@ import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 import axios from 'axios';
 import Transaction from '../Models/transaction.js';
+import Product from '../Models/product.js';
+import Customer from '../Models/customer.js';
+import Shift from '../Models/shift.js';
 import mongoose from 'mongoose';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -82,15 +85,6 @@ export const registerUser = async (req, res) => {
     });
   }
 
-  // Restrict email to buksu.edu.ph or student.buksu.edu.ph domains only
-  const allowedDomains = ["buksu.edu.ph", "student.buksu.edu.ph"];
-  const emailParts = email.split("@");
-
-  if (emailParts.length !== 2 || !allowedDomains.includes(emailParts[1])) {
-    return res.status(400).json({
-      message: "Only emails from buksu.edu.ph or student.buksu.edu.ph are allowed.",
-    });
-  }
 
   const session = await UserModel.startSession();
   try {
@@ -327,7 +321,21 @@ export const deleteUser = async (req, res) => {
 };
 import { v4 as uuidv4 } from 'uuid'; // Ensure you have this import for uuid
 export const addTransaction = async (req, res) => {
-  const { userId, products, paymentMethod, paymentStatus, transactionDate } = req.body;
+  const {
+    userId,
+    products,
+    paymentMethod,
+    paymentStatus,
+    transactionDate,
+    discountAmount = 0,
+    originalAmount = 0,
+    promoCode,
+    customerId,
+    shiftId,
+    loyaltyPointsEarned = 0,
+    loyaltyPointsRedeemed = 0,
+    splitDetails,
+  } = req.body;
 
   console.log('Request Body:', req.body); // Debug log
 
@@ -360,11 +368,63 @@ export const addTransaction = async (req, res) => {
       transactionId: uuidv4(), // Generate a new transaction ID
       lastUpdated: new Date(),
       transactionDate: actualTransactionDate,
+      discountAmount,
+      originalAmount,
+      promoCode,
+      customerId,
+      shiftId,
+      loyaltyPointsEarned,
+      loyaltyPointsRedeemed,
+      splitDetails,
     });
 
     // Save the new transaction
     const savedTransaction = await transaction.save();
     console.log('Transaction saved successfully:', savedTransaction); // Debug log
+
+    // 1. Update active cashier shift if applicable
+    if (shiftId) {
+      try {
+        await Shift.findByIdAndUpdate(shiftId, {
+          $inc: { transactionsCount: 1 }
+        });
+        console.log(`Incremented transactions count for shift ${shiftId}`);
+      } catch (shiftError) {
+        console.error(`Failed to update shift transactions count:`, shiftError.message);
+      }
+    }
+
+    // 2. Update customer purchase history and loyalty points if applicable
+    if (customerId) {
+      try {
+        const finalAmount = originalAmount - discountAmount;
+        await Customer.findByIdAndUpdate(customerId, {
+          $inc: {
+            purchaseCount: 1,
+            totalSpent: finalAmount > 0 ? finalAmount : 0,
+            loyaltyPoints: loyaltyPointsEarned - loyaltyPointsRedeemed
+          }
+        });
+        console.log(`Updated customer loyalty points and spending history for customer ${customerId}`);
+      } catch (customerError) {
+        console.error(`Failed to update customer purchase history:`, customerError.message);
+      }
+    }
+
+    // Decrement stock for each product in the transaction
+    for (const item of processedProducts) {
+      const pId = item.productId || item._id;
+      if (pId) {
+        try {
+          await Product.findByIdAndUpdate(pId, {
+            $inc: { quantity: -item.quantity }
+          });
+          console.log(`Decremented product ${pId} quantity by ${item.quantity}`);
+        } catch (stockError) {
+          console.error(`Failed to decrement stock for product ${pId}:`, stockError.message);
+        }
+      }
+    }
 
     // Send the success response
     res.status(201).json({ message: 'Transaction added successfully!', transaction: savedTransaction });

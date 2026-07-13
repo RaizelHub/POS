@@ -1,10 +1,16 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+/* CSS Design system tokens */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
-  --primary-color: #2563eb;
-  --secondary-color: #7c3aed;
-  --success-color: #10b981;
-  --error-color: #ef4444;
+  --primary-color: #059669;
+  --primary-hover: #047857;
+  --secondary-color: #0f172a;
+  --success-color: #059669;
+  --error-color: #e11d48;
   --background-color: #f8fafc;
   --text-primary: #1e293b;
   --text-secondary: #64748b;
@@ -20,7 +26,7 @@
 
 body {
   margin: 0;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Inter', system-ui, sans-serif;
   background-color: var(--background-color);
   color: var(--text-primary);
   line-height: 1.5;
@@ -54,8 +60,12 @@ html {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: #64748b;
 }
+
+button, input, select, textarea { font: inherit; }
+
+:focus-visible { outline: 3px solid rgba(5, 150, 105, .32); outline-offset: 2px; }
 
 /* Common utility classes */
 .container {
@@ -101,4 +111,3 @@ html {
     padding: 0 0.5rem;
   }
 }
-
