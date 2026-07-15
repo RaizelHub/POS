@@ -5,22 +5,24 @@ import {
 } from 'react-icons/fa';
 import config from '../config';
 
-const TransactionsLedger = ({ isModalView = false, onClose }) => {
+const TransactionsLedger = ({ isModalView = false, limitToCashierId = '', onClose }) => {
   const [transactions, setTransactions] = useState([]);
   const [cashiers, setCashiers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [confirmingId, setConfirmingId] = useState(null);
 
   // Filters state
-  const [selectedCashier, setSelectedCashier] = useState('');
+  const [selectedCashier, setSelectedCashier] = useState(limitToCashierId);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [statusFilter, setStatusFilter] = useState('All'); // 'All', 'Paid', 'Pay Later'
 
   useEffect(() => {
-    fetchCashiers();
+    if (!limitToCashierId) {
+      fetchCashiers();
+    }
     fetchLedgerData();
-  }, [selectedCashier, startDate, endDate]);
+  }, [selectedCashier, limitToCashierId, startDate, endDate]);
 
   const fetchCashiers = async () => {
     try {
@@ -39,7 +41,8 @@ const TransactionsLedger = ({ isModalView = false, onClose }) => {
     setLoading(true);
     try {
       let queryParams = [];
-      if (selectedCashier) queryParams.push(`cashierId=${selectedCashier}`);
+      const activeCashier = limitToCashierId || selectedCashier;
+      if (activeCashier) queryParams.push(`cashierId=${activeCashier}`);
       if (startDate) queryParams.push(`startDate=${startDate}`);
       if (endDate) queryParams.push(`endDate=${endDate}`);
 
@@ -199,23 +202,25 @@ const TransactionsLedger = ({ isModalView = false, onClose }) => {
         <div className="flex items-center gap-2 text-slate-700 font-bold text-xs uppercase tracking-wide">
           <FaFilter className="text-[10px] text-slate-400" /> Filter Logs
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-          <div>
-            <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1.5">Cashier Profile</label>
-            <div className="relative">
-              <FaUser className="absolute left-3 top-3 text-slate-400 text-xs" />
-              <select
-                value={selectedCashier}
-                onChange={(e) => setSelectedCashier(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-750 font-semibold focus:bg-white focus:outline-none focus:border-slate-350"
-              >
-                <option value="">All Cashiers</option>
-                {cashiers.map(c => (
-                  <option key={c._id} value={c._id}>{c.firstname} {c.lastname}</option>
-                ))}
-              </select>
+        <div className={`grid grid-cols-1 ${limitToCashierId ? 'md:grid-cols-3' : 'md:grid-cols-4'} gap-4 items-end`}>
+          {!limitToCashierId && (
+            <div>
+              <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1.5">Cashier Profile</label>
+              <div className="relative">
+                <FaUser className="absolute left-3 top-3 text-slate-400 text-xs" />
+                <select
+                  value={selectedCashier}
+                  onChange={(e) => setSelectedCashier(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-750 font-semibold focus:bg-white focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none transition-all"
+                >
+                  <option value="">All Cashiers</option>
+                  {cashiers.map(c => (
+                    <option key={c._id} value={c._id}>{c.firstname} {c.lastname}</option>
+                  ))}
+                </select>
+              </div>
             </div>
-          </div>
+          )}
 
           <div>
             <label className="block text-[11px] font-bold text-slate-400 uppercase mb-1.5">From Date</label>
@@ -225,7 +230,7 @@ const TransactionsLedger = ({ isModalView = false, onClose }) => {
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-750 font-semibold focus:bg-white focus:outline-none focus:border-slate-350"
+                className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-750 font-semibold focus:bg-white focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none transition-all"
               />
             </div>
           </div>
@@ -238,7 +243,7 @@ const TransactionsLedger = ({ isModalView = false, onClose }) => {
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-750 font-semibold focus:bg-white focus:outline-none focus:border-slate-350"
+                className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-750 font-semibold focus:bg-white focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none transition-all"
               />
             </div>
           </div>
@@ -251,7 +256,7 @@ const TransactionsLedger = ({ isModalView = false, onClose }) => {
                 <button
                   key={tab}
                   onClick={() => setStatusFilter(tab)}
-                  className={`flex-1 py-1 text-center text-xs font-bold rounded transition-all ${statusFilter === tab ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                  className={`flex-1 py-1 text-center text-xs font-bold rounded transition-all ${statusFilter === tab ? 'bg-teal-700 text-white shadow-sm' : 'text-slate-500 hover:text-slate-750 hover:bg-slate-50'}`}
                 >
                   {tab}
                 </button>
@@ -264,7 +269,7 @@ const TransactionsLedger = ({ isModalView = false, onClose }) => {
       {/* Main Ledger List */}
       {loading ? (
         <div className="bg-white border border-slate-200 rounded-xl p-12 text-center shadow-sm">
-          <div className="w-8 h-8 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-8 h-8 border-2 border-teal-700 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-sm font-semibold text-slate-500">Querying transaction log sheets...</p>
         </div>
       ) : Object.keys(groupedData).length === 0 ? (

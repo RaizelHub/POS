@@ -6,16 +6,34 @@
 @tailwind utilities;
 
 :root {
-  --primary-color: #059669;
-  --primary-hover: #047857;
-  --secondary-color: #0f172a;
-  --success-color: #059669;
-  --error-color: #e11d48;
-  --background-color: #f8fafc;
-  --text-primary: #1e293b;
-  --text-secondary: #64748b;
-  --border-radius: 8px;
-  --transition-speed: 0.3s;
+  --primary-color: #0f766e; /* Teal 700 - Professional brand anchor */
+  --primary-hover: #0d9488; /* Teal 600 */
+  --primary-light: #ccfbf1; /* Teal 100 */
+  --secondary-color: #0f172a; /* Slate 900 */
+  --secondary-hover: #1e293b; /* Slate 800 */
+  --accent-color: #6366f1; /* Indigo 500 */
+  --success-color: #10b981; /* Emerald 500 */
+  --success-light: #d1fae5; /* Emerald 100 */
+  --warning-color: #f59e0b; /* Amber 500 */
+  --warning-light: #fef3c7; /* Amber 100 */
+  --error-color: #ef4444; /* Red 500 */
+  --error-light: #fee2e2; /* Red 100 */
+  --info-color: #3b82f6; /* Blue 500 */
+  --info-light: #dbeafe; /* Blue 100 */
+  --background-color: #f8fafc; /* Slate 50 */
+  --card-background: #ffffff;
+  --border-color: #e2e8f0; /* Slate 200 */
+  --border-hover: #cbd5e1; /* Slate 300 */
+  --text-primary: #0f172a; /* Slate 900 */
+  --text-secondary: #475569; /* Slate 600 */
+  --text-muted: #94a3b8; /* Slate 400 */
+  --border-radius-sm: 6px;
+  --border-radius-md: 10px;
+  --border-radius-lg: 16px;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.08);
+  --transition-speed: 0.2s;
 }
 
 * {
@@ -26,7 +44,7 @@
 
 body {
   margin: 0;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background-color: var(--background-color);
   color: var(--text-primary);
   line-height: 1.5;
@@ -45,40 +63,47 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Custom scrollbar */
+/* Premium Scrollbars */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: var(--background-color);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
+  background: var(--border-color);
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #64748b;
+  background: var(--text-muted);
 }
 
-button, input, select, textarea { font: inherit; }
+button, input, select, textarea { 
+  font-family: inherit; 
+}
 
-:focus-visible { outline: 3px solid rgba(5, 150, 105, .32); outline-offset: 2px; }
+:focus-visible { 
+  outline: 2px solid var(--accent-color); 
+  outline-offset: 2px; 
+}
 
-/* Common utility classes */
+/* Utility Containers */
 .container {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 0 1.5rem;
 }
 
 .text-center {
   text-align: center;
 }
 
+/* Layout Padding Margins */
 .mt-1 { margin-top: 0.25rem; }
 .mt-2 { margin-top: 0.5rem; }
 .mt-3 { margin-top: 1rem; }
@@ -91,23 +116,77 @@ button, input, select, textarea { font: inherit; }
 .mb-4 { margin-bottom: 1.5rem; }
 .mb-5 { margin-bottom: 2rem; }
 
-/* Animation classes */
+/* Micro-interactions & animations */
 .fade-in {
-  animation: fadeIn var(--transition-speed) ease-in;
+  animation: fadeIn var(--transition-speed) cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
+    transform: translateY(4px);
   }
   to {
     opacity: 1;
+    transform: translateY(0);
   }
 }
 
-/* Responsive design */
+/* Skeleton Loading Pulsar */
+.skeleton {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: loading-pulse 1.5s infinite;
+}
+
+@keyframes loading-pulse {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Glassmorphic/Sleek Overlay Styles for Modals */
+.overlay-blur {
+  backdrop-filter: blur(8px);
+  background-color: rgba(15, 23, 42, 0.4);
+}
+
+/* Receipt thermal paper styling */
+.thermal-receipt {
+  background: #ffffff;
+  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+  position: relative;
+  border: 1px solid var(--border-color);
+}
+
+.thermal-receipt::after {
+  content: "";
+  display: block;
+  height: 10px;
+  background-image: linear-gradient(135deg, transparent 50%, #ffffff 50%), linear-gradient(225deg, transparent 50%, #ffffff 50%);
+  background-size: 10px 10px;
+  background-repeat: repeat-x;
+  position: absolute;
+  bottom: -10px;
+  left: 0;
+  right: 0;
+}
+
 @media (max-width: 768px) {
   .container {
-    padding: 0 0.5rem;
+    padding: 0 1rem;
   }
+}
+
+/* No Scrollbar Utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }

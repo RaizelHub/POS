@@ -27,6 +27,7 @@ function UserList() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("error");
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -53,6 +54,30 @@ function UserList() {
     } catch (error) {
       console.error("Error fetching transaction history:", error.message);
       setTransactions({ paid: [], payLater: [] });
+    }
+  };
+
+  const handleAssignStation = async (userId, newStation) => {
+    try {
+      const response = await axios.put(`${config.apiUrl}/api/user/${userId}`, {
+        station: newStation
+      });
+      
+      // Update local state
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user._id === userId ? { ...user, station: newStation } : user
+        )
+      );
+      
+      setSnackbarSeverity("success");
+      setSnackbarMessage(`Successfully assigned cashier to ${newStation === 'Unassigned' ? 'Standby' : newStation}.`);
+      setSnackbarOpen(true);
+    } catch (error) {
+      console.error("Error assigning station:", error.message);
+      setSnackbarSeverity("error");
+      setSnackbarMessage("Failed to update workstation assignment.");
+      setSnackbarOpen(true);
     }
   };
 
@@ -122,7 +147,7 @@ function UserList() {
             placeholder="Search cashier profile..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 border border-slate-200 focus:border-slate-400 focus:outline-none rounded-lg text-xs bg-white font-semibold transition-all"
+            className="w-full pl-9 pr-4 py-2 border border-slate-200 focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none rounded-lg text-xs bg-white font-semibold transition-all"
           />
         </div>
       </div>
@@ -175,6 +200,20 @@ function UserList() {
                       {user.isVerified ? 'Verified' : 'Unverified'}
                     </span>
                   </div>
+                </div>
+                <div className="flex flex-col gap-1.5 text-left border-t border-slate-100 pt-3 mt-1">
+                  <span className="font-extrabold text-slate-450 uppercase text-[9px] tracking-wider">Assigned POS Workstation</span>
+                  <select
+                    value={user.station || 'Unassigned'}
+                    onChange={(e) => handleAssignStation(user._id, e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-205 focus:border-teal-700 focus:ring-1 focus:ring-teal-700 rounded-lg py-1.5 px-2.5 outline-none font-semibold text-xs text-slate-700 transition-all cursor-pointer"
+                  >
+                    <option value="Unassigned">Standby / Unassigned</option>
+                    <option value="POS-01">Register Station 01 (POS-01)</option>
+                    <option value="POS-02">Register Station 02 (POS-02)</option>
+                    <option value="POS-03">Register Station 03 (POS-03)</option>
+                    <option value="POS-04">Register Station 04 (POS-04)</option>
+                  </select>
                 </div>
 
                 <div className="border-t border-slate-100 pt-3 flex justify-end">
@@ -299,7 +338,7 @@ function UserList() {
       >
         <Alert
           onClose={handleCloseSnackbar}
-          severity="error"
+          severity={snackbarSeverity}
           variant="filled"
           sx={{ borderRadius: "12px", fontSize: "12px", fontWeight: "600" }}
         >

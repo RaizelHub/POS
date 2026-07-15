@@ -11,6 +11,7 @@ import Customer from '../Models/customer.js';
 import Shift from '../Models/shift.js';
 import mongoose from 'mongoose';
 import { formatDistanceToNow } from 'date-fns';
+import sendStationAssignmentEmail from '../utills/sendStationAssignmentEmail.js';
 
 
 
@@ -26,9 +27,9 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // Token generation utility
- const createToken = (id, email, expiresIn = '1d') => {
+const createToken = (id, email, expiresIn = '1d') => {
   const jwtSecretKey = process.env.JWT_SECRET_KEY;
-  return jwt.sign({ id, email }, jwtSecretKey,{ expiresIn });
+  return jwt.sign({ id, email }, jwtSecretKey, { expiresIn });
 
 };
 
@@ -61,10 +62,10 @@ export const sendVerificationEmail = (email, verificationToken) => {
 
 
 export const registerUser = async (req, res) => {
-  const { firstname, lastname, email, pin,  image } = req.body;
+  const { firstname, lastname, email, pin, image } = req.body;
 
   // Validate required fields
-  if (!firstname || !lastname || !email || !pin ) {
+  if (!firstname || !lastname || !email || !pin) {
     // Check which fields are missing
     const missingFields = [];
     if (!firstname) missingFields.push("First Name");
@@ -231,7 +232,7 @@ export const loginUser = async (req, res) => {
     const token = createToken(user._id, user.email);
 
     // Include user details in the response (excluding sensitive fields like `pin`)
-    const { _id, firstname, lastname, email: userEmail, image, createdAt ,lastLogin} = user;
+    const { _id, firstname, lastname, email: userEmail, image, createdAt, lastLogin } = user;
 
     return res.status(200).json({
       message: 'Login successful.',
@@ -290,15 +291,31 @@ export const updateUser = async (req, res) => {
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: 'Invalid or missing user ID.' });
     }
+    
+    const existingUser = await UserModel.findById(id);
+    if (!existingUser) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
     const updateData = { ...req.body }; // image is now a URL
     if (updateData.pin) {
       const hashedPin = await bcrypt.hash(updateData.pin, 10);
       updateData.pin = hashedPin;
     }
+
+    const stationChanged = updateData.station !== undefined && updateData.station !== existingUser.station;
+
     const updatedUser = await UserModel.findByIdAndUpdate(id, updateData, { new: true });
-    if (!updatedUser) {
-      return res.status(404).json({ message: 'User not found.' });
+    
+    if (stationChanged) {
+      sendStationAssignmentEmail(
+        updatedUser.email,
+        updatedUser.firstname || 'Cashier',
+        updatedUser.lastname || '',
+        updatedUser.station
+      );
     }
+
     res.status(200).json({ message: 'User updated successfully', user: updatedUser });
   } catch (error) {
     res.status(500).json({ message: 'Error updating user.', error: error.message });

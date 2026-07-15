@@ -20,7 +20,7 @@ const sendVerificationEmail = (email, token) => {
     const verificationUrl = `${process.env.CLIENT_URL}/verify-email?token=${token}`;
 
     const mailOptions = {
-        from: process.env.EMAIL_USER || '2201102887@student.buksu.edu.ph',
+        from: process.env.EMAIL_USER || 'janmarkking@gmail.com',
         to: email,
         subject: 'Please verify your email',
         text: `Click the link to verify your email: ${verificationUrl}`,

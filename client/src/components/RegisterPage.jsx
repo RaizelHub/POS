@@ -134,21 +134,12 @@ function RegisterPage() {
     }
   };
 
-  const googleAuth = () => {
-    try {
-      // Fix google redirect URI to run dynamically using our server config API endpoint
-      window.open(`${config.apiUrl}/auth/google`, "_self");
-    } catch (error) {
-      setError("Google authentication failed. Please try again.");
-    }
-  };
-
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row font-sans text-slate-800 antialiased">
-      
+
       {/* Left side: Premium branding & features highlight */}
       <div className="w-full md:w-[420px] bg-slate-900 text-slate-350 p-8 flex flex-col justify-between border-r border-slate-800">
-        
+
         {/* Top Logo link */}
         <div className="flex items-center gap-3">
           <button
@@ -202,7 +193,7 @@ function RegisterPage() {
       {/* Right side: Registration Form container */}
       <div className="flex-1 bg-slate-50 p-6 md:p-12 flex flex-col justify-center items-center">
         <div className="w-full max-w-xl bg-white border border-slate-200 rounded-xl p-6 md:p-8 shadow-sm space-y-6">
-          
+
           <div className="text-center md:text-left">
             <h3 className="font-bold text-slate-900 text-lg">Create Cashier Account</h3>
             <p className="text-slate-400 text-xs mt-0.5">Please provide your details and create a 6-digit PIN</p>
@@ -232,7 +223,7 @@ function RegisterPage() {
           </AnimatePresence>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            
+
             {/* Account Details */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
@@ -282,7 +273,7 @@ function RegisterPage() {
 
             {/* Custom security PIN Code Inputs */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              
+
               <div className="space-y-2">
                 <label className="text-[11px] font-semibold text-slate-500 block uppercase">Choose 6-Digit PIN</label>
                 <div className="flex gap-1.5">
@@ -326,7 +317,7 @@ function RegisterPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs transition-colors shadow-sm disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-3 bg-teal-700 hover:bg-teal-600 text-white font-bold rounded-lg text-xs transition-colors shadow-sm disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
@@ -336,14 +327,6 @@ function RegisterPage() {
                 ) : (
                   <span>Register Account</span>
                 )}
-              </button>
-
-              <button
-                type="button"
-                onClick={googleAuth}
-                className="w-full py-2.5 border border-slate-200 hover:border-slate-350 text-slate-700 hover:bg-slate-50 font-bold rounded-lg text-xs transition-all flex items-center justify-center gap-2 active:scale-95"
-              >
-                <span>Google Single Sign-On</span>
               </button>
             </div>
 

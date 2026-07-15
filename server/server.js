@@ -11,9 +11,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import adminRoutes from './Routes/adminRoutes.js';
 import session from 'express-session';
-import authRoutes from './Routes/authRoutes.js';
 import bodyParser from 'body-parser';
-import passport from './Services/passport.js';
 import cookieParser from 'cookie-parser';
 import productRoutes from './Routes/productRoute.js'
 import salesRoutes from './Routes/salesRoutes.js'
@@ -24,6 +22,7 @@ import couponRoutes from './Routes/couponRoutes.js';
 import shiftRoutes from './Routes/shiftRoutes.js';
 import customerRoutes from './Routes/customerRoutes.js';
 import analyticsRoutes from './Routes/analyticsRoutes.js';
+import supplierRoutes from './Routes/supplierRoutes.js';
 import fs from 'fs';
 import jwt from 'jsonwebtoken';
 
@@ -123,28 +122,6 @@ const uploadDir = path.join(__dirname, 'ads');
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
-app.use(passport.initialize());
-app.use(passport.session());
-
-
-// Google OAuth route for callback
-app.get('/oauth2callback', (req, res, next) => {
-  console.log('Root OAuth callback route hit');
-  next();
-}, passport.authenticate('google', {
-  failureRedirect: `${process.env.CLIENT_URL}/register`,
-}), (req, res) => {
-  // Generate a JWT token upon successful login
-  const token = jwt.sign(
-    { id: req.user._id, email: req.user.email },
-    process.env.JWT_SECRET_KEY,
-    { expiresIn: '1h' }
-  );
-
-  // Set the token as a cookie
-  res.cookie('token', token, { httpOnly: true, secure: true, maxAge: 3600000 });
-  res.redirect(`${process.env.CLIENT_URL}/login-selection`);
-});
 
 // Test endpoint for CORS
 app.get('/api/cors-test', (req, res) => {
@@ -158,7 +135,6 @@ app.get('/api/cors-test', (req, res) => {
 // API routes
 app.use('/api', userRoutes);
 app.use('/api', adminRoutes);
-app.use('/auth', authRoutes);
 app.use('/api', productRoutes)
 app.use('/api', salesRoutes)
 app.use('/api/transactions', transactionRoutes);
@@ -168,6 +144,7 @@ app.use('/api', couponRoutes);
 app.use('/api', shiftRoutes);
 app.use('/api', customerRoutes);
 app.use('/api', analyticsRoutes);
+app.use('/api', supplierRoutes);
 
 
 // Global error handler

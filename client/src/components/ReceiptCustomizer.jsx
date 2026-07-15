@@ -80,8 +80,8 @@ function ReceiptCustomizer() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[500px]">
-        <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+      <div className="flex justify-center items-center py-20">
+        <div className="w-8 h-8 border-4 border-teal-700 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -91,7 +91,7 @@ function ReceiptCustomizer() {
       
       {/* Alert banner */}
       {alert && (
-        <div className={`p-4 rounded-xl flex items-center gap-3 border shadow-sm transition-all duration-300 ${alert.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-rose-50 border-rose-200 text-rose-800'}`}>
+        <div className={`p-4 rounded-xl flex items-center gap-3 border shadow-sm transition-all duration-300 ${alert.type === 'success' ? 'bg-teal-50 border-teal-200 text-teal-800' : 'bg-rose-50 border-rose-200 text-rose-800'}`}>
           {alert.type === 'success' ? <FaCheckCircle className="text-lg" /> : <FaExclamationCircle className="text-lg" />}
           <span className="text-sm font-semibold">{alert.message}</span>
         </div>
@@ -103,8 +103,8 @@ function ReceiptCustomizer() {
         {/* Left Side: Customize Form (7 cols) */}
         <form onSubmit={handleSave} className="lg:col-span-7 bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-6">
           <div className="border-b border-slate-100 pb-4">
-            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-              <FaReceipt className="text-emerald-500" /> Receipt Customizer
+            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                <FaReceipt className="text-teal-700" /> Receipt Customizer
             </h2>
             <p className="text-slate-500 text-xs mt-1">Configure layout, typography, messages, and business fields for all printed and digital receipt outputs.</p>
           </div>
@@ -115,55 +115,58 @@ function ReceiptCustomizer() {
               <FaStore /> Business Header Details
             </h3>
             
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Store Name</label>
+              <input
+                type="text"
+                name="storeName"
+                value={settings.storeName}
+                onChange={handleInputChange}
+                className="w-full bg-slate-50 border border-slate-200 focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none focus:bg-white text-sm rounded-lg px-3 py-2 transition-all font-semibold"
+                placeholder="Mega Store Inc."
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-xs font-semibold text-slate-700">Tagline / Sub-header</label>
+              <input
+                type="text"
+                name="tagline"
+                value={settings.tagline}
+                onChange={handleInputChange}
+                className="w-full bg-slate-50 border border-slate-200 focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none focus:bg-white text-sm rounded-lg px-3 py-2 transition-all"
+                placeholder="Delicious coffee & pastries"
+              />
+            </div>
+          </div>
+
+          {/* Contact Details */}
+          <div className="bg-slate-50 p-4 border border-slate-200/60 rounded-xl space-y-4">
+            <span className="text-xs font-bold text-slate-700 block uppercase tracking-wide">Contact Details</span>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Store Name</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Phone Line</label>
                 <input
                   type="text"
-                  name="storeName"
-                  value={settings.storeName}
+                  name="phone"
+                  value={settings.phone}
                   onChange={handleInputChange}
-                  className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white text-sm rounded-lg px-3 py-2 outline-none transition-all"
-                  placeholder="e.g. SUELTO Café"
-                  required
+                  className="w-full bg-slate-50 border border-slate-200 focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none focus:bg-white text-sm rounded-lg px-3 py-2 transition-all"
+                  placeholder="+63 900 0000 000"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Vat / Tax ID</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Store Address</label>
                 <input
                   type="text"
-                  name="vatNumber"
-                  value={settings.vatNumber}
+                  name="address"
+                  value={settings.address}
                   onChange={handleInputChange}
-                  className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white text-sm rounded-lg px-3 py-2 outline-none transition-all"
-                  placeholder="e.g. 123-456-789-000"
+                  className="w-full bg-slate-50 border border-slate-200 focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none focus:bg-white text-sm rounded-lg px-3 py-2 transition-all"
+                  placeholder="Street, City, Country"
                 />
               </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Business Address</label>
-              <input
-                type="text"
-                name="address"
-                value={settings.address}
-                onChange={handleInputChange}
-                className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white text-sm rounded-lg px-3 py-2 outline-none transition-all"
-                placeholder="e.g. 12 Main St, Cityville"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Contact Number</label>
-              <input
-                type="text"
-                name="contactNumber"
-                value={settings.contactNumber}
-                onChange={handleInputChange}
-                className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white text-sm rounded-lg px-3 py-2 outline-none transition-all"
-                placeholder="e.g. 09123456789"
-              />
             </div>
           </div>
 
@@ -180,7 +183,7 @@ function ReceiptCustomizer() {
                 value={settings.headerMessage}
                 onChange={handleInputChange}
                 rows={2}
-                className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white text-sm rounded-lg px-3 py-2 outline-none transition-all resize-none"
+                className="w-full bg-slate-50 border border-slate-200 focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none focus:bg-white text-sm rounded-lg px-3 py-2 transition-all resize-none"
                 placeholder="e.g. Thank you for supporting our business!"
               />
             </div>
@@ -189,11 +192,23 @@ function ReceiptCustomizer() {
               <label className="block text-xs font-semibold text-slate-700 mb-1.5">Footer Closing Message</label>
               <textarea
                 name="footerMessage"
+                rows={2}
                 value={settings.footerMessage}
                 onChange={handleInputChange}
+                className="w-full bg-slate-50 border border-slate-200 focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none focus:bg-white text-sm rounded-lg px-3 py-2 transition-all resize-none"
+                placeholder="Thank you for shopping with us!"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-xs font-semibold text-slate-700">Return Policy Description</label>
+              <textarea
+                name="returnPolicy"
                 rows={2}
-                className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white text-sm rounded-lg px-3 py-2 outline-none transition-all resize-none"
-                placeholder="e.g. This serves as an official receipt. Please visit again!"
+                value={settings.returnPolicy}
+                onChange={handleInputChange}
+                className="w-full bg-slate-50 border border-slate-200 focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none focus:bg-white text-sm rounded-lg px-3 py-2 transition-all resize-none"
+                placeholder="No returns without original invoice. Exchange within 7 days."
               />
             </div>
           </div>
@@ -211,7 +226,7 @@ function ReceiptCustomizer() {
                   name="fontSize"
                   value={settings.fontSize}
                   onChange={handleInputChange}
-                  className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white text-sm rounded-lg px-3 py-2 outline-none transition-all"
+                  className="w-full bg-slate-50 border border-slate-200 focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none focus:bg-white text-sm rounded-lg px-3 py-2 transition-all"
                 >
                   <option value="small">Small</option>
                   <option value="medium">Medium</option>
@@ -226,7 +241,7 @@ function ReceiptCustomizer() {
                   name="showLogo"
                   checked={settings.showLogo}
                   onChange={handleInputChange}
-                  className="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500"
+                  className="w-4 h-4 text-teal-700 border-slate-300 rounded focus:ring-teal-700"
                 />
                 <label htmlFor="showLogo" className="text-xs font-semibold text-slate-700 cursor-pointer select-none">
                   Display Logo on Receipt
@@ -239,7 +254,7 @@ function ReceiptCustomizer() {
             <button
               type="submit"
               disabled={saving}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg shadow-sm flex items-center gap-2 transition-colors disabled:opacity-50"
+              className="bg-teal-700 hover:bg-teal-650 text-white text-sm font-bold px-5 py-2.5 rounded-lg shadow-sm flex items-center gap-2 transition-colors disabled:opacity-50"
             >
               <FaSave /> {saving ? 'Saving changes...' : 'Save Template'}
             </button>

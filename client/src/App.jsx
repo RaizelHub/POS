@@ -19,25 +19,25 @@ function App() {
   const theme = createTheme({
     palette: {
       primary: {
-        main: '#059669',
-        light: '#34d399',
-        dark: '#047857',
+        main: '#0f766e', // Teal 700
+        light: '#14b8a6', // Teal 500
+        dark: '#115e59', // Teal 800
         contrastText: '#ffffff',
       },
       secondary: {
-        main: '#0f172a',
+        main: '#0f172a', // Slate 900
         light: '#334155',
         dark: '#020617',
         contrastText: '#ffffff',
       },
       success: {
-        main: '#059669',
-        light: '#34d399',
-        dark: '#059669',
+        main: '#10b981', // Emerald 500
+        light: '#a7f3d0',
+        dark: '#047857',
       },
       error: {
-        main: '#e11d48',
-        light: '#f87171',
+        main: '#ef4444', // Red 500
+        light: '#fca5a5',
         dark: '#dc2626',
       },
       background: {
@@ -45,87 +45,88 @@ function App() {
         paper: '#ffffff',
       },
       text: {
-        primary: '#1e293b',
-        secondary: '#64748b',
+        primary: '#0f172a',
+        secondary: '#475569',
       },
     },
     typography: {
       fontFamily: '"Inter", "Helvetica", "Arial", sans-serif',
       h1: {
-        fontSize: '2.5rem',
-        fontWeight: 600,
+        fontSize: '2.25rem',
+        fontWeight: 700,
         lineHeight: 1.2,
       },
       h2: {
-        fontSize: '2rem',
-        fontWeight: 600,
+        fontSize: '1.75rem',
+        fontWeight: 700,
         lineHeight: 1.3,
       },
       h3: {
-        fontSize: '1.75rem',
+        fontSize: '1.5rem',
         fontWeight: 600,
         lineHeight: 1.3,
       },
       h4: {
-        fontSize: '1.5rem',
-        fontWeight: 500,
+        fontSize: '1.25rem',
+        fontWeight: 600,
         lineHeight: 1.4,
       },
       h5: {
-        fontSize: '1.25rem',
+        fontSize: '1.125rem',
         fontWeight: 500,
         lineHeight: 1.4,
       },
       h6: {
-        fontSize: '1rem',
+        fontSize: '0.875rem',
         fontWeight: 500,
         lineHeight: 1.4,
       },
       body1: {
-        fontSize: '1rem',
+        fontSize: '0.875rem',
         lineHeight: 1.5,
       },
       body2: {
-        fontSize: '0.875rem',
+        fontSize: '0.75rem',
         lineHeight: 1.5,
       },
       button: {
         textTransform: 'none',
-        fontWeight: 500,
+        fontWeight: 600,
       },
     },
     shape: {
-      borderRadius: 8,
+      borderRadius: 10,
     },
     components: {
       MuiButton: {
         styleOverrides: {
           root: {
-            borderRadius: 12,
-            padding: '12px 24px',
+            borderRadius: 8,
+            padding: '10px 20px',
             textTransform: 'none',
             fontWeight: 600,
             transition: 'background-color .15s ease, border-color .15s ease, box-shadow .15s ease',
           },
           contained: {
-            background: '#059669',
+            background: '#0f766e',
             color: 'white',
             '&:hover': {
-              background: '#047857',
+              background: '#0d9488',
             },
           },
           outlined: {
-            borderColor: '#059669',
-            color: '#047857',
+            borderColor: '#0f766e',
+            color: '#0f766e',
             '&:hover': {
-              backgroundColor: '#059669',
+              backgroundColor: '#0f766e',
               color: 'white',
+              borderColor: '#0f766e',
             },
           },
           text: {
-            color: '#1a2a6c',
+            color: '#0f766e',
             '&:hover': {
-              backgroundColor: 'rgba(26, 42, 108, 0.1)',
+              backgroundColor: 'rgba(15, 118, 110, 0.08)',
             },
           },
         },
@@ -133,9 +134,9 @@ function App() {
       MuiIconButton: {
         styleOverrides: {
           root: {
-            transition: 'all 0.3s ease',
+            transition: 'all 0.2s ease',
             '&:hover': {
-              transform: 'translateY(-2px)',
+              transform: 'scale(1.05)',
             },
           },
         },
@@ -143,8 +144,9 @@ function App() {
       MuiCard: {
         styleOverrides: {
           root: {
-            borderRadius: 12,
-            boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
+            borderRadius: 10,
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05)',
+            border: '1px solid #e2e8f0',
           },
         },
       },

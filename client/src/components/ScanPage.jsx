@@ -705,7 +705,7 @@ function ScanPage() {
             <>
               <button
                 onClick={() => setShowLedgerModal(true)}
-                className="flex items-center gap-1.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900 px-3 py-1.5 rounded-lg font-medium transition-all border border-slate-200 active:scale-95"
+                className="flex items-center gap-1.5 text-xs text-slate-700 hover:bg-slate-50 border border-slate-250 hover:border-slate-355 px-3 py-2 rounded-lg font-semibold transition-all active:scale-95"
               >
                 <FaReceipt />
                 <span>Ledger & Credits</span>
@@ -717,7 +717,7 @@ function ScanPage() {
                   setCashAdjustmentType('Cash-In');
                   setShowCashAdjustmentModal(true);
                 }}
-                className="flex items-center gap-1.5 text-sm text-indigo-650 hover:bg-indigo-50 hover:text-indigo-750 px-3 py-1.5 rounded-lg font-medium transition-all border border-indigo-200 active:scale-95"
+                className="flex items-center gap-1.5 text-xs text-teal-800 bg-teal-50 hover:bg-teal-100/80 px-3 py-2 rounded-lg font-semibold transition-all border border-teal-200 active:scale-95"
               >
                 <FaMoneyBillWave />
                 <span>Drawer Adjust</span>
@@ -727,7 +727,7 @@ function ScanPage() {
                   setEndingCash(0);
                   setShowCloseShiftModal(true);
                 }}
-                className="flex items-center gap-1.5 text-sm text-amber-600 hover:bg-amber-50 hover:text-amber-700 px-3 py-1.5 rounded-lg font-medium transition-all border border-amber-200 active:scale-95"
+                className="flex items-center gap-1.5 text-xs text-amber-800 bg-amber-50 border border-amber-200 hover:bg-amber-100/80 px-3 py-2 rounded-lg font-semibold transition-all border border-amber-200 active:scale-95"
               >
                 <FaClock />
                 <span>Close Shift</span>
@@ -770,14 +770,14 @@ function ScanPage() {
                     className="pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:bg-white focus:outline-none focus:border-slate-400 w-[200px] transition-all"
                   />
                 </div>
-                <div className="flex items-center gap-1.5 bg-slate-50 p-1 border border-slate-200 rounded-lg">
+                <div className="flex items-center gap-1.5 bg-slate-50 p-1.5 border border-slate-200 rounded-lg">
                   {['all', 'drinks', 'junkfood', 'others'].map((cat) => (
                     <button
                       key={cat}
                       onClick={() => setActiveCategory(cat)}
-                      className={`text-xs font-semibold px-3 py-1.5 rounded-md transition-all ${activeCategory === cat
-                        ? 'bg-slate-900 text-white shadow-sm'
-                        : 'text-slate-600 hover:text-slate-900'
+                      className={`text-xs font-bold px-3 py-1.5 rounded-md transition-all ${activeCategory === cat
+                        ? 'bg-teal-700 text-white shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                         }`}
                     >
                       {cat.charAt(0).toUpperCase() + cat.slice(1)}
@@ -1032,9 +1032,9 @@ function ScanPage() {
               <button
                 onClick={proceedToCheckout}
                 disabled={cart.length === 0}
-                className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-lg text-sm shadow-sm hover:shadow transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-98"
+                className="w-full py-3 bg-teal-700 hover:bg-teal-650 text-white font-bold rounded-lg text-sm shadow-sm hover:shadow transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-98"
               >
-                Proceed
+                Proceed to Checkout
               </button>
             </div>
           </div>
@@ -1125,7 +1125,7 @@ function ScanPage() {
             </button>
             <button
               onClick={handleConfirmPayment}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm px-4 py-2 rounded-lg transition-all active:scale-95 shadow-sm"
+              className="bg-teal-700 hover:bg-teal-655 text-white font-bold text-sm px-4 py-2.5 rounded-lg transition-all active:scale-95 shadow-sm"
             >
               Confirm Settlement
             </button>
@@ -1355,7 +1355,7 @@ function ScanPage() {
             </button>
             <button
               onClick={handleAddCustomer}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm px-4 py-2.5 rounded-lg transition-colors shadow-sm"
+              className="bg-teal-700 hover:bg-teal-650 text-white font-bold text-sm px-4 py-2.5 rounded-lg transition-colors shadow-sm"
             >
               Register Customer
             </button>
@@ -1388,14 +1388,14 @@ function ScanPage() {
                 <button
                   type="button"
                   onClick={() => setCashAdjustmentType('Cash-In')}
-                  className={`flex-1 py-2 border rounded-lg text-xs font-bold transition-all ${cashAdjustmentType === 'Cash-In' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-350'}`}
+                  className={`flex-1 py-2.5 border rounded-lg text-xs font-bold transition-all ${cashAdjustmentType === 'Cash-In' ? 'bg-teal-700 text-white border-teal-700' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-350'}`}
                 >
                   Cash-In (Deposit)
                 </button>
                 <button
                   type="button"
                   onClick={() => setCashAdjustmentType('Cash-Out')}
-                  className={`flex-1 py-2 border rounded-lg text-xs font-bold transition-all ${cashAdjustmentType === 'Cash-Out' ? 'bg-rose-600 text-white border-rose-600' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-350'}`}
+                  className={`flex-1 py-2.5 border rounded-lg text-xs font-bold transition-all ${cashAdjustmentType === 'Cash-Out' ? 'bg-rose-600 text-white border-rose-600' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-350'}`}
                 >
                   Cash-Out (Payout)
                 </button>
@@ -1444,7 +1444,7 @@ function ScanPage() {
             <button
               onClick={handleLogCashAdjustment}
               disabled={loggingAdjustment}
-              className={`text-white font-semibold text-sm px-4 py-2.5 rounded-lg transition-colors shadow-sm disabled:opacity-50 ${cashAdjustmentType === 'Cash-In' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'}`}
+              className={`text-white font-bold text-sm px-4 py-2.5 rounded-lg transition-colors shadow-sm disabled:opacity-50 ${cashAdjustmentType === 'Cash-In' ? 'bg-teal-700 hover:bg-teal-650' : 'bg-rose-600 hover:bg-rose-700'}`}
             >
               {loggingAdjustment ? 'Logging...' : 'Submit Log'}
             </button>
@@ -1466,7 +1466,7 @@ function ScanPage() {
         <Box
           className="absolute inset-4 md:inset-8 bg-white rounded-2xl shadow-2xl p-6 focus:outline-none border border-slate-200 overflow-y-auto"
         >
-          <TransactionsLedger isModalView={true} onClose={() => setShowLedgerModal(false)} />
+          <TransactionsLedger isModalView={true} limitToCashierId={user?._id} onClose={() => setShowLedgerModal(false)} />
         </Box>
       </Modal>
 

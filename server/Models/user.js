@@ -48,6 +48,10 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null, // Default is null if the user hasn't logged in yet
     },
+    station: {
+      type: String,
+      default: 'Unassigned',
+    },
   },
   {
     timestamps: true,

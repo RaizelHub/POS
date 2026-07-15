@@ -41,6 +41,7 @@ function PaymentPage() {
   const [appliedPromo, setAppliedPromo] = useState(null);
   const [promoValidationError, setPromoValidationError] = useState('');
   const [redeemPointsChecked, setRedeemPointsChecked] = useState(false);
+  const [cashTendered, setCashTendered] = useState(0);
 
   const baseURL = config.apiUrl;
 
@@ -612,8 +613,8 @@ return (
     <main className="flex-1 max-w-6xl w-full mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
 
       {/* Left Side: Order Summary (Span 5) */}
-      <section className="md:col-span-5 bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
-        <h2 className="font-bold text-slate-900 text-base border-b border-slate-100 pb-3 flex items-center gap-2">
+      <section className="md:col-span-5 thermal-receipt p-6 space-y-4 relative pb-8">
+        <h2 className="font-bold text-slate-900 text-base border-b border-dashed border-slate-200 pb-3 flex items-center gap-2">
           <span>🛒</span> Order Summary
         </h2>
 
@@ -818,13 +819,13 @@ return (
             {/* Cash Option */}
             <button
               type="button"
-              onClick={() => setPaymentMethod('Cash')}
+              onClick={() => { setPaymentMethod('Cash'); setCashTendered(0); }}
               className={`flex items-center gap-3 p-3.5 border rounded-xl text-left transition-all hover:bg-slate-50 ${paymentMethod === 'Cash'
-                ? 'border-emerald-500 bg-emerald-50/20 text-emerald-950 ring-1 ring-emerald-500'
+                ? 'border-teal-600 bg-teal-50/20 text-teal-950 ring-1 ring-teal-600'
                 : 'border-slate-200 text-slate-800'
                 }`}
             >
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center ${paymentMethod === 'Cash' ? 'bg-emerald-500 text-white' : 'bg-emerald-100 text-emerald-600'
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center ${paymentMethod === 'Cash' ? 'bg-teal-700 text-white' : 'bg-teal-50 text-teal-700'
                 }`}>
                 <FaMoneyBillWave />
               </div>
@@ -837,13 +838,13 @@ return (
             {/* Card Option */}
             <button
               type="button"
-              onClick={() => setPaymentMethod('Card')}
+              onClick={() => { setPaymentMethod('Card'); setCashTendered(0); }}
               className={`flex items-center gap-3 p-3.5 border rounded-xl text-left transition-all hover:bg-slate-50 ${paymentMethod === 'Card'
-                ? 'border-emerald-600 bg-emerald-50 text-emerald-950 ring-1 ring-emerald-600'
+                ? 'border-teal-600 bg-teal-50/20 text-teal-950 ring-1 ring-teal-600'
                 : 'border-slate-200 text-slate-800'
                 }`}
             >
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center ${paymentMethod === 'Card' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center ${paymentMethod === 'Card' ? 'bg-teal-700 text-white' : 'bg-slate-100 text-slate-650'
                 }`}>
                 <FaCreditCard />
               </div>
@@ -856,13 +857,13 @@ return (
             {/* GCash Option */}
             <button
               type="button"
-              onClick={() => setPaymentMethod('GCash/PayMaya')}
+              onClick={() => { setPaymentMethod('GCash/PayMaya'); setCashTendered(0); }}
               className={`flex items-center gap-3 p-3.5 border rounded-xl text-left transition-all hover:bg-slate-50 ${paymentMethod === 'GCash/PayMaya'
-                ? 'border-emerald-600 bg-emerald-50 text-emerald-950 ring-1 ring-emerald-600'
+                ? 'border-teal-600 bg-teal-50/20 text-teal-950 ring-1 ring-teal-600'
                 : 'border-slate-200 text-slate-800'
                 }`}
             >
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center ${paymentMethod === 'GCash/PayMaya' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center ${paymentMethod === 'GCash/PayMaya' ? 'bg-teal-700 text-white' : 'bg-slate-100 text-slate-655'
                 }`}>
                 <FaWallet />
               </div>
@@ -877,15 +878,16 @@ return (
               type="button"
               onClick={() => {
                 setPaymentMethod('Split');
+                setCashTendered(0);
                 setSplitCashAmount(Math.round(finalTotalPrice * 0.5));
                 setSplitDigitalAmount(finalTotalPrice - Math.round(finalTotalPrice * 0.5));
               }}
               className={`flex items-center gap-3 p-3.5 border rounded-xl text-left transition-all hover:bg-slate-50 ${paymentMethod === 'Split'
-                ? 'border-emerald-600 bg-emerald-50 text-emerald-950 ring-1 ring-emerald-600'
+                ? 'border-teal-600 bg-teal-50/20 text-teal-950 ring-1 ring-teal-600'
                 : 'border-slate-200 text-slate-800'
                 }`}
             >
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center ${paymentMethod === 'Split' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center ${paymentMethod === 'Split' ? 'bg-teal-700 text-white' : 'bg-slate-100 text-slate-655'
                 }`}>
                 <FaExchangeAlt />
               </div>
@@ -898,7 +900,7 @@ return (
             {/* Pay Later Option */}
             <button
               type="button"
-              onClick={() => setPaymentMethod('Pay Later')}
+              onClick={() => { setPaymentMethod('Pay Later'); setCashTendered(0); }}
               className={`flex items-center gap-3 p-3.5 border rounded-xl text-left transition-all hover:bg-slate-50 ${paymentMethod === 'Pay Later'
                 ? 'border-red-500 bg-red-50/20 text-red-950 ring-1 ring-red-500'
                 : 'border-slate-200 text-slate-800'
@@ -960,14 +962,88 @@ return (
           </div>
         )}
 
+        {/* Cash Tendered Calculator (Commercial POS style) */}
+        {(paymentMethod === 'Cash' || paymentMethod === 'Split') && (
+          <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-xs font-semibold text-slate-750 block uppercase tracking-wide">
+                Cash Tendered Calculator
+              </span>
+              <span className="text-[10px] text-slate-400 font-bold font-mono">
+                PAYABLE: ₱{(paymentMethod === 'Split' ? splitCashAmount : finalTotalPrice).toFixed(2)}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+              <div className="sm:col-span-7 relative">
+                <span className="absolute left-3 top-3 text-slate-450 font-bold text-sm">₱</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={cashTendered || ''}
+                  onChange={(e) => setCashTendered(Number(e.target.value) || 0)}
+                  placeholder="Enter amount received..."
+                  className="w-full pl-7 pr-4 py-2.5 border border-slate-200 focus:border-teal-650 focus:ring-1 focus:ring-teal-650 rounded-lg text-sm bg-white font-bold outline-none transition-all"
+                />
+              </div>
+              <div className="sm:col-span-5 flex flex-wrap gap-1">
+                {[20, 50, 100, 200, 500, 1000].map((denom) => (
+                  <button
+                    key={denom}
+                    type="button"
+                    onClick={() => {
+                      setCashTendered((prev) => prev + denom);
+                    }}
+                    className="flex-1 py-1 px-2 border border-slate-250 hover:border-slate-355 hover:bg-slate-100 rounded text-[10px] font-bold text-slate-700 transition-all active:scale-95"
+                  >
+                    +{denom}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const currentPayable = paymentMethod === 'Split' ? splitCashAmount : finalTotalPrice;
+                    setCashTendered(currentPayable);
+                  }}
+                  className="w-full py-1 border border-teal-205 hover:border-teal-350 hover:bg-teal-50 rounded text-[10px] font-extrabold text-teal-800 transition-all active:scale-95"
+                >
+                  Exact Change
+                </button>
+              </div>
+            </div>
+
+            {/* Change display */}
+            <div className="flex justify-between items-center border-t border-slate-250/60 pt-3">
+              <span className="text-xs font-semibold text-slate-500">Change Due:</span>
+              <div className="text-right">
+                {cashTendered >= (paymentMethod === 'Split' ? splitCashAmount : finalTotalPrice) ? (
+                  <span className="text-2xl font-black text-emerald-600 font-mono">
+                    ₱{(cashTendered - (paymentMethod === 'Split' ? splitCashAmount : finalTotalPrice)).toFixed(2)}
+                  </span>
+                ) : (
+                  <span className="text-xs font-semibold text-red-500">
+                    Short ₱{((paymentMethod === 'Split' ? splitCashAmount : finalTotalPrice) - cashTendered).toFixed(2)}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Proceed Button */}
         <button
           onClick={handlePaymentClick}
-          disabled={!paymentMethod || processingPayment}
+          disabled={
+            !paymentMethod || 
+            processingPayment || 
+            ((paymentMethod === 'Cash' || paymentMethod === 'Split') && 
+             cashTendered < (paymentMethod === 'Split' ? splitCashAmount : finalTotalPrice))
+          }
           className={`w-full py-3.5 text-white font-bold rounded-xl text-sm transition-all shadow-sm hover:shadow flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed ${paymentMethod === 'Cash'
-            ? 'bg-emerald-600 hover:bg-emerald-700'
+            ? 'bg-teal-700 hover:bg-teal-650'
             : paymentMethod === 'Pay Later'
-              ? 'bg-red-600 hover:bg-red-700'
+              ? 'bg-rose-600 hover:bg-rose-700'
               : 'bg-slate-900 hover:bg-slate-800'
             }`}
         >

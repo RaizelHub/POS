@@ -202,7 +202,7 @@ function ProductList() {
 
           <button
             onClick={() => handleOpenModal()}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg text-xs transition-all shadow-sm active:scale-97"
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-teal-700 hover:bg-teal-650 text-white font-bold rounded-lg text-xs transition-all shadow-sm active:scale-97"
           >
             <FaPlus />
             <span>Add Item</span>
@@ -316,8 +316,7 @@ function ProductList() {
           </div>
 
           <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-4">
-            
-            {/* Name */}
+                        {/* Name */}
             <div className="space-y-1">
               <label className="text-[11px] font-semibold text-slate-500 block uppercase">Product Name</label>
               <input
@@ -327,7 +326,7 @@ function ProductList() {
                 placeholder="San Miguel Pale Pilsen"
                 value={formValues.name}
                 onChange={handleInputChange}
-                className="w-full px-3.5 py-2.5 border border-slate-200 focus:border-slate-400 focus:outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
+                className="w-full px-3.5 py-2.5 border border-slate-200 focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
               />
             </div>
 
@@ -342,7 +341,7 @@ function ProductList() {
                   placeholder="₱0.00"
                   value={formValues.price}
                   onChange={handleInputChange}
-                  className="w-full px-3.5 py-2.5 border border-slate-200 focus:border-slate-400 focus:outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
+                  className="w-full px-3.5 py-2.5 border border-slate-200 focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
                 />
               </div>
               <div className="space-y-1">
@@ -354,11 +353,10 @@ function ProductList() {
                   placeholder="24"
                   value={formValues.quantity}
                   onChange={handleInputChange}
-                  className="w-full px-3.5 py-2.5 border border-slate-200 focus:border-slate-400 focus:outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
+                  className="w-full px-3.5 py-2.5 border border-slate-200 focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
                 />
               </div>
             </div>
-
             {/* Barcode & Category */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
@@ -373,7 +371,7 @@ function ProductList() {
                   placeholder="480001234567"
                   value={formValues.barcode}
                   onChange={handleInputChange}
-                  className="w-full px-3.5 py-2.5 border border-slate-200 focus:border-slate-400 focus:outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
+                  className="w-full px-3.5 py-2.5 border border-slate-200 focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
                 />
               </div>
               <div className="space-y-1">
@@ -383,7 +381,7 @@ function ProductList() {
                   required
                   value={formValues.category}
                   onChange={handleInputChange}
-                  className="w-full px-3.5 py-2.5 border border-slate-200 focus:border-slate-400 focus:outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
+                  className="w-full px-3.5 py-2.5 border border-slate-200 focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
                 >
                   <option value="">Select...</option>
                   <option value="drinks">Drinks</option>
@@ -416,7 +414,7 @@ function ProductList() {
               <button
                 type="button"
                 onClick={handleSubmit}
-                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg text-xs transition-all shadow-sm active:scale-95"
+                className="px-4 py-2 bg-teal-700 hover:bg-teal-650 text-white font-bold rounded-lg text-xs transition-all shadow-sm active:scale-95"
               >
                 {selectedProduct ? "Save Changes" : "Create Item"}
               </button>

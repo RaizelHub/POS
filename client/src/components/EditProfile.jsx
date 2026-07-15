@@ -21,6 +21,10 @@ function EditProfile() {
   const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
 
+  const handleBack = () => {
+    navigate(-1);
+  };
+
   useEffect(() => {
     const fetchUserData = async () => {
       const token = localStorage.getItem('token');
