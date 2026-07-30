@@ -11,14 +11,14 @@ const StatusBadge = ({ role, theme = 'light' }) => {
       case 'supervisor':
         return isDark ? 'bg-blue-950/40 text-blue-400 border-blue-900/30' : 'bg-blue-50 text-blue-750 border-blue-200';
       case 'senior cashier':
-        return isDark ? 'bg-teal-950/40 text-teal-400 border-teal-900/30' : 'bg-teal-50 text-teal-750 border-teal-200';
+        return isDark ? 'bg-emerald-950/40 text-emerald-400 border-emerald-900/30' : 'bg-emerald-50 text-emerald-750 border-emerald-200';
       default:
         return isDark ? 'bg-slate-800/85 text-slate-300 border-slate-700/50' : 'bg-slate-100 text-slate-600 border-slate-200';
     }
   };
 
   return (
-    <span className={`px-2 py-0.5 rounded-md text-[8.5px] font-extrabold uppercase border tracking-wider ${getColors()}`}>
+    <span className={`px-2 py-0.5 rounded-md text-[8.5px] font-bold uppercase border tracking-wider ${getColors()}`}>
       {role}
     </span>
   );

@@ -1,165 +1,112 @@
-import React from 'react';
 import { motion } from 'framer-motion';
-import { 
-  FaBarcode, FaReceipt, FaWarehouse, FaTruck, FaFileInvoiceDollar, 
-  FaTags, FaChartBar, FaUserShield, FaHistory, FaFolderOpen, 
-  FaUndo, FaCalendarCheck 
+import {
+  FaBarcode,
+  FaChartBar,
+  FaFileInvoiceDollar,
+  FaHistory,
+  FaReceipt,
+  FaShieldAlt,
+  FaTags,
+  FaTruck,
+  FaWarehouse
 } from 'react-icons/fa';
 
-const features = [
+const coreFeatures = [
   {
-    title: 'Barcode Scanner',
-    desc: 'Instant hardware scanner lookup using lightning-fast database SKU matching.',
-    badge: 'Live',
-    icon: <FaBarcode />
+    title: 'A checkout that stays out of the way',
+    desc: 'Scan items, attach a customer, apply discounts, and take cash or digital payments from one calm, focused screen.',
+    label: 'Counter',
+    icon: FaBarcode,
+    className: 'lg:col-span-2',
+    accent: 'bg-emerald-50 text-emerald-700'
   },
   {
-    title: 'Thermal Receipt Customizer',
-    desc: 'Dynamic template builder with side-by-side live receipt roll rendering.',
-    badge: 'Built-in',
-    icon: <FaReceipt />
+    title: 'Inventory that updates itself',
+    desc: 'Every completed sale adjusts stock. Low-level warnings help your team reorder before the shelf is empty.',
+    label: 'Stock',
+    icon: FaWarehouse,
+    className: '',
+    accent: 'bg-amber-50 text-amber-700'
   },
   {
-    title: 'Inventory Management',
-    desc: 'Automatic deductions on checkouts with warning levels for safety thresholds.',
-    badge: 'Automated',
-    icon: <FaWarehouse />
+    title: 'A complete shift trail',
+    desc: 'Track opening floats, cash drops, drawer movements, and closing variance with accountability built in.',
+    label: 'Control',
+    icon: FaShieldAlt,
+    className: '',
+    accent: 'bg-sky-50 text-sky-700'
   },
   {
-    title: 'Supplier Contacts',
-    desc: 'Organize vendor credentials and warehouse shipping protocols in one table.',
-    badge: 'Built-in',
-    icon: <FaTruck />
-  },
-  {
-    title: 'Purchase Orders',
-    desc: 'Auto-compile reorders and download formatted Excel sheets using SheetJS.',
-    badge: 'Automated',
-    icon: <FaFileInvoiceDollar />
-  },
-  {
-    title: 'Discount & Coupon System',
-    desc: 'Configure price markdowns, percentage discounts, and loyalty coupon entries.',
-    badge: 'Live',
-    icon: <FaTags />
-  },
-  {
-    title: 'Shift Sales Reports',
-    desc: 'Generate shift sales breakdowns showing exact drawer variance calculations.',
-    badge: 'Live',
-    icon: <FaChartBar />
-  },
-  {
-    title: 'Role Permissions',
-    desc: 'Define distinct cashier access locks and administrative credentials.',
-    badge: 'Built-in',
-    icon: <FaUserShield />
-  },
-  {
-    title: 'Audit Logs & Cash Drops',
-    desc: 'Log shift drawer cash adjustments, deposits, supplier payouts, and logs.',
-    badge: 'Automated',
-    icon: <FaFolderOpen />
-  },
-  {
-    title: 'Cash Drawer Control',
-    desc: 'Monitor starting floats and audit register actions automatically.',
-    badge: 'Live',
-    icon: <FaUndo />
-  },
-  {
-    title: 'Transaction Returns',
-    desc: 'Process voids, transaction refunds, and update inventory counts on returns.',
-    badge: 'Built-in',
-    icon: <FaHistory />
-  },
-  {
-    title: 'Transaction History',
-    desc: 'Audited log histories of all checkouts filtered by cashiers and dates.',
-    badge: 'Live',
-    icon: <FaCalendarCheck />
+    title: 'Reports you can act on',
+    desc: 'See sales performance, product movement, cashier activity, and transaction history without assembling spreadsheets.',
+    label: 'Insight',
+    icon: FaChartBar,
+    className: 'lg:col-span-2',
+    accent: 'bg-violet-50 text-violet-700'
   }
 ];
 
-const FeatureGrid = () => {
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.05 }
-    }
-  };
+const supportingFeatures = [
+  { title: 'Receipt builder', icon: FaReceipt },
+  { title: 'Purchase orders', icon: FaFileInvoiceDollar },
+  { title: 'Supplier directory', icon: FaTruck },
+  { title: 'Coupons & discounts', icon: FaTags },
+  { title: 'Refund history', icon: FaHistory }
+];
 
-  const itemVariants = {
-    hidden: { y: 15, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] }
-    }
-  };
-
-  return (
-    <section id="features" className="py-20 bg-slate-50 px-6 lg:px-10">
-      <div className="max-w-7xl mx-auto space-y-12">
-        
-        {/* Section Header */}
-        <div className="text-center space-y-4 max-w-3xl mx-auto">
-          <span className="text-xs font-extrabold text-emerald-600 uppercase tracking-widest bg-emerald-50 px-3 py-1.5 rounded-full">
-            Platform Capabilities
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-            Designed for Reliable Store Auditing
+const FeatureGrid = () => (
+  <section id="features" className="bg-white px-5 py-20 sm:px-6 sm:py-28 lg:px-8">
+    <div className="mx-auto max-w-7xl">
+      <div className="mb-12 grid gap-6 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
+        <div>
+          <span className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-emerald-700">Everything your store needs</span>
+          <h2 className="mt-4 max-w-xl text-4xl font-extrabold leading-[1.06] tracking-[-0.045em] text-slate-950 sm:text-5xl">
+            Less switching. More selling.
           </h2>
-          <p className="text-slate-500 text-sm leading-relaxed">
-            Eliminate operational bottlenecks with optimized checkout layouts, automated stock level calculations, and unified shift cash drops tracking.
-          </p>
         </div>
-
-        {/* Feature Grid */}
-        <motion.div 
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={containerVariants}
-        >
-          {features.map((feat, idx) => (
-            <motion.div
-              key={idx}
-              variants={itemVariants}
-              className="bg-white border border-slate-200 p-5 rounded-lg hover:shadow-md transition-all duration-200 group flex flex-col justify-between hover:border-emerald-300"
-            >
-              <div className="space-y-4">
-                
-                {/* Feature Icon & Badge */}
-                <div className="flex items-center justify-between">
-                  <div className="w-9 h-9 rounded-md bg-slate-50 border border-slate-100 text-emerald-600 flex items-center justify-center text-sm shadow-sm group-hover:bg-emerald-600 group-hover:text-white transition-colors duration-200">
-                    {feat.icon}
-                  </div>
-                  <span className="bg-slate-100 border border-slate-200 text-slate-600 text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">
-                    {feat.badge}
-                  </span>
-                </div>
-
-                {/* Text Content */}
-                <div className="space-y-1.5">
-                  <h3 className="font-bold text-slate-900 text-xs sm:text-sm tracking-tight group-hover:text-emerald-700 transition-colors">
-                    {feat.title}
-                  </h3>
-                  <p className="text-slate-500 text-[11px] leading-relaxed">
-                    {feat.desc}
-                  </p>
-                </div>
-
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
-
+        <p className="max-w-2xl text-sm font-medium leading-7 text-slate-600 sm:text-base lg:justify-self-end">
+          Suelto connects the moments at the counter with the work behind it, giving cashiers a faster flow and managers a more dependable view of the day.
+        </p>
       </div>
-    </section>
-  );
-};
+
+      <motion.div
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: '-80px' }}
+        variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.07 } } }}
+        className="grid gap-4 lg:grid-cols-3"
+      >
+        {coreFeatures.map(({ title, desc, label, icon: Icon, className, accent }) => (
+          <motion.article
+            key={title}
+            variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.45 } } }}
+            className={`group relative min-h-[260px] overflow-hidden rounded-[24px] border border-slate-200 bg-[#f8faf8] p-7 transition-all hover:-translate-y-1 hover:border-emerald-200 hover:shadow-xl hover:shadow-slate-900/5 sm:p-8 ${className}`}
+          >
+            <div className="absolute -bottom-14 -right-12 h-40 w-40 rounded-full bg-emerald-100/40 blur-2xl transition-transform group-hover:scale-125" />
+            <div className="relative flex h-full flex-col">
+              <div className="flex items-center justify-between">
+                <span className={`grid h-12 w-12 place-items-center rounded-2xl ${accent}`}><Icon /></span>
+                <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[9px] font-extrabold uppercase tracking-[0.16em] text-slate-500">{label}</span>
+              </div>
+              <div className="mt-auto pt-12">
+                <h3 className="max-w-lg text-xl font-extrabold tracking-[-0.025em] text-slate-950 sm:text-2xl">{title}</h3>
+                <p className="mt-3 max-w-xl text-sm font-medium leading-6 text-slate-600">{desc}</p>
+              </div>
+            </div>
+          </motion.article>
+        ))}
+      </motion.div>
+
+      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        {supportingFeatures.map(({ title, icon: Icon }) => (
+          <div key={title} className="flex min-h-[92px] items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-xs font-bold text-slate-700 transition-colors hover:border-emerald-200 hover:bg-emerald-50/40">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-slate-100 text-slate-600"><Icon /></span>
+            {title}
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+);
 
 export default FeatureGrid;

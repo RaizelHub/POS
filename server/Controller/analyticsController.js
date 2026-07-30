@@ -1,6 +1,4 @@
 import Transaction from '../Models/transaction.js';
-import Product from '../Models/product.js';
-import mongoose from 'mongoose';
 
 export const getDashboardAnalytics = async (req, res) => {
   try {
@@ -13,16 +11,23 @@ export const getDashboardAnalytics = async (req, res) => {
     const dailySales = await Transaction.aggregate([
       {
         $match: {
+          organizationId: req.auth.organizationId,
+          branchId: req.auth.branchId,
+          status: { $ne: 'voided' },
           transactionDate: { $gte: start, $lte: end },
         },
       },
       {
-        $unwind: '$products',
-      },
-      {
         $group: {
           _id: { $dateToString: { format: '%Y-%m-%d', date: '$transactionDate' } },
-          totalSales: { $sum: '$products.totalPrice' },
+          totalSales: {
+            $sum: {
+              $divide: [
+                { $subtract: ['$totalAmountCents', { $ifNull: ['$refundTotalCents', 0] }] },
+                100,
+              ],
+            },
+          },
         },
       },
       {
@@ -51,6 +56,9 @@ export const getDashboardAnalytics = async (req, res) => {
     const categorySales = await Transaction.aggregate([
       {
         $match: {
+          organizationId: req.auth.organizationId,
+          branchId: req.auth.branchId,
+          status: { $ne: 'voided' },
           transactionDate: { $gte: start, $lte: end },
         },
       },
@@ -74,7 +82,19 @@ export const getDashboardAnalytics = async (req, res) => {
       {
         $group: {
           _id: { $ifNull: ['$productDetails.category', 'others'] },
-          value: { $sum: '$products.totalPrice' },
+          value: {
+            $sum: {
+              $divide: [
+                {
+                  $subtract: [
+                    { $ifNull: ['$products.netTotalPriceCents', { $multiply: ['$products.totalPrice', 100] }] },
+                    { $ifNull: ['$products.refundedAmountCents', 0] },
+                  ],
+                },
+                100,
+              ],
+            },
+          },
         },
       },
     ]);
@@ -88,13 +108,33 @@ export const getDashboardAnalytics = async (req, res) => {
     // 3. Top 5 Selling Products
     const topProducts = await Transaction.aggregate([
       {
+        $match: {
+          organizationId: req.auth.organizationId,
+          branchId: req.auth.branchId,
+          status: { $ne: 'voided' },
+          transactionDate: { $gte: start, $lte: end },
+        },
+      },
+      {
         $unwind: '$products',
       },
       {
         $group: {
           _id: '$products.name',
           quantity: { $sum: '$products.quantity' },
-          revenue: { $sum: '$products.totalPrice' },
+          revenue: {
+            $sum: {
+              $divide: [
+                {
+                  $subtract: [
+                    { $ifNull: ['$products.netTotalPriceCents', { $multiply: ['$products.totalPrice', 100] }] },
+                    { $ifNull: ['$products.refundedAmountCents', 0] },
+                  ],
+                },
+                100,
+              ],
+            },
+          },
         },
       },
       {
@@ -118,53 +158,5 @@ export const getDashboardAnalytics = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: 'Error compiling analytics data', error: error.message });
-  }
-};
-
-// Get cashier leaderboard analytics
-export const getCashierLeaderboard = async (req, res) => {
-  try {
-    const leaderboard = await Transaction.aggregate([
-      {
-        $group: {
-          _id: '$userId',
-          totalSales: { $sum: { $subtract: ['$originalAmount', '$discountAmount'] } },
-          transactionsCount: { $sum: 1 },
-        },
-      },
-      {
-        $lookup: {
-          from: 'users',
-          localField: '_id',
-          foreignField: '_id',
-          as: 'cashierDetails',
-        },
-      },
-      {
-        $unwind: {
-          path: '$cashierDetails',
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $project: {
-          _id: 1,
-          totalSales: 1,
-          transactionsCount: 1,
-          firstname: { $ifNull: ['$cashierDetails.firstname', 'Unknown'] },
-          lastname: { $ifNull: ['$cashierDetails.lastname', 'User'] },
-          email: { $ifNull: ['$cashierDetails.email', 'N/A'] },
-          image: { $ifNull: ['$cashierDetails.image', ''] },
-        },
-      },
-      {
-        $sort: { totalSales: -1 },
-      },
-    ]);
-
-    res.json(leaderboard);
-  } catch (error) {
-    console.error('Error compiling cashier leaderboard:', error);
-    res.status(500).json({ message: 'Error compiling cashier leaderboard data', error: error.message });
   }
 };

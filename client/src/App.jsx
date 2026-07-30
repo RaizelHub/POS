@@ -1,27 +1,43 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import axios from 'axios';
+import { lazy, Suspense } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import HomePage from './components/HomePage';
-import RegisterPage from './components/RegisterPage';
-import AdminLoginPage from './components/AdminLoginPage';
-import LoginSelectionPage from './components/LoginSelection';
-import VerifyEmailPage from './components/VerifyEmail';
-import Dashboard from './components/Dashboard';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import ScanPage from './components/ScanPage';
-import PaymentPage from './components/PaymentPage';
-import ThankYou from './components/ThankYou';
-import EditProfile from './components/EditProfile';
 import './App.css';
-import ResetPinPage from './components/ResetPinPage';
+import { jwtDecode } from 'jwt-decode';
+
+const RegisterPage = lazy(() => import('./components/RegisterPage'));
+const AdminLoginPage = lazy(() => import('./components/AdminLoginPage'));
+const LoginSelectionPage = lazy(() => import('./components/LoginSelection'));
+const VerifyEmailPage = lazy(() => import('./components/VerifyEmail'));
+const Dashboard = lazy(() => import('./components/Dashboard'));
+const ScanPage = lazy(() => import('./components/ScanPage'));
+const PaymentPage = lazy(() => import('./components/PaymentPage'));
+const ThankYou = lazy(() => import('./components/ThankYou'));
+const EditProfile = lazy(() => import('./components/EditProfile'));
+const ResetPinPage = lazy(() => import('./components/ResetPinPage'));
+
+const ManagerRegistrationRoute = () => {
+  const token = localStorage.getItem('token');
+  if (!token) return <Navigate to="/admin-login" replace />;
+  try {
+    const decoded = jwtDecode(token);
+    const role = decoded.isAdmin ? 'owner' : decoded.role;
+    if (decoded.exp * 1000 <= Date.now() || !['owner', 'manager'].includes(role)) {
+      return <Navigate to="/admin-login" replace />;
+    }
+    return <RegisterPage />;
+  } catch {
+    return <Navigate to="/admin-login" replace />;
+  }
+};
 
 function App() {
   const theme = createTheme({
     palette: {
       primary: {
-        main: '#0f766e', // Teal 700
-        light: '#14b8a6', // Teal 500
-        dark: '#115e59', // Teal 800
+        main: '#059669', // Emerald 600
+        light: '#10b981', // Emerald 500
+        dark: '#047857', // Emerald 700
         contrastText: '#ffffff',
       },
       secondary: {
@@ -32,13 +48,23 @@ function App() {
       },
       success: {
         main: '#10b981', // Emerald 500
-        light: '#a7f3d0',
+        light: '#ecfdf5',
         dark: '#047857',
       },
       error: {
-        main: '#ef4444', // Red 500
-        light: '#fca5a5',
-        dark: '#dc2626',
+        main: '#f43f5e', // Rose 500
+        light: '#fff1f2',
+        dark: '#e11d48',
+      },
+      warning: {
+        main: '#f59e0b', // Amber 500
+        light: '#fef3c7',
+        dark: '#d97706',
+      },
+      info: {
+        main: '#0ea5e9', // Sky 500
+        light: '#f0f9ff',
+        dark: '#0284c7',
       },
       background: {
         default: '#f8fafc',
@@ -108,25 +134,25 @@ function App() {
             transition: 'background-color .15s ease, border-color .15s ease, box-shadow .15s ease',
           },
           contained: {
-            background: '#0f766e',
+            background: '#059669',
             color: 'white',
             '&:hover': {
-              background: '#0d9488',
+              background: '#047857',
             },
           },
           outlined: {
-            borderColor: '#0f766e',
-            color: '#0f766e',
+            borderColor: '#059669',
+            color: '#059669',
             '&:hover': {
-              backgroundColor: '#0f766e',
+              backgroundColor: '#059669',
               color: 'white',
-              borderColor: '#0f766e',
+              borderColor: '#059669',
             },
           },
           text: {
-            color: '#0f766e',
+            color: '#059669',
             '&:hover': {
-              backgroundColor: 'rgba(15, 118, 110, 0.08)',
+              backgroundColor: 'rgba(5, 150, 105, 0.08)',
             },
           },
         },
@@ -134,18 +160,16 @@ function App() {
       MuiIconButton: {
         styleOverrides: {
           root: {
-            transition: 'all 0.2s ease',
-            '&:hover': {
-              transform: 'scale(1.05)',
-            },
+            borderRadius: 8,
+            transition: 'background-color .15s ease, color .15s ease',
           },
         },
       },
       MuiCard: {
         styleOverrides: {
           root: {
-            borderRadius: 10,
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05)',
+            borderRadius: 12,
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
             border: '1px solid #e2e8f0',
           },
         },
@@ -155,7 +179,55 @@ function App() {
           root: {
             '& .MuiOutlinedInput-root': {
               borderRadius: 8,
+              '&:hover .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#cbd5e1',
+              },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#059669',
+                borderWidth: '2px',
+              },
             },
+          },
+        },
+      },
+      MuiDialog: {
+        styleOverrides: {
+          paper: {
+            borderRadius: 12,
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 18px 50px rgba(15, 23, 42, 0.16)',
+          },
+        },
+      },
+      MuiTableCell: {
+        styleOverrides: {
+          head: {
+            backgroundColor: '#f8fafc',
+            color: '#475569',
+            fontSize: '0.6875rem',
+            fontWeight: 700,
+            letterSpacing: '0.06em',
+            textTransform: 'uppercase',
+          },
+          root: {
+            borderColor: '#e2e8f0',
+          },
+        },
+      },
+      MuiTabs: {
+        styleOverrides: {
+          indicator: {
+            height: 2,
+            backgroundColor: '#059669',
+          },
+        },
+      },
+      MuiTab: {
+        styleOverrides: {
+          root: {
+            minHeight: 44,
+            textTransform: 'none',
+            fontWeight: 600,
           },
         },
       },
@@ -166,9 +238,10 @@ function App() {
     <Router>
       <ThemeProvider theme={theme}>
         <div className="app-container">
+          <Suspense fallback={<div className="min-h-screen grid place-items-center bg-slate-50 text-sm text-slate-500">Loading workspace…</div>}>
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/register" element={<ManagerRegistrationRoute />} />
             <Route path="/admin-login" element={<AdminLoginPage />} />
             <Route path="/login-selection" element={<LoginSelectionPage />} />
             <Route path="/verify-email" element={<VerifyEmailPage />} />
@@ -179,6 +252,7 @@ function App() {
             <Route path="/dashboard/*" element={<Dashboard />} />
             <Route path="/reset-pin/:token" element={<ResetPinPage />} />
           </Routes>
+          </Suspense>
         </div>
       </ThemeProvider>
     </Router>
@@ -186,6 +260,3 @@ function App() {
 }
 
 export default App;
-
-
-

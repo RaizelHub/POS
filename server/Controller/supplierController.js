@@ -3,7 +3,10 @@ import Supplier from '../Models/supplier.js';
 // Get all suppliers
 export const getSuppliers = async (req, res) => {
   try {
-    const suppliers = await Supplier.find().populate('products');
+    const suppliers = await Supplier.find({
+      organizationId: req.auth.organizationId,
+      branchId: req.auth.branchId,
+    }).populate('products');
     res.status(200).json(suppliers);
   } catch (error) {
     console.error('Error fetching suppliers:', error);
@@ -20,7 +23,11 @@ export const createSupplier = async (req, res) => {
       return res.status(400).json({ message: 'Supplier name is required.' });
     }
 
-    const existingSupplier = await Supplier.findOne({ name });
+    const existingSupplier = await Supplier.findOne({
+      name,
+      organizationId: req.auth.organizationId,
+      branchId: req.auth.branchId,
+    });
     if (existingSupplier) {
       return res.status(400).json({ message: 'Supplier name already exists.' });
     }
@@ -29,7 +36,9 @@ export const createSupplier = async (req, res) => {
       name,
       contactEmail: contactEmail || '',
       contactPhone: contactPhone || '',
-      products: products || []
+      products: products || [],
+      organizationId: req.auth.organizationId,
+      branchId: req.auth.branchId,
     });
 
     await newSupplier.save();
@@ -46,13 +55,22 @@ export const updateSupplier = async (req, res) => {
     const { id } = req.params;
     const { name, contactEmail, contactPhone, products } = req.body;
 
-    const supplier = await Supplier.findById(id);
+    const supplier = await Supplier.findOne({
+      _id: id,
+      organizationId: req.auth.organizationId,
+      branchId: req.auth.branchId,
+    });
     if (!supplier) {
       return res.status(404).json({ message: 'Supplier not found.' });
     }
 
     if (name && name !== supplier.name) {
-      const existingSupplier = await Supplier.findOne({ name });
+      const existingSupplier = await Supplier.findOne({
+        name,
+        organizationId: req.auth.organizationId,
+        branchId: req.auth.branchId,
+        _id: { $ne: id },
+      });
       if (existingSupplier) {
         return res.status(400).json({ message: 'Supplier name already exists.' });
       }
@@ -78,7 +96,11 @@ export const updateSupplier = async (req, res) => {
 export const deleteSupplier = async (req, res) => {
   try {
     const { id } = req.params;
-    const deletedSupplier = await Supplier.findByIdAndDelete(id);
+    const deletedSupplier = await Supplier.findOneAndDelete({
+      _id: id,
+      organizationId: req.auth.organizationId,
+      branchId: req.auth.branchId,
+    });
     if (!deletedSupplier) {
       return res.status(404).json({ message: 'Supplier not found.' });
     }

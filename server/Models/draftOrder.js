@@ -14,7 +14,8 @@ const cartItemSchema = new mongoose.Schema(
 
 const draftOrderSchema = new mongoose.Schema(
   {
-    branchId: { type: String, default: 'default', index: true },
+    organizationId: { type: String, default: 'default', index: true },
+    branchId: { type: String, default: 'main', index: true },
     draftId: { type: String, required: true },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -47,8 +48,8 @@ const draftOrderSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-draftOrderSchema.index({ userId: 1, draftId: 1 }, { unique: true });
-  draftOrderSchema.index({ branchId: 1 });
+draftOrderSchema.index({ organizationId: 1, userId: 1, draftId: 1 }, { unique: true });
+draftOrderSchema.index({ organizationId: 1, branchId: 1 });
 draftOrderSchema.index({ userId: 1, status: 1, updatedAt: -1 });
 
 export const SavedCart = mongoose.model('SavedCart', draftOrderSchema, 'savedCarts');

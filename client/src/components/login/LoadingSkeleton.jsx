@@ -6,7 +6,7 @@ const LoadingSkeleton = () => {
       {[...Array(3)].map((_, idx) => (
         <div 
           key={idx}
-          className="w-full flex items-center justify-between p-4 border border-slate-200 rounded-2xl bg-white animate-pulse"
+          className="w-full flex items-center justify-between p-4 border border-slate-200 rounded-xl bg-white animate-pulse"
         >
           <div className="flex items-center gap-3.5 w-full">
             {/* Avatar Circle skeleton */}

@@ -10,9 +10,6 @@ import connectDB from './db.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import adminRoutes from './Routes/adminRoutes.js';
-import session from 'express-session';
-import bodyParser from 'body-parser';
-import cookieParser from 'cookie-parser';
 import productRoutes from './Routes/productRoute.js'
 import salesRoutes from './Routes/salesRoutes.js'
 import transactionRoutes from "./Routes/transcationRoutes.js";
@@ -23,8 +20,11 @@ import shiftRoutes from './Routes/shiftRoutes.js';
 import customerRoutes from './Routes/customerRoutes.js';
 import analyticsRoutes from './Routes/analyticsRoutes.js';
 import supplierRoutes from './Routes/supplierRoutes.js';
+import inventoryRoutes from './Routes/inventoryRoutes.js';
+import returnRoutes from './Routes/returnRoutes.js';
+import reportRoutes from './Routes/reportRoutes.js';
+import auditRoutes from './Routes/auditRoutes.js';
 import fs from 'fs';
-import jwt from 'jsonwebtoken';
 
 const app = express();
 dotenvSafe.config({
@@ -33,81 +33,58 @@ dotenvSafe.config({
 });
 // Keep original dotenv for backward compatibility
 dotenv.config();
+const port = process.env.PORT || 8000;
+
+// Flexible CORS configuration
+const whitelist = [
+    process.env.CLIENT_URL?.trim().replace(/\/$/, ''),
+    'http://localhost:3000',
+    'http://localhost:3454',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:3454'
+].filter(Boolean);
+
+const corsOptions = {
+    origin: function (origin, callback) {
+        if (!origin) return callback(null, true);
+        const cleanOrigin = origin.trim().replace(/\/$/, '');
+        if (whitelist.indexOf(cleanOrigin) !== -1) {
+            return callback(null, true);
+        }
+        if (cleanOrigin.includes('localhost') || cleanOrigin.includes('127.0.0.1')) {
+            return callback(null, true);
+        }
+        if (process.env.NODE_ENV !== 'production') {
+            return callback(null, true);
+        }
+        return callback(null, false);
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'DELETE', 'PUT', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Idempotency-Key'],
+    exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar'],
+    maxAge: 86400
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
+
 app.use(express.json());
-// Security middlewares
-app.use(helmet());
+
+// Security middlewares with cross-origin resource policy allowed for dev
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" }
+}));
+
 const limiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
-  max: 100, // limit each IP to 100 requests per minute
+  max: 300, // limit each IP to 300 requests per minute
   standardHeaders: true,
   legacyHeaders: false,
 });
 app.use(limiter);
-app.use(bodyParser.json());
-app.use(cookieParser());
 connectDB();
-
-const port = process.env.PORT || 8000;
-
-// More flexible CORS configuration with function to check origin
-const whitelist = [
-    process.env.CLIENT_URL,
-    'http://localhost:3000',
-    'http://localhost:3454'
-];
-
-const corsOptions = {
-    origin: function (origin, callback) {
-        console.log('Request origin:', origin);
-
-        // Allow requests with no origin (like mobile apps, curl requests)
-        if (!origin) {
-            console.log('Allowing request with no origin');
-            return callback(null, true);
-        }
-
-        // Check if origin is in whitelist
-        if (whitelist.indexOf(origin) !== -1) {
-            console.log('Origin in whitelist:', origin);
-            return callback(null, true);
-        }
-
-        // Allow localhost in development (any port)
-        if (origin && origin.includes('localhost')) {
-            console.log('Allowing localhost:', origin);
-            return callback(null, true);
-        }
-
-        // In development, allow all origins
-        if (process.env.NODE_ENV !== 'production') {
-            console.log('Allowing all origins in development mode');
-            return callback(null, true);
-        }
-
-        console.log('Blocking origin by CORS:', origin);
-        callback(new Error('Not allowed by CORS'));
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'DELETE', 'PUT', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-    exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar'],
-    maxAge: 86400 // 24 hours
-}
-app.use(cors(corsOptions));
-
-// Handle preflight requests
-app.options('*', cors(corsOptions));
-
-// Use express-session for session handling
-app.use(session({
-    secret: process.env.SESSION_SECRET || 'default_secret', // Make sure this is set in .env
-    resave: false,
-    saveUninitialized: true,
-    cookie: {
-        secure: process.env.NODE_ENV === 'production',  // Set to true in production for HTTPS
-        httpOnly: true,
-    },
-}));
 
 // Serve static files (e.g., images)
 const __filename = fileURLToPath(import.meta.url);
@@ -123,15 +100,6 @@ if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Test endpoint for CORS
-app.get('/api/cors-test', (req, res) => {
-    res.json({
-        message: 'CORS is working!',
-        origin: req.headers.origin || 'No origin header',
-        timestamp: new Date().toISOString()
-    });
-});
-
 // API routes
 app.use('/api', userRoutes);
 app.use('/api', adminRoutes);
@@ -145,6 +113,10 @@ app.use('/api', shiftRoutes);
 app.use('/api', customerRoutes);
 app.use('/api', analyticsRoutes);
 app.use('/api', supplierRoutes);
+app.use('/api', inventoryRoutes);
+app.use('/api', returnRoutes);
+app.use('/api', reportRoutes);
+app.use('/api', auditRoutes);
 
 
 // Global error handler
@@ -166,8 +138,6 @@ app.use((err, req, res, next) => {
         error: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
 
-    // Continue to other error handlers if any
-    if (next) next(err);
 });
 
 app.listen(port, () => {

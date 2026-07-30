@@ -69,7 +69,10 @@ function ThankYou() {
   }, [product, cartItems, user, navigate]);
 
   const handleLogout = () => {
-    localStorage.clear();
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('activeShiftId');
+    localStorage.removeItem('lastPurchase');
     navigate('/login-selection');
   };
 
@@ -179,15 +182,15 @@ function ThankYou() {
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-50 text-emerald-500 border border-emerald-150 mb-1">
               <FaCheckCircle className="text-xl" />
             </div>
-            <h2 className="text-lg font-bold text-slate-900">Purchase Completed!</h2>
-            <p className="text-slate-500 text-xs">Transaction processed successfully.</p>
+            <h2 className="text-xl font-semibold tracking-tight text-slate-950">Payment complete</h2>
+            <p className="text-slate-500 text-sm">The transaction was recorded successfully.</p>
           </div>
 
           {/* Receipt Content Title */}
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <span className="flex items-center gap-2 font-bold text-slate-900 text-xs uppercase tracking-wider">
               <FaReceipt className="text-slate-400" />
-              <span>Official Receipt</span>
+              <span>Receipt</span>
             </span>
             <span className="text-[10px] text-slate-400 font-semibold uppercase">
               Method: {paymentMethod}
@@ -252,8 +255,8 @@ function ThankYou() {
 
             {/* Receipt Summary Footer Row */}
             <div className="px-4 py-3 bg-slate-100 border-t border-slate-200 flex justify-between items-center text-xs font-bold">
-              <span className="text-slate-500 uppercase tracking-wider">Total Amount Due</span>
-              <span className="text-sm text-slate-900 font-extrabold">₱{totalPrice.toFixed(2)}</span>
+              <span className="text-slate-500 uppercase tracking-wider">Total paid</span>
+              <span className="text-sm text-slate-900 font-bold">₱{totalPrice.toFixed(2)}</span>
             </div>
           </div>
 

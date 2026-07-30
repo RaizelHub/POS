@@ -1,9 +1,9 @@
 import express from 'express';
-import { getDashboardAnalytics, getCashierLeaderboard } from '../Controller/analyticsController.js';
+import { getDashboardAnalytics } from '../Controller/analyticsController.js';
+import { requireAuth, requireManager } from '../Middleware/authorize.js';
 
 const router = express.Router();
 
-router.get('/analytics', getDashboardAnalytics);
-router.get('/analytics/cashier-leaderboard', getCashierLeaderboard);
+router.get('/analytics', requireAuth, requireManager, getDashboardAnalytics);
 
 export default router;

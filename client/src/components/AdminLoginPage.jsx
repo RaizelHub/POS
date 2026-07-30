@@ -80,7 +80,7 @@ const AdminLoginPage = () => {
               A
             </div>
             <span className="font-semibold text-slate-100 tracking-tight text-base">
-              Admin Gateway
+              SUELTO Admin
             </span>
           </div>
         </div>
@@ -91,24 +91,24 @@ const AdminLoginPage = () => {
             <img src={novaLogo} alt="SUELTO Logo" className="h-14 w-auto object-contain rounded-xl shadow-sm" />
           </div>
           <h2 className="text-xl font-bold text-slate-100 tracking-tight">
-            Security Control Console
+            Store administration
           </h2>
           <p className="text-xs leading-relaxed text-slate-450">
-            Administrative credentials are required to configure product settings, audit registers, evaluate cash flow, and manage employee accounts.
+            Manage products, registers, reports, and cashier access.
           </p>
 
           <div className="space-y-3.5 pt-4 text-xs font-semibold text-slate-400">
             <div className="flex items-center gap-2.5">
               <FaUsers className="text-slate-500" />
-              <span>Modify cashiers registry</span>
+              <span>Manage cashier accounts</span>
             </div>
             <div className="flex items-center gap-2.5">
               <FaBox className="text-slate-500" />
-              <span>Configure pricing catalog lists</span>
+              <span>Maintain products and pricing</span>
             </div>
             <div className="flex items-center gap-2.5">
               <FaChartLine className="text-slate-500" />
-              <span>Review detailed transaction histories</span>
+              <span>Review sales and transactions</span>
             </div>
           </div>
         </div>
@@ -126,9 +126,9 @@ const AdminLoginPage = () => {
           <div className="text-center md:text-left">
             <h3 className="font-bold text-slate-900 text-lg flex items-center justify-center md:justify-start gap-2">
               <FaShieldAlt className="text-slate-700" />
-              <span>Administrator Login</span>
+              <span>Administrator sign in</span>
             </h3>
-            <p className="text-slate-400 text-xs mt-0.5">Please fill in your admin credentials below</p>
+            <p className="text-slate-400 text-xs mt-1">Enter your email and six-digit PIN.</p>
           </div>
 
           <AnimatePresence>
@@ -189,15 +189,15 @@ const AdminLoginPage = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-teal-700 hover:bg-teal-600 text-white font-bold rounded-lg text-xs transition-colors shadow-sm disabled:opacity-50 flex items-center justify-center gap-2 mt-6"
+              className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs transition-colors shadow-sm disabled:opacity-50 flex items-center justify-center gap-2 mt-6"
             >
               {loading ? (
                 <>
                   <div className="w-4 h-4 border-2 border-slate-400 border-t-white rounded-full animate-spin" />
-                  <span>Authenticating Gateway...</span>
+                  <span>Signing in…</span>
                 </>
               ) : (
-                <span>Access Console</span>
+                <span>Sign in</span>
               )}
             </button>
 

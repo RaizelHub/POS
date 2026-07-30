@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { 
@@ -48,7 +48,7 @@ function InventoryManager() {
   const fetchLowStock = async () => {
     try {
       setLoadingItems(true);
-      const res = await axios.get(`${config.apiUrl}/api/products/low-stock`);
+      const res = await api.get(`${config.apiUrl}/api/products/low-stock`);
       const items = res.data.map(item => ({
         ...item,
         reorderQty: Math.max(10, (item.lowStockThreshold || 5) * 3 - (item.quantity || 0))
@@ -65,7 +65,7 @@ function InventoryManager() {
   const fetchSuppliers = async () => {
     try {
       setLoadingSuppliers(true);
-      const res = await axios.get(`${config.apiUrl}/api/suppliers`);
+      const res = await api.get(`${config.apiUrl}/api/suppliers`);
       setSuppliers(res.data);
     } catch (err) {
       console.error('Error fetching suppliers:', err);
@@ -77,7 +77,7 @@ function InventoryManager() {
 
   const fetchAllProducts = async () => {
     try {
-      const res = await axios.get(`${config.apiUrl}/api/products`);
+      const res = await api.get(`${config.apiUrl}/api/products`);
       setAllProducts(res.data);
     } catch (err) {
       console.error('Error fetching all products:', err);
@@ -247,11 +247,11 @@ function InventoryManager() {
 
       if (editingSupplierId) {
         // Edit Supplier
-        await axios.put(`${config.apiUrl}/api/suppliers/${editingSupplierId}`, payload);
+        await api.put(`${config.apiUrl}/api/suppliers/${editingSupplierId}`, payload);
         showAlert('success', 'Supplier updated successfully!');
       } else {
         // Add Supplier
-        await axios.post(`${config.apiUrl}/api/suppliers`, payload);
+        await api.post(`${config.apiUrl}/api/suppliers`, payload);
         showAlert('success', 'Supplier created successfully!');
       }
 
@@ -273,7 +273,7 @@ function InventoryManager() {
     }
 
     try {
-      await axios.delete(`${config.apiUrl}/api/suppliers/${id}`);
+      await api.delete(`${config.apiUrl}/api/suppliers/${id}`);
       showAlert('success', 'Supplier deleted successfully.');
       fetchSuppliers();
     } catch (err) {
@@ -288,16 +288,17 @@ function InventoryManager() {
   );
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6">
+    <div className="w-full space-y-6">
 
       {/* Header Bar */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <FaBox className="text-teal-650" /> Auto-Restock & PO Manager
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Inventory</p>
+          <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950 flex items-center gap-2">
+            <FaBox className="text-emerald-650" /> Restocking
           </h2>
-          <p className="text-slate-500 text-xs mt-1">
-            Associate suppliers with your inventory catalog and compile detailed purchase spreadsheet sheets.
+          <p className="text-slate-500 text-sm mt-1">
+            Connect suppliers to products and prepare purchase orders.
           </p>
         </div>
 
@@ -311,7 +312,7 @@ function InventoryManager() {
                 : 'text-slate-500 hover:text-slate-850'
             }`}
           >
-            Generate PO
+            Purchase orders
           </button>
           <button
             onClick={() => setActiveTab('suppliers')}
@@ -349,7 +350,7 @@ function InventoryManager() {
               <select
                 value={selectedSupplierId}
                 onChange={(e) => setSelectedSupplierId(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm font-semibold rounded-lg px-3 py-2.5 outline-none transition-all focus:bg-white focus:border-teal-700 focus:ring-1 focus:ring-teal-700 cursor-pointer"
+                className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm font-semibold rounded-lg px-3 py-2.5 outline-none transition-all focus:bg-white focus:border-emerald-700 focus:ring-1 focus:ring-emerald-700 cursor-pointer"
               >
                 <option value="all">All Suppliers (Display Unfiltered Catalog)</option>
                 {suppliers.map(s => (
@@ -370,7 +371,7 @@ function InventoryManager() {
               <button
                 onClick={handleExportPO}
                 disabled={exporting || getFilteredLowStock().length === 0}
-                className="bg-teal-700 hover:bg-teal-650 text-white text-xs font-bold px-5 py-3 rounded-lg shadow-sm flex items-center gap-2 transition-all active:scale-98 disabled:opacity-50"
+                className="bg-emerald-700 hover:bg-emerald-650 text-white text-xs font-bold px-5 py-3 rounded-lg shadow-sm flex items-center gap-2 transition-all active:scale-98 disabled:opacity-50"
               >
                 <FaFileExcel /> Export Supplier Excel PO
               </button>
@@ -380,7 +381,7 @@ function InventoryManager() {
           {/* Low Stock Items List */}
           {loadingItems ? (
             <div className="flex items-center justify-center min-h-[250px]">
-              <div className="w-8 h-8 border-4 border-teal-700 border-t-transparent rounded-full animate-spin" />
+              <div className="w-8 h-8 border-4 border-emerald-700 border-t-transparent rounded-full animate-spin" />
             </div>
           ) : getFilteredLowStock().length === 0 ? (
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-12 text-center space-y-3">
@@ -441,7 +442,7 @@ function InventoryManager() {
                               value={item.reorderQty}
                               min={0}
                               onChange={(e) => handleQtyChange(item._id, e.target.value)}
-                              className="w-20 bg-slate-50 border border-slate-200 focus:border-teal-700 focus:ring-1 focus:ring-teal-700 focus:bg-white text-sm font-semibold rounded-lg px-2.5 py-1.5 text-center outline-none transition-all"
+                              className="w-20 bg-slate-50 border border-slate-200 focus:border-emerald-700 focus:ring-1 focus:ring-emerald-700 focus:bg-white text-sm font-semibold rounded-lg px-2.5 py-1.5 text-center outline-none transition-all"
                             />
                             <span className="text-slate-400 text-xs">units</span>
                           </div>
@@ -465,7 +466,7 @@ function InventoryManager() {
             <h3 className="text-sm font-bold text-slate-700">Suppliers Directory ({suppliers.length})</h3>
             <button
               onClick={handleOpenAddModal}
-              className="bg-teal-700 hover:bg-teal-650 text-white text-xs font-bold px-4 py-2.5 rounded-lg shadow-sm flex items-center gap-1.5 transition-all active:scale-98"
+              className="bg-emerald-700 hover:bg-emerald-650 text-white text-xs font-bold px-4 py-2.5 rounded-lg shadow-sm flex items-center gap-1.5 transition-all active:scale-98"
             >
               <FaPlus /> Add Supplier
             </button>
@@ -473,7 +474,7 @@ function InventoryManager() {
 
           {loadingSuppliers ? (
             <div className="flex items-center justify-center min-h-[200px]">
-              <div className="w-8 h-8 border-4 border-teal-700 border-t-transparent rounded-full animate-spin" />
+              <div className="w-8 h-8 border-4 border-emerald-700 border-t-transparent rounded-full animate-spin" />
             </div>
           ) : suppliers.length === 0 ? (
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-12 text-center space-y-3">
@@ -490,7 +491,7 @@ function InventoryManager() {
                   <div className="space-y-3">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-teal-50 border border-teal-100 flex items-center justify-center text-teal-750">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-750">
                           <FaTruck />
                         </div>
                         <div>
@@ -561,12 +562,12 @@ function InventoryManager() {
       {/* Supplier Modal: Handles Add & Edit */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
-          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+          <div className="bg-white border border-slate-200 rounded-xl w-full max-w-2xl shadow-lg overflow-hidden flex flex-col max-h-[90vh]">
             
             {/* Modal Header */}
             <div className="px-6 py-4.5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-              <h3 className="font-extrabold text-slate-900 text-sm sm:text-base flex items-center gap-2">
-                <FaTruck className="text-teal-655" />
+              <h3 className="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-2">
+                <FaTruck className="text-emerald-655" />
                 {editingSupplierId ? 'Modify Supplier Parameters' : 'Register New Supplier'}
               </h3>
               <button
@@ -589,7 +590,7 @@ function InventoryManager() {
                     required
                     value={formName}
                     onChange={(e) => setFormName(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none focus:bg-white text-xs font-semibold rounded-lg px-3 py-2 transition-all"
+                    className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-700 focus:ring-1 focus:ring-emerald-700 outline-none focus:bg-white text-xs font-semibold rounded-lg px-3 py-2 transition-all"
                     placeholder="Enter supplier contact name"
                   />
                 </div>
@@ -599,7 +600,7 @@ function InventoryManager() {
                     type="email"
                     value={formEmail}
                     onChange={(e) => setFormEmail(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none focus:bg-white text-xs font-semibold rounded-lg px-3 py-2 transition-all"
+                    className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-700 focus:ring-1 focus:ring-emerald-700 outline-none focus:bg-white text-xs font-semibold rounded-lg px-3 py-2 transition-all"
                     placeholder="name@supplier.com"
                   />
                 </div>
@@ -609,7 +610,7 @@ function InventoryManager() {
                     type="tel"
                     value={formPhone}
                     onChange={(e) => setFormPhone(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none focus:bg-white text-xs font-semibold rounded-lg px-3 py-2 transition-all"
+                    className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-700 focus:ring-1 focus:ring-emerald-700 outline-none focus:bg-white text-xs font-semibold rounded-lg px-3 py-2 transition-all"
                     placeholder="+63 900 0000 000"
                   />
                 </div>
@@ -632,7 +633,7 @@ function InventoryManager() {
                       type="text"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg pl-8 pr-3 py-1.5 outline-none transition-all focus:border-teal-700 focus:ring-1 focus:ring-teal-700 focus:bg-white"
+                      className="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg pl-8 pr-3 py-1.5 outline-none transition-all focus:border-emerald-700 focus:ring-1 focus:ring-emerald-700 focus:bg-white"
                       placeholder="Search barcode or name..."
                     />
                   </div>
@@ -645,7 +646,7 @@ function InventoryManager() {
                     <button
                       type="button"
                       onClick={() => handleSelectAllVisible(filteredCatalogForSearch.map(p => p._id))}
-                      className="text-teal-700 hover:text-teal-850"
+                      className="text-emerald-700 hover:text-emerald-850"
                     >
                       Select All Filtered
                     </button>
@@ -675,7 +676,7 @@ function InventoryManager() {
                           onClick={() => handleToggleProduct(product._id)}
                           className={`flex items-center justify-between px-4 py-2.5 rounded-lg cursor-pointer transition-colors ${
                             isChecked 
-                              ? 'bg-teal-50/50 hover:bg-teal-50 text-teal-950 font-bold' 
+                              ? 'bg-emerald-50/50 hover:bg-emerald-50 text-emerald-950 font-bold'
                               : 'hover:bg-slate-100 text-slate-750'
                           }`}
                         >
@@ -688,7 +689,7 @@ function InventoryManager() {
                           
                           <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${
                             isChecked 
-                              ? 'bg-teal-700 border-teal-700 text-white' 
+                              ? 'bg-emerald-700 border-emerald-700 text-white'
                               : 'border-slate-300 bg-white'
                           }`}>
                             {isChecked && <FaCheck className="text-[10px]" />}
@@ -717,7 +718,7 @@ function InventoryManager() {
                 <button
                   type="submit"
                   disabled={savingSupplier}
-                  className="px-5 py-2 bg-teal-700 hover:bg-teal-650 disabled:opacity-50 text-white text-xs font-bold rounded-lg shadow-sm transition-all active:scale-98"
+                  className="px-5 py-2 bg-emerald-700 hover:bg-emerald-650 disabled:opacity-50 text-white text-xs font-bold rounded-lg shadow-sm transition-all active:scale-98"
                 >
                   {savingSupplier ? 'Saving...' : editingSupplierId ? 'Save Changes' : 'Register Supplier'}
                 </button>

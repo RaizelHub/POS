@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FaLaptop, FaBarcode, FaChartBar, FaReceipt, FaWarehouse } from 'react-icons/fa';
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { FaLaptop, FaBarcode, FaReceipt, FaWarehouse } from 'react-icons/fa';
 
 import adminDashboard from '../../images/admin_dashboard.png';
 import finalScanPage from '../../images/final_scan_page.png';
 import receiptBuilder from '../../images/receipt_builder.png';
 import autoRestock from '../../images/auto_restock.png';
-import leaderboard from '../../images/leaderboard.png';
 
 const screenshots = [
   {
@@ -15,7 +14,7 @@ const screenshots = [
     desc: 'The central administration gateway for viewing net checkout volumes, pending cashier logs, and shift floats variance.',
     icon: <FaLaptop />,
     image: adminDashboard,
-    url: 'http://localhost:3000/dashboard'
+    path: 'Overview'
   },
   {
     id: 'checkout',
@@ -23,7 +22,7 @@ const screenshots = [
     desc: 'A barcode-ready scanner terminal equipped with customer loyalty pickers, credit ledgers, and transaction cash adjustments.',
     icon: <FaBarcode />,
     image: finalScanPage,
-    url: 'http://localhost:3000/scan'
+    path: 'Checkout'
   },
   {
     id: 'receipt',
@@ -31,7 +30,7 @@ const screenshots = [
     desc: 'Dynamically customize contact info, headers, tax numbers, and footer slogans with a side-by-side thermal roll preview.',
     icon: <FaReceipt />,
     image: receiptBuilder,
-    url: 'http://localhost:3000/dashboard/receipt-customizer'
+    path: 'Receipt builder'
   },
   {
     id: 'inventory',
@@ -39,15 +38,7 @@ const screenshots = [
     desc: 'Automatically tracks low-stock thresholds and exports detailed Purchase Order spreadsheets in a single click using SheetJS.',
     icon: <FaWarehouse />,
     image: autoRestock,
-    url: 'http://localhost:3000/dashboard/inventory-manager'
-  },
-  {
-    id: 'analytics',
-    title: 'Cashier Leaderboards',
-    desc: 'Evaluate shift sales volume metrics and cashier transactions rankings using interactive charting dashboards.',
-    icon: <FaChartBar />,
-    image: leaderboard,
-    url: 'http://localhost:3000/dashboard/leaderboard'
+    path: 'Inventory'
   }
 ];
 
@@ -57,32 +48,31 @@ const Screenshots = () => {
   const activeScreen = screenshots.find(s => s.id === activeTab) || screenshots[0];
 
   return (
-    <section className="py-20 bg-slate-50 border-t border-b border-slate-200/85 px-6 lg:px-10">
-      <div className="max-w-7xl mx-auto space-y-12">
+    <section id="product-tour" className="bg-[#f4f7f3] px-5 py-20 sm:px-6 sm:py-28 lg:px-8">
+      <div className="mx-auto max-w-7xl">
         
         {/* Section Header */}
-        <div className="text-center space-y-4 max-w-3xl mx-auto">
-          <span className="text-xs font-extrabold text-emerald-600 uppercase tracking-widest bg-emerald-50 px-3 py-1.5 rounded-full">
-            Interactive Product Tour
+        <div className="mx-auto max-w-3xl text-center">
+          <span className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-emerald-700">
+            Product tour
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-            See the Actual Running System
+          <h2 className="mt-4 text-4xl font-extrabold tracking-[-0.045em] text-slate-950 sm:text-5xl">
+            A closer look at Suelto
           </h2>
-          <p className="text-slate-500 text-sm leading-relaxed">
-            Take a visual tour of Suelto's active interfaces. These are 100% accurate screenshots captured directly from our live software environment.
+          <p className="mx-auto mt-5 max-w-2xl text-sm font-medium leading-7 text-slate-600 sm:text-base">
+            Move through the core workspaces your cashiers and managers use every day.
           </p>
         </div>
 
-        {/* Tab Buttons */}
-        <div className="flex flex-wrap justify-center gap-3">
+        <div className="mt-10 flex snap-x gap-2 overflow-x-auto pb-3 sm:flex-wrap sm:justify-center">
           {screenshots.map((screen) => (
             <button
               key={screen.id}
               onClick={() => setActiveTab(screen.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-semibold transition-all border ${
+              className={`flex shrink-0 snap-start items-center gap-2 rounded-xl border px-4 py-3 text-xs font-bold transition-all ${
                 activeTab === screen.id
-                  ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
-                  : 'bg-white text-slate-600 border-slate-200 hover:border-slate-350 hover:bg-slate-50'
+                  ? 'border-slate-950 bg-slate-950 text-white shadow-md'
+                  : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
               }`}
             >
               {screen.icon}
@@ -91,55 +81,42 @@ const Screenshots = () => {
           ))}
         </div>
 
-        {/* Browser Mockup Frame */}
-        <div className="space-y-6 max-w-5xl mx-auto">
-          
+        <div className="mx-auto mt-7 max-w-6xl">
           <motion.div 
             key={activeTab}
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden"
+            className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_28px_70px_-35px_rgba(15,23,42,0.35)]"
           >
-            
-            {/* Top Browser Bar */}
-            <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
-              {/* Circular Dots */}
+            <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3.5 sm:px-5">
               <div className="flex items-center gap-2">
-                <span className="w-3.5 h-3.5 rounded-full bg-red-400 block" />
-                <span className="w-3.5 h-3.5 rounded-full bg-yellow-400 block" />
-                <span className="w-3.5 h-3.5 rounded-full bg-emerald-400 block" />
+                <span className="block h-2.5 w-2.5 rounded-full bg-slate-300" />
+                <span className="block h-2.5 w-2.5 rounded-full bg-slate-300" />
+                <span className="block h-2.5 w-2.5 rounded-full bg-emerald-400" />
               </div>
-
-              {/* Address bar input */}
-              <div className="bg-white border border-slate-200 rounded-md py-1 px-4 text-[10px] font-semibold text-slate-400 font-mono w-[60%] sm:w-[50%] text-center truncate">
-                {activeScreen.url}
+              <div className="w-[55%] truncate rounded-lg bg-slate-100 px-4 py-1.5 text-center text-[9px] font-bold uppercase tracking-[0.14em] text-slate-500 sm:w-[40%]">
+                Suelto · {activeScreen.path}
               </div>
-
-              <div className="w-12" />
+              <div className="w-10 text-right text-[9px] font-bold text-emerald-600">LIVE</div>
             </div>
 
-            {/* Embedded Screenshot Image */}
-            <div className="p-1 bg-slate-50 flex justify-center border-b border-slate-200">
+            <div className="flex justify-center bg-slate-100 p-2 sm:p-3">
               <img 
                 src={activeScreen.image} 
                 alt={activeScreen.title} 
-                className="w-full h-auto max-h-[500px] object-contain rounded-b border border-slate-200/40 bg-white"
+                className="h-auto max-h-[570px] w-full rounded-xl border border-slate-200 bg-white object-contain"
               />
             </div>
 
-            {/* Image caption/description */}
-            <div className="p-6 bg-white space-y-2">
-              <h3 className="font-extrabold text-slate-900 text-sm">{activeScreen.title}</h3>
-              <p className="text-slate-500 text-xs leading-relaxed max-w-3xl">
+            <div className="grid gap-2 border-t border-slate-200 bg-white p-5 sm:grid-cols-[0.32fr_0.68fr] sm:items-center sm:p-7">
+              <h3 className="text-base font-extrabold tracking-tight text-slate-950">{activeScreen.title}</h3>
+              <p className="text-xs font-medium leading-6 text-slate-600 sm:text-sm">
                 {activeScreen.desc}
               </p>
             </div>
-
           </motion.div>
-
         </div>
-
       </div>
     </section>
   );

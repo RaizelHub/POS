@@ -14,7 +14,7 @@ const reviews = [
     name: 'Sarah Jenkins',
     role: 'General Manager',
     business: 'Metro Kiosk & Books',
-    text: 'We configured our GCash dynamic QR codes and thermal receipt parameters in under five minutes. The sales performance leaderboard has driven team efficiency.',
+    text: 'We configured our GCash references and thermal receipt parameters in under five minutes. Shift reconciliation now gives our managers a clear daily close.',
     rating: 5
   },
   {
@@ -50,10 +50,10 @@ const Testimonials = () => {
         
         {/* Section Header */}
         <div className="text-center space-y-4 max-w-3xl mx-auto">
-          <span className="text-xs font-extrabold text-emerald-600 uppercase tracking-widest bg-emerald-50 px-3 py-1.5 rounded-full">
+          <span className="text-xs font-bold text-emerald-600 uppercase tracking-widest bg-emerald-50 px-3 py-1.5 rounded-full">
             Client Success
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">
             Trusted by Cashiers and Managers
           </h2>
           <p className="text-slate-500 text-sm leading-relaxed">

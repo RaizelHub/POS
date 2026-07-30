@@ -1,11 +1,13 @@
 import Product from '../Models/product.js';
 import path from 'path';
 import mongoose from 'mongoose';
+import { toCents } from '../utils/money.js';
+import { buildOrgBranchFilter } from '../utills/orgBranchFilter.js';
 
 // Register a new product
 export const registerProduct = async (req, res) => {
   try {
-    const { name, price, quantity, barcode, sku, category, image } = req.body;
+    const { name, price, quantity, barcode, sku, category, image, costPrice = 0, lowStockThreshold = 5 } = req.body;
 
     // Validation checks
     if (!name || !price || !quantity || !barcode || !category || !image) {
@@ -43,6 +45,12 @@ export const registerProduct = async (req, res) => {
       category,
       sku: uniqueSku,
       image, // This is now the Cloudinary URL
+      organizationId: req.auth?.organizationId || 'default',
+      branchId: req.auth?.branchId || 'main',
+      priceCents: toCents(price),
+      costPrice,
+      costPriceCents: toCents(costPrice),
+      lowStockThreshold,
     });
 
     const product = await newProduct.save();
@@ -55,13 +63,14 @@ export const registerProduct = async (req, res) => {
         price: product.price,
         quantity: product.quantity,
         barcode: product.barcode,
+        sku: product.sku,
         category: product.category,
-        image: product.image || null,  // Cloudinary URL
+        image: product.image,
       },
     });
   } catch (error) {
-    console.error('Error registering product:', error);
-    res.status(500).json({ message: `Error registering product: ${error.message}` });
+    console.error('Error during product registration:', error.message);
+    res.status(500).json({ message: 'Internal server error. Please try again later.' });
   }
 };
 
@@ -70,7 +79,10 @@ export const getProduct = async (req, res) => {
   try {
     const { category } = req.query;
 
-    let filter = {};
+    let filter = {
+      ...buildOrgBranchFilter(req.auth),
+      isActive: { $ne: false },
+    };
     if (category && category !== "all") {
       filter.category = category;
     }
@@ -85,7 +97,10 @@ export const getProduct = async (req, res) => {
 // Get product by ID
 export const getProductbyId = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findOne({
+      _id: req.params.id,
+      ...buildOrgBranchFilter(req.auth),
+    });
     if (!product) return res.status(404).json({ message: 'Product not found' });
     res.status(200).json(product);
   } catch (error) {
@@ -96,10 +111,15 @@ export const getProductbyId = async (req, res) => {
 // Get product by barcode
 export const getProductByBarcode = async (req, res) => {
   try {
-    const barcode = req.params.barcode.trim();
+    const barcode = req.params.barcode?.trim();
+    if (!barcode) return res.status(400).json({ message: 'Barcode is required' });
     console.log('Searching product with barcode:', barcode);
 
-    const product = await Product.findOne({ barcode });
+    const product = await Product.findOne({
+      barcode,
+      ...buildOrgBranchFilter(req.auth),
+      isActive: { $ne: false },
+    });
 
     if (!product) {
       console.log('No product found for barcode:', barcode);
@@ -120,10 +140,22 @@ export const getProductByBarcode = async (req, res) => {
 export const updateProduct = async (req, res) => {
   try {
     const productId = req.params.id;
-    const updatedProductData = { ...req.body }; // image is now a URL
+    const allowedFields = [
+      'name', 'price', 'costPrice', 'quantity', 'category', 'lowStockThreshold',
+      'barcode', 'sku', 'image', 'isActive',
+    ];
+    const updatedProductData = Object.fromEntries(
+      Object.entries(req.body).filter(([key]) => allowedFields.includes(key))
+    );
+    if (updatedProductData.price !== undefined) updatedProductData.priceCents = toCents(updatedProductData.price);
+    if (updatedProductData.costPrice !== undefined) updatedProductData.costPriceCents = toCents(updatedProductData.costPrice);
 
     // Update the product
-    const updatedProduct = await Product.findByIdAndUpdate(productId, updatedProductData, {
+    const updatedProduct = await Product.findOneAndUpdate({
+      _id: productId,
+      organizationId: req.auth.organizationId,
+      branchId: req.auth.branchId,
+    }, updatedProductData, {
       new: true,
     });
 
@@ -142,7 +174,11 @@ export const updateProduct = async (req, res) => {
 // Delete product by ID
 export const deleteProduct = async (req, res) => {
   try {
-    const deletedProduct = await Product.findByIdAndDelete(req.params.id);
+    const deletedProduct = await Product.findOneAndUpdate({
+      _id: req.params.id,
+      organizationId: req.auth.organizationId,
+      branchId: req.auth.branchId,
+    }, { isActive: false }, { new: true });
     if (!deletedProduct) return res.status(404).json({ message: 'Product not found' });
     res.status(200).json({ message: 'Product deleted successfully' });
   } catch (error) {
@@ -190,6 +226,7 @@ export const decrementProductQuantity = async (req, res) => {
     res.status(500).json({ message: `Error updating product quantity: ${error.message}` });
   }
 };
+
 export const deleteAllProducts = async (req, res) => {
   try {
     // Delete all products from the database
@@ -215,6 +252,8 @@ export const getLowStockProducts = async (req, res) => {
   try {
     // Find products where quantity <= lowStockThreshold
     const lowStockItems = await Product.find({
+      ...buildOrgBranchFilter(req.auth),
+      isActive: { $ne: false },
       $expr: { $lte: ['$quantity', '$lowStockThreshold'] }
     });
     res.json(lowStockItems);

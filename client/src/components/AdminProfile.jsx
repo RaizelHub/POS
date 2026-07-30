@@ -49,7 +49,9 @@ function AdminProfile() {
             pin: "",
             image: null,
           });
-          setImagePreview(response.data.image);
+          const rawImg = response.data.image;
+          const validImg = (rawImg && !rawImg.includes('default-image.jpg')) ? rawImg : null;
+          setImagePreview(validImg);
         } else {
           setErrorMessage("Failed to fetch admin data.");
         }
@@ -90,7 +92,7 @@ function AdminProfile() {
         imageUrl = await uploadToCloudinary(formData.image);
       }
 
-      const updateData = {
+      const updatedFields = {
         firstname: formData.firstname,
         lastname: formData.lastname,
         email: formData.email,
@@ -98,19 +100,20 @@ function AdminProfile() {
       };
 
       if (formData.pin) {
-        updateData.pin = formData.pin;
+        updatedFields.pin = formData.pin;
       }
 
       const token = localStorage.getItem("token");
-      await axios.put(`${config.apiUrl}/api/admin`, updateData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await axios.put(`${config.apiUrl}/api/admin/profile`, updatedFields, {
+        headers: { Authorization: `Bearer ${token}` },
       });
+
+      setAdmin(response.data.admin);
       setSuccessMessage("Profile updated successfully!");
+      setFormData((prev) => ({ ...prev, pin: "" }));
     } catch (err) {
-      setErrorMessage("Failed to update profile. Please try again.");
       console.error("Error updating profile:", err);
+      setErrorMessage(err.response?.data?.message || "Failed to update profile.");
     } finally {
       setSaving(false);
     }
@@ -126,12 +129,13 @@ function AdminProfile() {
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto font-sans text-slate-800 space-y-6">
+    <div className="w-full max-w-3xl font-sans text-slate-800 space-y-6">
       
       {/* Title Header */}
       <div className="border-b border-slate-200 pb-5">
-        <h2 className="text-xl font-bold text-slate-900">Admin Account Profile</h2>
-        <p className="text-slate-500 text-sm mt-0.5">Modify administrator credentials and details.</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Settings</p>
+        <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950">Administrator profile</h2>
+        <p className="text-slate-500 text-sm mt-1">Update account details and profile photo.</p>
       </div>
 
       <div className="bg-white border border-slate-200 rounded-xl p-6 md:p-8 shadow-sm grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
@@ -140,8 +144,13 @@ function AdminProfile() {
         <div className="md:col-span-4 flex flex-col items-center space-y-4">
           <div className="relative group cursor-pointer">
             <div className="w-28 h-28 rounded-full border-2 border-slate-250 overflow-hidden shadow-sm flex items-center justify-center bg-slate-50 relative">
-              {imagePreview ? (
-                <img src={imagePreview} alt="Admin profile preview" className="w-full h-full object-cover" />
+              {imagePreview && !imagePreview.includes('default-image.jpg') ? (
+                <img
+                  src={imagePreview}
+                  alt="Admin profile preview"
+                  className="w-full h-full object-cover"
+                  onError={() => setImagePreview(null)}
+                />
               ) : (
                 <FaUser className="text-slate-400 text-3xl" />
               )}

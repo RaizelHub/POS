@@ -6,22 +6,19 @@ import {
   updateProduct, 
   deleteProduct,
   getProductByBarcode,
-  decrementProductQuantity,
-  deleteAllProducts,
   getLowStockProducts
-} from '../Controller/productsController.js'; // Fix the controller import path
+} from '../Controller/productsController.js';
+import { requireAuth, requireManager } from '../Middleware/authorize.js';
 
 const router = express.Router();
 
 // Define routes
-router.post('/registerProduct', registerProduct);
-router.get('/products', getProduct);
-router.get('/products/low-stock', getLowStockProducts);
-router.get('/products/:id', getProductbyId);
-router.put('/products/:id', updateProduct);
-router.delete('/products/:id', deleteProduct);
-router.get('/products/barcode/:barcode', getProductByBarcode);
-router.put('/products/:id/decrement', decrementProductQuantity);
-router.delete('/products', deleteAllProducts);
+router.post('/registerProduct', requireAuth, requireManager, registerProduct);
+router.get('/products', requireAuth, getProduct);
+router.get('/products/low-stock', requireAuth, requireManager, getLowStockProducts);
+router.get('/products/barcode/:barcode', requireAuth, getProductByBarcode);
+router.get('/products/:id', requireAuth, getProductbyId);
+router.put('/products/:id', requireAuth, requireManager, updateProduct);
+router.delete('/products/:id', requireAuth, requireManager, deleteProduct);
 
 export default router;

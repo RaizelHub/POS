@@ -22,11 +22,11 @@ const ForgotPinModal = ({ isOpen, onClose, onSubmit, selectedUser, loading, rese
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 200, opacity: 0 }}
         transition={{ duration: 0.3, ease: 'easeOut' }}
-        className="bg-white border border-slate-200 rounded-t-3xl sm:rounded-2xl w-full max-w-md shadow-2xl overflow-hidden"
+        className="bg-white border border-slate-200 rounded-t-3xl sm:rounded-xl w-full max-w-md shadow-lg overflow-hidden"
       >
         {/* Header */}
         <div className="px-6 py-4.5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-          <h3 className="font-extrabold text-slate-900 text-sm sm:text-base">
+          <h3 className="font-bold text-slate-900 text-sm sm:text-base">
             PIN Recovery Requester
           </h3>
           <button

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FaUserCircle, FaArrowLeft, FaBackspace, FaLock,
-  FaCheckCircle, FaExclamationTriangle, FaSearch, FaUserPlus,
+  FaCheckCircle, FaExclamationTriangle, FaSearch,
   FaQuestionCircle
 } from 'react-icons/fa';
 
@@ -68,7 +68,7 @@ const LoginSelectionPage = () => {
     try {
       setLoading(true);
       const apiUrl = getApiUrl();
-      const res = await fetch(`${apiUrl}/api/users`);
+      const res = await fetch(`${apiUrl}/api/cashiers/login-directory`);
       if (!res.ok) throw new Error('Failed to fetch users.');
       const data = await res.json();
       setUsers(data);
@@ -80,15 +80,10 @@ const LoginSelectionPage = () => {
   };
 
   const handleUserClick = (user) => {
-    if (user.isVerified) {
-      setSelectedUser(user);
-      setPin('');
-      setError(null);
-      setIsForgotPin(false);
-    } else {
-      setError('This cashier is not verified. Please verify email first.');
-      setTimeout(() => setError(null), 4000);
-    }
+    setSelectedUser(user);
+    setPin('');
+    setError(null);
+    setIsForgotPin(false);
   };
 
   const submitPin = async (currentPin) => {
@@ -100,7 +95,7 @@ const LoginSelectionPage = () => {
       const res = await fetch(`${apiUrl}/api/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: selectedUser.email, pin: currentPin }),
+        body: JSON.stringify({ userId: selectedUser._id, pin: currentPin }),
       });
 
       if (!res.ok) throw new Error('Invalid PIN or login failed.');
@@ -135,11 +130,6 @@ const LoginSelectionPage = () => {
       return;
     }
 
-    if (enteredEmail !== selectedUser.email) {
-      setResetError('Email does not match the selected user.');
-      return;
-    }
-
     const cashierNum = `C-${selectedUser._id.substring(selectedUser._id.length - 4).toUpperCase()}`;
     if (enteredEmployeeId && enteredEmployeeId.toUpperCase() !== cashierNum) {
       setResetError('Employee ID does not match selected profile.');
@@ -153,7 +143,7 @@ const LoginSelectionPage = () => {
       const response = await fetch(`${apiUrl}/api/forgot-pin`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: selectedUser.email }),
+        body: JSON.stringify({ email: enteredEmail }),
       });
 
       if (!response.ok) {
@@ -196,15 +186,11 @@ const LoginSelectionPage = () => {
   // Filter Cashier Lists
   const filteredUsers = users.filter(user => {
     const fullName = `${user.firstname || ''} ${user.lastname || ''}`.toLowerCase();
-    return fullName.includes(searchQuery.toLowerCase()) || user.email.toLowerCase().includes(searchQuery.toLowerCase());
+    return fullName.includes(searchQuery.toLowerCase());
   });
 
   return (
-    <div className="w-screen h-screen bg-slate-950 flex items-center justify-center font-sans text-slate-300 antialiased selection:bg-teal-500/20 selection:text-teal-400 overflow-hidden relative">
-
-      {/* Radial Glows */}
-      <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-teal-500/5 rounded-full blur-[140px] pointer-events-none z-0" />
-      <div className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] bg-indigo-600/5 rounded-full blur-[140px] pointer-events-none z-0" />
+    <div className="w-screen h-screen bg-slate-50 flex items-center justify-center font-sans text-slate-800 antialiased selection:bg-emerald-500/20 selection:text-emerald-700 overflow-hidden relative">
 
       {/* Success/Error toasts */}
       <AnimatePresence>
@@ -213,9 +199,9 @@ const LoginSelectionPage = () => {
             initial={{ opacity: 0, y: -40, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
-            className="fixed top-6 right-6 bg-slate-900 border border-teal-550/30 text-teal-400 px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2.5 z-50 text-xs font-bold"
+            className="fixed top-6 right-6 bg-slate-900 border border-emerald-600/30 text-emerald-400 px-4 py-3 rounded-xl shadow-lg flex items-center gap-2.5 z-50 text-xs font-bold"
           >
-            <FaCheckCircle className="text-teal-400 text-sm" />
+            <FaCheckCircle className="text-emerald-400 text-sm" />
             <span>{snackbarMessage}</span>
           </motion.div>
         )}
@@ -225,13 +211,8 @@ const LoginSelectionPage = () => {
       <div className="w-full h-full bg-slate-950 grid grid-cols-1 lg:grid-cols-12 relative z-10">
 
         {/* Left Side Branding & Retail Visual (Full Screen Left Panel) */}
-        <div className="hidden lg:block lg:col-span-5 h-full relative overflow-hidden">
-          <img
-            src={loginImage}
-            alt="Retail Store Visual"
-            className="absolute inset-0 w-full h-full object-cover opacity-25"
-          />
-          <div className="absolute inset-0 bg-slate-950/90 flex flex-col justify-between p-10 text-white border-r border-slate-900/60">
+        <div className="hidden lg:block lg:col-span-5 h-full relative overflow-hidden bg-slate-900">
+          <div className="absolute inset-0 bg-slate-900 flex flex-col justify-between p-10 text-white border-r border-slate-800">
 
             {/* Top Logo */}
             <div className="flex items-center gap-2.5">
@@ -241,8 +222,8 @@ const LoginSelectionPage = () => {
                 className="h-10 w-auto object-contain rounded-xl shadow-sm"
               />
               <div className="text-left">
-                <h2 className="font-extrabold text-white text-base leading-none tracking-tight">SUELTO POS</h2>
-                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1">Retail Station Terminal</p>
+                <h2 className="font-bold text-white text-base leading-none tracking-tight">SUELTO POS</h2>
+                <p className="text-[9px] font-semibold text-slate-500 uppercase tracking-widest mt-1">Register terminal</p>
               </div>
             </div>
 
@@ -253,12 +234,12 @@ const LoginSelectionPage = () => {
 
             {/* Bottom Slogan */}
             <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
-              Suelto Workstation Client
+              SUELTO Retail · Register access
             </div>
           </div>
         </div>
 
-        <div className="lg:col-span-7 p-6 md:p-10 flex flex-col justify-between overflow-y-auto bg-slate-50 h-full border-l border-slate-200">
+        <div className="lg:col-span-7 p-6 md:p-10 flex flex-col justify-between overflow-y-auto bg-white h-full border-l border-slate-200">
 
           {/* Header info */}
           <Header theme="light" onHelpDeskClick={() => setIsHelpDeskOpen(true)} />
@@ -267,7 +248,7 @@ const LoginSelectionPage = () => {
           <div className="flex-grow flex flex-col justify-center max-w-[500px] w-full mx-auto py-8">
             <motion.div
               layout
-              className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-xl space-y-6 text-slate-800 relative overflow-hidden border-t-2 border-t-teal-700/80"
+              className="bg-white border border-slate-200 rounded-xl p-6 md:p-8 shadow-sm space-y-6 text-slate-800 relative overflow-hidden"
             >
               <AnimatePresence mode="wait">
                 {!selectedUser ? (
@@ -281,12 +262,12 @@ const LoginSelectionPage = () => {
                     className="space-y-5"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-600">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
                         <FaLock className="text-sm" />
                       </div>
                       <div>
-                        <h2 className="text-base font-extrabold text-slate-900 tracking-tight leading-none">Cashier Authentication</h2>
-                        <p className="text-slate-450 text-[10.5px] mt-1.5 font-medium">Select your cash management profile to continue</p>
+                        <h2 className="text-xl font-semibold text-slate-950 tracking-tight leading-none">Choose cashier</h2>
+                        <p className="text-slate-500 text-xs mt-2 font-medium">Select your profile to open the register.</p>
                       </div>
                     </div>
 
@@ -299,8 +280,8 @@ const LoginSelectionPage = () => {
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search cashier profile..."
-                        className="w-full bg-slate-50 border border-slate-200 text-xs font-semibold rounded-xl pl-9 pr-4 py-3 outline-none transition-all focus:bg-white focus:border-teal-500 focus:ring-1 focus:ring-teal-500 text-slate-800 placeholder:text-slate-400"
+                        placeholder="Search cashiers"
+                        className="w-full bg-slate-50 border border-slate-200 text-xs font-semibold rounded-xl pl-9 pr-4 py-3 outline-none transition-all focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 text-slate-800 placeholder:text-slate-400"
                       />
                     </div>
 
@@ -320,18 +301,13 @@ const LoginSelectionPage = () => {
                         ))}
                       </div>
                     ) : (
-                      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-8 text-center space-y-3">
+                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-8 text-center space-y-3">
                         <FaUserCircle className="text-slate-450 text-4xl mx-auto" />
                         <h4 className="text-sm font-bold text-slate-800">No Cashiers Found</h4>
                         <p className="text-slate-500 text-[11px] leading-relaxed max-w-xs mx-auto">
-                          There are no cash management profiles registered matching that search. Create one to log in.
+                          No cashier profiles match this search.
                         </p>
-                        <Link
-                          to="/register"
-                          className="inline-flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-[10px] px-3.5 py-2 rounded-lg shadow transition-all active:scale-95 uppercase tracking-wide"
-                        >
-                          <FaUserPlus /> Register Cashier
-                        </Link>
+                        <p className="text-[10px] font-semibold text-slate-500">Ask a manager to add or assign a cashier.</p>
                       </div>
                     )}
 
@@ -342,12 +318,8 @@ const LoginSelectionPage = () => {
                       </div>
                     )}
 
-                    {/* Bottom options redirect */}
-                    <div className="border-t border-slate-200 pt-4 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider">
-                      <span className="text-slate-500">Need to register a store?</span>
-                      <Link to="/register" className="text-teal-700 hover:text-teal-600 hover:underline transition-colors">
-                        Register Account
-                      </Link>
+                    <div className="border-t border-slate-200 pt-4 text-center text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      Cashier accounts are managed from the admin workspace
                     </div>
                   </motion.div>
                 ) : (
@@ -372,14 +344,14 @@ const LoginSelectionPage = () => {
                           />
                         </div>
                         <div className="text-left leading-none">
-                          <h4 className="font-extrabold text-slate-800 text-xs">{selectedUser.firstname} {selectedUser.lastname}</h4>
-                          <span className="text-slate-500 text-[10px] font-mono">{selectedUser.email}</span>
+                          <h4 className="font-bold text-slate-800 text-xs">{selectedUser.firstname} {selectedUser.lastname}</h4>
+                          <span className="text-slate-500 text-[10px] font-mono">{selectedUser.station || 'Unassigned register'}</span>
                         </div>
                       </div>
 
                       <button
                         onClick={closeModal}
-                        className="text-[10px] font-extrabold text-slate-450 hover:text-slate-700 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-lg flex items-center gap-1 transition-all active:scale-95 uppercase tracking-wide"
+                        className="text-[10px] font-bold text-slate-450 hover:text-slate-700 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-lg flex items-center gap-1 transition-all active:scale-95 uppercase tracking-wide"
                       >
                         <FaArrowLeft className="text-[8px]" /> Back
                       </button>
@@ -387,8 +359,8 @@ const LoginSelectionPage = () => {
 
                     {/* PIN field header */}
                     <div className="text-center space-y-1">
-                      <h3 className="font-extrabold text-slate-900 text-base tracking-tight">Key in security PIN</h3>
-                      <p className="text-slate-400 text-[10px] font-semibold uppercase tracking-wide">Enter your 6-digit terminal PIN</p>
+                      <h3 className="font-semibold text-slate-950 text-lg tracking-tight">Enter PIN</h3>
+                      <p className="text-slate-500 text-xs">Use your six-digit cashier PIN.</p>
                     </div>
 
                     {/* PIN Display Indicators */}
@@ -402,7 +374,7 @@ const LoginSelectionPage = () => {
                               key={idx}
                               animate={{ scale: hasChar ? 1.15 : 1 }}
                               className={`w-3.5 h-3.5 rounded-full border transition-all duration-200 flex items-center justify-center ${hasChar
-                                ? 'bg-teal-700 border-teal-700 shadow-md shadow-teal-700/20'
+                                ? 'bg-emerald-600 border-emerald-600 shadow-md shadow-emerald-600/20'
                                 : 'bg-slate-50 border-slate-200'
                                 }`}
                             >
@@ -428,17 +400,17 @@ const LoginSelectionPage = () => {
                       <button
                         onClick={handlePinSubmit}
                         disabled={pin.length < 6 || loading}
-                        className="w-full h-14 bg-teal-700 hover:bg-teal-600 disabled:bg-slate-200 text-white disabled:text-slate-400 text-xs font-extrabold rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 active:scale-98 disabled:cursor-not-allowed"
+                        className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 text-white disabled:text-slate-400 text-xs font-bold rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 active:scale-98 disabled:cursor-not-allowed"
                       >
-                        {loading ? 'Signing In...' : 'Verify & Launch Workstation'}
+                        {loading ? 'Signing in…' : 'Open register'}
                       </button>
 
                       <button
                         type="button"
                         onClick={() => setIsForgotPin(true)}
-                        className="w-full text-center text-[10px] font-extrabold text-slate-400 hover:text-teal-700 transition-colors uppercase tracking-wider block"
+                        className="w-full text-center text-[10px] font-bold text-slate-400 hover:text-emerald-600 transition-colors uppercase tracking-wider block"
                       >
-                        Forgot cashier security PIN?
+                        Forgot PIN?
                       </button>
                     </div>
 
@@ -482,22 +454,22 @@ const LoginSelectionPage = () => {
               initial={{ scale: 0.95, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 20 }}
-              className="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 max-w-[650px] w-full shadow-2xl space-y-6 text-left relative text-white border-t-4 border-t-teal-500"
+              className="bg-slate-900 border border-slate-800 rounded-xl p-6 md:p-8 max-w-[650px] w-full shadow-lg space-y-6 text-left relative text-white"
             >
               {/* Header */}
               <div className="flex items-center justify-between border-b border-slate-800 pb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-teal-950/50 border border-teal-900/40 flex items-center justify-center text-teal-400">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-950/50 border border-emerald-900/40 flex items-center justify-center text-emerald-400">
                     <FaQuestionCircle className="text-lg" />
                   </div>
                   <div>
-                    <h3 className="font-extrabold text-lg text-white leading-none tracking-tight">Workstation Support Desk</h3>
+                    <h3 className="font-bold text-lg text-white leading-none tracking-tight">Workstation Support Desk</h3>
                     <p className="text-[10.5px] text-slate-450 mt-1.5 font-semibold uppercase tracking-wider">Secure Terminal Guide & Hotkeys</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsHelpDeskOpen(false)}
-                  className="bg-slate-950 border border-slate-850 hover:bg-slate-850 text-slate-400 hover:text-white px-3 py-1.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wide transition-all active:scale-95"
+                  className="bg-slate-950 border border-slate-850 hover:bg-slate-850 text-slate-400 hover:text-white px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all active:scale-95"
                 >
                   Close
                 </button>
@@ -508,8 +480,8 @@ const LoginSelectionPage = () => {
                 
                 {/* Hardware Troubleshooting */}
                 <div className="space-y-3">
-                  <h4 className="text-[11px] font-extrabold text-teal-400 uppercase tracking-widest flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-teal-500 inline-block" />
+                  <h4 className="text-[11px] font-bold text-emerald-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
                     Workstation Troubleshooting
                   </h4>
                   
@@ -533,8 +505,8 @@ const LoginSelectionPage = () => {
                 <div className="space-y-5">
                   
                   <div className="space-y-3">
-                    <h4 className="text-[11px] font-extrabold text-teal-400 uppercase tracking-widest flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-teal-500 inline-block" />
+                    <h4 className="text-[11px] font-bold text-emerald-400 uppercase tracking-widest flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
                       Cashier Hotkeys (Checkout Screen)
                     </h4>
                     
@@ -559,19 +531,19 @@ const LoginSelectionPage = () => {
                   </div>
 
                   <div className="space-y-3">
-                    <h4 className="text-[11px] font-extrabold text-teal-400 uppercase tracking-widest flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-teal-500 inline-block" />
+                    <h4 className="text-[11px] font-bold text-emerald-400 uppercase tracking-widest flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
                       Support Escalations
                     </h4>
                     
-                    <div className="p-4 bg-teal-950/20 border border-teal-900/40 rounded-xl space-y-2 text-[10.5px]">
+                    <div className="p-4 bg-emerald-950/20 border border-emerald-900/40 rounded-xl space-y-2 text-[10.5px]">
                       <div className="flex justify-between">
                         <span className="text-slate-400">Branch Manager Line:</span>
-                        <span className="font-bold text-teal-400 font-mono">EXT 805</span>
+                        <span className="font-bold text-emerald-400 font-mono">EXT 805</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-slate-400">IT Systems Hotline:</span>
-                        <span className="font-bold text-teal-400 font-mono">EXT 104</span>
+                        <span className="font-bold text-emerald-400 font-mono">EXT 104</span>
                       </div>
                     </div>
                   </div>

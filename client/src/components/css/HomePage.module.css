@@ -4,10 +4,10 @@
   align-items: center;
   justify-content: center;
   height: 100vh;
-  background: linear-gradient(135deg, #1a2a6c 0%, #b21f1f 50%, #fdbb2d 100%);
-  color: white;
+  background: #f8fafc;
+  color: #0f172a;
   text-align: center;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Inter', sans-serif;
   position: relative;
   overflow: hidden;
 }
@@ -19,7 +19,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.3) 100%);
+  background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.02) 100%);
   pointer-events: none;
 }
 
@@ -32,36 +32,32 @@
   position: absolute;
   top: 0;
   z-index: 10;
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .adminIcon {
-  color: #ffffff;
+  color: #059669;
   margin-right: 20px;
-  font-size: 2.5rem;
+  font-size: 1.5rem;
   cursor: pointer;
-  transition: all 0.3s ease;
-  text-shadow: 0 0 12px rgba(255,255,255,0.9), 0 0 20px rgba(255,255,255,0.7);
-  filter: brightness(1.5) drop-shadow(0 0 5px rgba(255,255,255,0.8));
-  background-color: rgba(255,255,255,0.25);
-  padding: 12px;
-  border-radius: 50%;
+  transition: all 0.2s ease;
+  background-color: #ecfdf5;
+  padding: 10px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 40px;
   height: 40px;
-  box-shadow: 0 0 15px rgba(255,255,255,0.5);
+  border: 1px solid #d1fae5;
 }
 
 .adminIcon:hover {
-  transform: translateY(-2px) scale(1.1);
-  text-shadow: 0 0 15px #ffffff, 0 0 25px #ffffff;
-  color: #ffffff;
-  filter: brightness(1.8) drop-shadow(0 0 8px rgba(255,255,255,0.9));
-  background-color: rgba(255,255,255,0.4);
-  box-shadow: 0 0 20px rgba(255,255,255,0.7);
+  transform: translateY(-2px);
+  background-color: #d1fae5;
+  border-color: #a7f3d0;
 }
 
 .navButtons {
@@ -71,23 +67,22 @@
 
 .customButton {
   padding: 12px 24px;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  font-size: 1rem;
+  border: 1px solid #e2e8f0;
+  background: white;
+  color: #0f172a;
+  font-size: 0.875rem;
   font-weight: 600;
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(5px);
+  transition: all 0.2s ease;
   letter-spacing: 0.5px;
 }
 
 .customButton:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.4);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .customButton:active {
@@ -129,38 +124,35 @@
 }
 
 .title {
-  font-size: 3.5rem;
-  font-weight: 800;
+  font-size: 3rem;
+  font-weight: 700;
   margin-bottom: 20px;
-  background: linear-gradient(to right, #fff, #f0f0f0);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  letter-spacing: 1px;
+  color: #0f172a;
+  letter-spacing: -0.5px;
 }
 
 .subtitle {
-  font-size: 1.8rem;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.9);
-  text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  letter-spacing: 0.5px;
+  font-size: 1.25rem;
+  font-weight: 400;
+  color: #475569;
+  letter-spacing: 0;
 }
 
 .footer {
   position: absolute;
   bottom: 30px;
-  font-size: 1rem;
+  font-size: 0.875rem;
   width: 100%;
   padding: 20px;
-  background: rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid #e2e8f0;
 }
 
 .footerText {
-  color: rgba(255, 255, 255, 0.9);
+  color: #64748b;
   font-weight: 500;
-  letter-spacing: 1px;
+  letter-spacing: 0;
 }
 
 /* Enhanced Animations */

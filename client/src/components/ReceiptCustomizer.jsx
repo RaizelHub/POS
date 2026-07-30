@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import { FaStore, FaReceipt, FaEnvelopeOpenText, FaFont, FaSave, FaCheckCircle, FaExclamationCircle } from 'react-icons/fa';
 import config from '../config';
 
@@ -26,7 +26,7 @@ function ReceiptCustomizer() {
   const fetchSettings = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${config.apiUrl}/api/receipt-settings`);
+      const res = await api.get(`${config.apiUrl}/api/receipt-settings`);
       if (res.data) {
         setSettings(res.data);
       }
@@ -55,7 +55,7 @@ function ReceiptCustomizer() {
     e.preventDefault();
     try {
       setSaving(true);
-      const res = await axios.post(`${config.apiUrl}/api/receipt-settings`, settings);
+      const res = await api.post(`${config.apiUrl}/api/receipt-settings`, settings);
       setSettings(res.data.settings);
       showAlert('success', 'Receipt template saved successfully!');
     } catch (err) {
@@ -81,17 +81,17 @@ function ReceiptCustomizer() {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-20">
-        <div className="w-8 h-8 border-4 border-teal-700 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-emerald-700 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6">
+    <div className="w-full space-y-6">
       
       {/* Alert banner */}
       {alert && (
-        <div className={`p-4 rounded-xl flex items-center gap-3 border shadow-sm transition-all duration-300 ${alert.type === 'success' ? 'bg-teal-50 border-teal-200 text-teal-800' : 'bg-rose-50 border-rose-200 text-rose-800'}`}>
+        <div className={`p-4 rounded-xl flex items-center gap-3 border shadow-sm transition-all duration-300 ${alert.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-rose-50 border-rose-200 text-rose-800'}`}>
           {alert.type === 'success' ? <FaCheckCircle className="text-lg" /> : <FaExclamationCircle className="text-lg" />}
           <span className="text-sm font-semibold">{alert.message}</span>
         </div>
@@ -103,10 +103,11 @@ function ReceiptCustomizer() {
         {/* Left Side: Customize Form (7 cols) */}
         <form onSubmit={handleSave} className="lg:col-span-7 bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-6">
           <div className="border-b border-slate-100 pb-4">
-            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                <FaReceipt className="text-teal-700" /> Receipt Customizer
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Store output</p>
+            <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950 flex items-center gap-2">
+                <FaReceipt className="text-emerald-700" /> Receipts
             </h2>
-            <p className="text-slate-500 text-xs mt-1">Configure layout, typography, messages, and business fields for all printed and digital receipt outputs.</p>
+            <p className="text-slate-500 text-sm mt-1">Set the business details and messages shown on receipts.</p>
           </div>
 
           {/* Section 1: Store info */}
@@ -122,7 +123,7 @@ function ReceiptCustomizer() {
                 name="storeName"
                 value={settings.storeName}
                 onChange={handleInputChange}
-                className="w-full bg-slate-50 border border-slate-200 focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none focus:bg-white text-sm rounded-lg px-3 py-2 transition-all font-semibold"
+                className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-700 focus:ring-1 focus:ring-emerald-700 outline-none focus:bg-white text-sm rounded-lg px-3 py-2 transition-all font-semibold"
                 placeholder="Mega Store Inc."
               />
             </div>
@@ -134,7 +135,7 @@ function ReceiptCustomizer() {
                 name="tagline"
                 value={settings.tagline}
                 onChange={handleInputChange}
-                className="w-full bg-slate-50 border border-slate-200 focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none focus:bg-white text-sm rounded-lg px-3 py-2 transition-all"
+                className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-700 focus:ring-1 focus:ring-emerald-700 outline-none focus:bg-white text-sm rounded-lg px-3 py-2 transition-all"
                 placeholder="Delicious coffee & pastries"
               />
             </div>
@@ -151,7 +152,7 @@ function ReceiptCustomizer() {
                   name="phone"
                   value={settings.phone}
                   onChange={handleInputChange}
-                  className="w-full bg-slate-50 border border-slate-200 focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none focus:bg-white text-sm rounded-lg px-3 py-2 transition-all"
+                  className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-700 focus:ring-1 focus:ring-emerald-700 outline-none focus:bg-white text-sm rounded-lg px-3 py-2 transition-all"
                   placeholder="+63 900 0000 000"
                 />
               </div>
@@ -163,7 +164,7 @@ function ReceiptCustomizer() {
                   name="address"
                   value={settings.address}
                   onChange={handleInputChange}
-                  className="w-full bg-slate-50 border border-slate-200 focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none focus:bg-white text-sm rounded-lg px-3 py-2 transition-all"
+                  className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-700 focus:ring-1 focus:ring-emerald-700 outline-none focus:bg-white text-sm rounded-lg px-3 py-2 transition-all"
                   placeholder="Street, City, Country"
                 />
               </div>
@@ -183,7 +184,7 @@ function ReceiptCustomizer() {
                 value={settings.headerMessage}
                 onChange={handleInputChange}
                 rows={2}
-                className="w-full bg-slate-50 border border-slate-200 focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none focus:bg-white text-sm rounded-lg px-3 py-2 transition-all resize-none"
+                className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-700 focus:ring-1 focus:ring-emerald-700 outline-none focus:bg-white text-sm rounded-lg px-3 py-2 transition-all resize-none"
                 placeholder="e.g. Thank you for supporting our business!"
               />
             </div>
@@ -195,7 +196,7 @@ function ReceiptCustomizer() {
                 rows={2}
                 value={settings.footerMessage}
                 onChange={handleInputChange}
-                className="w-full bg-slate-50 border border-slate-200 focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none focus:bg-white text-sm rounded-lg px-3 py-2 transition-all resize-none"
+                className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-700 focus:ring-1 focus:ring-emerald-700 outline-none focus:bg-white text-sm rounded-lg px-3 py-2 transition-all resize-none"
                 placeholder="Thank you for shopping with us!"
               />
             </div>
@@ -207,7 +208,7 @@ function ReceiptCustomizer() {
                 rows={2}
                 value={settings.returnPolicy}
                 onChange={handleInputChange}
-                className="w-full bg-slate-50 border border-slate-200 focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none focus:bg-white text-sm rounded-lg px-3 py-2 transition-all resize-none"
+                className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-700 focus:ring-1 focus:ring-emerald-700 outline-none focus:bg-white text-sm rounded-lg px-3 py-2 transition-all resize-none"
                 placeholder="No returns without original invoice. Exchange within 7 days."
               />
             </div>
@@ -226,7 +227,7 @@ function ReceiptCustomizer() {
                   name="fontSize"
                   value={settings.fontSize}
                   onChange={handleInputChange}
-                  className="w-full bg-slate-50 border border-slate-200 focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none focus:bg-white text-sm rounded-lg px-3 py-2 transition-all"
+                  className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-700 focus:ring-1 focus:ring-emerald-700 outline-none focus:bg-white text-sm rounded-lg px-3 py-2 transition-all"
                 >
                   <option value="small">Small</option>
                   <option value="medium">Medium</option>
@@ -241,7 +242,7 @@ function ReceiptCustomizer() {
                   name="showLogo"
                   checked={settings.showLogo}
                   onChange={handleInputChange}
-                  className="w-4 h-4 text-teal-700 border-slate-300 rounded focus:ring-teal-700"
+                  className="w-4 h-4 text-emerald-700 border-slate-300 rounded focus:ring-emerald-700"
                 />
                 <label htmlFor="showLogo" className="text-xs font-semibold text-slate-700 cursor-pointer select-none">
                   Display Logo on Receipt
@@ -254,7 +255,7 @@ function ReceiptCustomizer() {
             <button
               type="submit"
               disabled={saving}
-              className="bg-teal-700 hover:bg-teal-650 text-white text-sm font-bold px-5 py-2.5 rounded-lg shadow-sm flex items-center gap-2 transition-colors disabled:opacity-50"
+              className="bg-emerald-700 hover:bg-emerald-650 text-white text-sm font-bold px-5 py-2.5 rounded-lg shadow-sm flex items-center gap-2 transition-colors disabled:opacity-50"
             >
               <FaSave /> {saving ? 'Saving changes...' : 'Save Template'}
             </button>

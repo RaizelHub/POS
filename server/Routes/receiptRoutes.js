@@ -1,8 +1,10 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
 import { createReceipt, getReceiptSettings, updateReceiptSettings } from '../Controller/receiptController.js';
+import { requireAuth, requireManager } from '../Middleware/authorize.js';
 
 const router = express.Router();
+router.use(requireAuth);
 
 // Validation middleware
 router.post(
@@ -35,6 +37,6 @@ router.post(
 );
 
 router.get('/receipt-settings', getReceiptSettings);
-router.post('/receipt-settings', updateReceiptSettings);
+router.post('/receipt-settings', requireManager, updateReceiptSettings);
 
 export default router;

@@ -1,23 +1,26 @@
 import express from 'express';
-import { registerUser, getUsers, getUserById, updateUser, deleteUser, loginUser,verifyEmail,addTransaction,
-  getUserTransactions,getLoggedInUser ,updateLoggedInUser,forgotPin, resetPin} from '../Controller/userController.js';
+import { registerUser, getUsers, getUserById, updateUser, deleteUser, loginUser,verifyEmail,
+  getUserTransactions,getLoggedInUser ,updateLoggedInUser,forgotPin, resetPin, getCashierLoginDirectory} from '../Controller/userController.js';
+import { completeSale } from '../Controller/saleController.js';
+import { requireAuth, requireManager, requireSelfOrManager } from '../Middleware/authorize.js';
   
 
 
 const router = express.Router();
 
 // Routes for users
-router.post('/register', registerUser);  // Register a new user
-router.get('/users', getUsers);  // Get all users
-router.get('/users/:id', getUserById);  // Get a user by ID
-router.put('/user/me', updateLoggedInUser);
-router.put('/user/:id', updateUser);// Update a user by ID
-router.delete('/users/:id', deleteUser);  // Delete a user
+router.get('/cashiers/login-directory', getCashierLoginDirectory);
+router.post('/register', requireAuth, requireManager, registerUser);
+router.get('/users', requireAuth, requireManager, getUsers);
+router.get('/users/:id', requireAuth, requireSelfOrManager('id'), getUserById);
+router.put('/user/me', requireAuth, updateLoggedInUser);
+router.put('/user/:id', requireAuth, requireManager, updateUser);
+router.delete('/users/:id', requireAuth, requireManager, deleteUser);
 router.get('/verify-email', verifyEmail);
 router.post('/login', loginUser);
-router.post('/transactions', addTransaction); // Add a transaction for a user
-router.get('/:id/transactions', getUserTransactions);
-router.get('/user/me', getLoggedInUser);
+router.post('/transactions', requireAuth, completeSale);
+router.get('/:id/transactions', requireAuth, requireSelfOrManager('id'), getUserTransactions);
+router.get('/user/me', requireAuth, getLoggedInUser);
 router.post('/forgot-pin', forgotPin);
 router.post('/reset-pin/:token', resetPin);
 

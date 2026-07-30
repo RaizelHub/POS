@@ -143,8 +143,8 @@ function EditProfile() {
             <FaArrowLeft className="text-xs" />
           </button>
           <div>
-            <h2 className="text-base font-bold text-slate-900">Edit Cashier Profile</h2>
-            <p className="text-[10px] text-slate-400">Configure personal account details and photo.</p>
+            <h2 className="text-lg font-semibold tracking-tight text-slate-950">Cashier profile</h2>
+            <p className="text-xs text-slate-500">Update account details and profile photo.</p>
           </div>
         </div>
 

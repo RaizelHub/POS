@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { FaClock, FaMoneyBillWave, FaReceipt, FaSyncAlt, FaUser } from "react-icons/fa";
 import config from "../config";
+import apiFetch from "../utils/apiFetch";
 
 const currency = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" });
 
@@ -16,7 +17,7 @@ export default function ShiftLog() {
   const fetchShifts = async () => {
     setLoading(true); setError("");
     try {
-      const response = await fetch(`${config.apiUrl}/api/shifts`);
+      const response = await apiFetch(`${config.apiUrl}/api/shifts`);
       if (!response.ok) throw new Error("Unable to load shift records.");
       setShifts(await response.json());
     } catch (err) { setError(err.message); } finally { setLoading(false); }
@@ -25,7 +26,7 @@ export default function ShiftLog() {
   const fetchCashLogs = async (shiftId) => {
     setLoadingLogs(true);
     try {
-      const response = await fetch(`${config.apiUrl}/api/shifts/${shiftId}/cash-logs`);
+      const response = await apiFetch(`${config.apiUrl}/api/shifts/${shiftId}/cash-logs`);
       if (response.ok) {
         setExpandedShiftLogs(await response.json());
       }

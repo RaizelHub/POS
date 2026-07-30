@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import { FaBox, FaSearch, FaPlus, FaTimes, FaTags, FaBarcode, FaCheckCircle, FaTrashAlt } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
-import axios from "axios";
+import api from '../utils/api';
 import { uploadToCloudinary } from "../config/cloudinary";
 import config from '../config';
 
@@ -47,7 +47,7 @@ function ProductList() {
           ? `${API_BASE_URL}/products`
           : `${API_BASE_URL}/products?category=${selectedCategory}`;
 
-      const response = await axios.get(url);
+      const response = await api.get(url);
 
       const filteredProducts = response.data.filter((product) =>
         product.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -117,12 +117,12 @@ function ProductList() {
       };
 
       if (selectedProduct) {
-        await axios.put(
+        await api.put(
           `${API_BASE_URL}/products/${selectedProduct._id}`,
           productData
         );
       } else {
-        await axios.post(
+        await api.post(
           `${API_BASE_URL}/registerProduct`,
           productData
         );
@@ -166,13 +166,14 @@ function ProductList() {
   }
 
   return (
-    <div className="w-full max-w-5xl mx-auto font-sans text-slate-800 space-y-6">
+    <div className="w-full font-sans text-slate-800 space-y-6">
       
       {/* Title & Actions Row Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
-          <h2 className="text-xl font-bold text-slate-900">Products Inventory</h2>
-          <p className="text-slate-500 text-sm mt-0.5">Maintain cafe items catalog, pricing list, and stock counts.</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Catalog</p>
+          <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950">Products</h2>
+          <p className="text-slate-500 text-sm mt-1">Manage prices, barcodes, categories, and stock.</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -202,7 +203,7 @@ function ProductList() {
 
           <button
             onClick={() => handleOpenModal()}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-teal-700 hover:bg-teal-650 text-white font-bold rounded-lg text-xs transition-all shadow-sm active:scale-97"
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-700 hover:bg-emerald-650 text-white font-bold rounded-lg text-xs transition-all shadow-sm active:scale-97"
           >
             <FaPlus />
             <span>Add Item</span>
@@ -267,7 +268,7 @@ function ProductList() {
                   </div>
 
                   <div className="border-t border-slate-100 pt-3 flex justify-between items-center">
-                    <span className="font-extrabold text-slate-900 text-sm">₱{Number(product.price).toFixed(2)}</span>
+                    <span className="font-bold text-slate-900 text-sm">₱{Number(product.price).toFixed(2)}</span>
                     <button
                       onClick={() => handleOpenModal(product)}
                       className="px-3 py-1.5 border border-slate-250 hover:border-slate-350 hover:bg-slate-50 text-slate-700 font-bold rounded-lg text-xs transition-all active:scale-97"
@@ -326,7 +327,7 @@ function ProductList() {
                 placeholder="San Miguel Pale Pilsen"
                 value={formValues.name}
                 onChange={handleInputChange}
-                className="w-full px-3.5 py-2.5 border border-slate-200 focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
+                className="w-full px-3.5 py-2.5 border border-slate-200 focus:border-emerald-700 focus:ring-1 focus:ring-emerald-700 outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
               />
             </div>
 
@@ -341,7 +342,7 @@ function ProductList() {
                   placeholder="₱0.00"
                   value={formValues.price}
                   onChange={handleInputChange}
-                  className="w-full px-3.5 py-2.5 border border-slate-200 focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
+                  className="w-full px-3.5 py-2.5 border border-slate-200 focus:border-emerald-700 focus:ring-1 focus:ring-emerald-700 outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
                 />
               </div>
               <div className="space-y-1">
@@ -353,7 +354,7 @@ function ProductList() {
                   placeholder="24"
                   value={formValues.quantity}
                   onChange={handleInputChange}
-                  className="w-full px-3.5 py-2.5 border border-slate-200 focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
+                  className="w-full px-3.5 py-2.5 border border-slate-200 focus:border-emerald-700 focus:ring-1 focus:ring-emerald-700 outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
                 />
               </div>
             </div>
@@ -371,7 +372,7 @@ function ProductList() {
                   placeholder="480001234567"
                   value={formValues.barcode}
                   onChange={handleInputChange}
-                  className="w-full px-3.5 py-2.5 border border-slate-200 focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
+                  className="w-full px-3.5 py-2.5 border border-slate-200 focus:border-emerald-700 focus:ring-1 focus:ring-emerald-700 outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
                 />
               </div>
               <div className="space-y-1">
@@ -381,7 +382,7 @@ function ProductList() {
                   required
                   value={formValues.category}
                   onChange={handleInputChange}
-                  className="w-full px-3.5 py-2.5 border border-slate-200 focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
+                  className="w-full px-3.5 py-2.5 border border-slate-200 focus:border-emerald-700 focus:ring-1 focus:ring-emerald-700 outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
                 >
                   <option value="">Select...</option>
                   <option value="drinks">Drinks</option>
@@ -414,7 +415,7 @@ function ProductList() {
               <button
                 type="button"
                 onClick={handleSubmit}
-                className="px-4 py-2 bg-teal-700 hover:bg-teal-650 text-white font-bold rounded-lg text-xs transition-all shadow-sm active:scale-95"
+                className="px-4 py-2 bg-emerald-700 hover:bg-emerald-650 text-white font-bold rounded-lg text-xs transition-all shadow-sm active:scale-95"
               >
                 {selectedProduct ? "Save Changes" : "Create Item"}
               </button>

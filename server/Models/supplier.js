@@ -2,10 +2,11 @@ import mongoose from 'mongoose';
 
 const supplierSchema = new mongoose.Schema(
   {
+    organizationId: { type: String, default: 'default', index: true },
+    branchId: { type: String, default: 'main', index: true },
     name: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
     },
     contactEmail: {
@@ -27,6 +28,8 @@ const supplierSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+supplierSchema.index({ organizationId: 1, branchId: 1, name: 1 }, { unique: true });
 
 const Supplier = mongoose.model('Supplier', supplierSchema);
 export default Supplier;

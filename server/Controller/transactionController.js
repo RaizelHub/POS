@@ -1,112 +1,154 @@
-import mongoose from 'mongoose'; // Ensure mongoose is imported
+import mongoose from 'mongoose';
 import Transaction from '../Models/transaction.js';
+import Customer from '../Models/customer.js';
+import Shift from '../Models/shift.js';
+import CreditPayment from '../Models/creditPayment.js';
+import AuditLog from '../Models/auditLog.js';
+import { buildOrgBranchFilter } from '../utills/orgBranchFilter.js';
 
 export const confirmPayLaterPayment = async (req, res) => {
-  const { userId, itemId } = req.body;
-  console.log('Request Body:', req.body);
-
-  if (!userId || !itemId) {
-    return res.status(400).json({ message: 'User ID and Item ID are required.' });
+  const { transactionId, itemId, shiftId, paymentMethod = 'Cash', reference } = req.body;
+  const amountCentsInput = req.body.amountCents;
+  if (!transactionId && !itemId) {
+    return res.status(400).json({ message: 'A transaction ID is required.' });
+  }
+  if (!mongoose.Types.ObjectId.isValid(shiftId)) {
+    return res.status(400).json({ message: 'An active shift is required to receive payment.' });
+  }
+  if (!['Cash', 'Card', 'GCash/PayMaya'].includes(paymentMethod)) {
+    return res.status(400).json({ message: 'Unsupported payment method.' });
+  }
+  if (paymentMethod !== 'Cash' && !String(reference || '').trim()) {
+    return res.status(400).json({ message: 'A reference is required for digital payments.' });
   }
 
+  const session = await mongoose.startSession();
+  let payment;
+  let updatedTransaction;
   try {
-    // Ensure that itemId is a valid ObjectId
-    const itemIdObject = new mongoose.Types.ObjectId(itemId); // Use 'new' to instantiate ObjectId
+    await session.withTransaction(async () => {
+      const shift = await Shift.findOne({
+        _id: shiftId,
+        organizationId: req.auth.organizationId,
+        branchId: req.auth.branchId,
+        cashierId: req.auth.userId,
+        status: 'Open',
+      }).session(session);
+      if (!shift) {
+        const error = new Error('Your active shift was not found.');
+        error.status = 409;
+        throw error;
+      }
 
-    // Find the transaction for the user with the specified itemId and 'Pay Later' status
-    const transaction = await Transaction.findOne({
-      userId,
-      "products._id": itemIdObject,
-      "products.paymentStatus": 'Pay Later'
+      const query = {
+        organizationId: req.auth.organizationId,
+        branchId: req.auth.branchId,
+        paymentStatus: 'Pay Later',
+        balanceDueCents: { $gt: 0 },
+      };
+      if (transactionId && mongoose.Types.ObjectId.isValid(transactionId)) query._id = transactionId;
+      else if (mongoose.Types.ObjectId.isValid(itemId)) query['products._id'] = itemId;
+      else {
+        const error = new Error('Invalid transaction reference.');
+        error.status = 400;
+        throw error;
+      }
+
+      const transaction = await Transaction.findOne(query).session(session);
+      if (!transaction || !transaction.customerId) {
+        const error = new Error('Outstanding credit transaction was not found.');
+        error.status = 404;
+        throw error;
+      }
+
+      const amountCents = amountCentsInput === undefined
+        ? transaction.balanceDueCents
+        : Number(amountCentsInput);
+      if (!Number.isInteger(amountCents) || amountCents <= 0 || amountCents > transaction.balanceDueCents) {
+        const error = new Error('Payment must be a positive cent amount no greater than the balance.');
+        error.status = 400;
+        throw error;
+      }
+
+      transaction.amountPaidCents = (transaction.amountPaidCents || 0) + amountCents;
+      transaction.balanceDueCents -= amountCents;
+      if (transaction.balanceDueCents === 0) {
+        transaction.paymentStatus = 'Paid';
+        transaction.products.forEach((item) => { item.paymentStatus = 'Paid'; });
+      }
+      await transaction.save({ session });
+      updatedTransaction = transaction;
+
+      await Customer.updateOne(
+        { _id: transaction.customerId, organizationId: req.auth.organizationId },
+        { $inc: { outstandingBalanceCents: -amountCents } },
+        { session }
+      );
+      [payment] = await CreditPayment.create([{
+        organizationId: req.auth.organizationId,
+        branchId: req.auth.branchId,
+        transactionId: transaction._id,
+        customerId: transaction.customerId,
+        shiftId,
+        amountCents,
+        paymentMethod,
+        reference: String(reference || '').trim() || undefined,
+        receivedBy: req.auth.userId,
+      }], { session });
+      await AuditLog.create([{
+        organizationId: req.auth.organizationId,
+        branchId: req.auth.branchId,
+        actorId: req.auth.userId,
+        action: 'credit.payment_received',
+        entityType: 'transaction',
+        entityId: transaction._id.toString(),
+        summary: `Received credit payment of ${(amountCents / 100).toFixed(2)}`,
+        metadata: { paymentId: payment._id, amountCents, paymentMethod },
+        ipAddress: req.ip,
+      }], { session });
     });
-
-    console.log('Transaction:', transaction);
-
-    if (!transaction || !transaction.products || transaction.products.length === 0) {
-      return res.status(404).json({ message: 'Transaction or products not found.' });
-    }
-
-    // Locate the product in the products array with paymentStatus "Pay Later"
-    const itemIndex = transaction.products.findIndex(
-      (item) => item._id.toString() === itemIdObject.toString()
-    );
-
-    console.log('Item Index:', itemIndex);
-
-    if (itemIndex === -1) {
-      return res.status(404).json({ message: 'Item not found in Pay Later list.' });
-    }
-
-    const payLaterItem = transaction.products[itemIndex];
-    console.log('Pay Later Item:', payLaterItem);
-
-    if (!payLaterItem.name || !payLaterItem.price) {
-      return res.status(400).json({ message: 'Item data is incomplete. Name and price are required.' });
-    }
-
-    // Update the payment status to "Paid" and push to paidItems
-    const updatedTransaction = await Transaction.findOneAndUpdate(
-      { userId, "products._id": itemIdObject, "products.paymentStatus": 'Pay Later' },
-      {
-        $set: {
-          "products.$.paymentStatus": 'Paid',
-        },
-        $push: {
-          paidItems: {
-            itemId: payLaterItem._id,
-            name: payLaterItem.name,
-            price: payLaterItem.price,
-            paymentMethod: 'Cash',
-            date: new Date(),
-          }
-        }
-      },
-      { new: true } // Return the updated document
-    );
-
-    if (!updatedTransaction) {
-      return res.status(500).json({ message: 'Error updating payment status.' });
-    }
-
-    console.log('Paid Items After Saving:', updatedTransaction.paidItems);
-
-    res.status(200).json({ message: 'Payment confirmed successfully.', paidItem: payLaterItem });
+    res.status(200).json({
+      message: 'Payment recorded successfully.',
+      payment,
+      balanceDueCents: updatedTransaction.balanceDueCents,
+    });
   } catch (error) {
-    console.error('Error confirming payment:', error);
-    res.status(500).json({ message: 'Error confirming payment.', error: error.stack || error.message });
+    res.status(error.status || 500).json({ message: error.message || 'Could not record payment.' });
+  } finally {
+    await session.endSession();
   }
 };
 
 export const getAllTransactionsLedger = async (req, res) => {
   try {
-    const { cashierId, startDate, endDate } = req.query;
-    const query = {};
-
-    if (cashierId) {
-      query.userId = cashierId;
-    }
-
+    const { cashierId, startDate, endDate, status, search } = req.query;
+    const query = {
+      ...buildOrgBranchFilter(req.auth),
+    };
+    if (cashierId) query.userId = cashierId;
+    if (status) query.status = status;
     if (startDate || endDate) {
       query.transactionDate = {};
-      if (startDate) {
-        query.transactionDate.$gte = new Date(startDate);
-      }
+      if (startDate) query.transactionDate.$gte = new Date(startDate);
       if (endDate) {
         const end = new Date(endDate);
         end.setHours(23, 59, 59, 999);
         query.transactionDate.$lte = end;
       }
     }
-
-    // Populate user details (cashier) and customer profile
+    if (search) {
+      query.$or = [
+        { transactionId: { $regex: String(search).trim(), $options: 'i' } },
+        { tenderReference: { $regex: String(search).trim(), $options: 'i' } },
+      ];
+    }
     const transactions = await Transaction.find(query)
       .populate('userId', 'firstname lastname email')
       .populate('customerId', 'name phone email')
-      .sort({ transactionDate: -1 });
-
+      .sort({ transactionDate: -1 })
+      .limit(1000);
     res.status(200).json(transactions);
   } catch (error) {
-    console.error('Error fetching transactions ledger:', error);
     res.status(500).json({ message: 'Error fetching transactions ledger.', error: error.message });
   }
 };

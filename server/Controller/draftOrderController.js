@@ -52,7 +52,7 @@ const normalizeCartItems = (cartItems = []) => {
 
 const buildDraftPayload = (req, normalizedType) => {
   const body = req.body || {};
-  const userId = toObjectId(body.userId || req.params.userId);
+  const userId = toObjectId(req.auth?.userId);
 
   if (!userId) {
     return { error: 'Valid userId is required.' };
@@ -62,6 +62,8 @@ const buildDraftPayload = (req, normalizedType) => {
   const cartItems = normalizeCartItems(body.cartItems || body.cart || []);
 
   return {
+    organizationId: req.auth.organizationId,
+    branchId: req.auth.branchId,
     draftId: body.draftId || req.params.draftId || uuidv4(),
     userId,
     cashierId: toObjectId(body.cashierId) || userId,
@@ -93,7 +95,11 @@ export const upsertDraft = async (req, res) => {
 
   try {
     const draft = await Model.findOneAndUpdate(
-      { userId: payload.userId, draftId: payload.draftId },
+      {
+        organizationId: req.auth.organizationId,
+        userId: payload.userId,
+        draftId: payload.draftId,
+      },
       { $set: payload },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
@@ -120,7 +126,11 @@ export const getDraftsForUser = async (req, res) => {
   try {
     const statusFilter = req.query.status || ['active', 'held'];
     const statuses = Array.isArray(statusFilter) ? statusFilter : String(statusFilter).split(',');
-    const drafts = await Model.find({ userId, status: { $in: statuses } }).sort({ updatedAt: -1 });
+    const drafts = await Model.find({
+      organizationId: req.auth.organizationId,
+      userId,
+      status: { $in: statuses },
+    }).sort({ updatedAt: -1 });
 
     res.status(200).json({ drafts, draftType: normalizedType });
   } catch (error) {
@@ -138,9 +148,9 @@ export const getAllDraftsForUser = async (req, res) => {
 
   try {
     const [savedCarts, draftSales, heldOrders] = await Promise.all([
-      draftModels.savedCart.find({ userId, status: { $in: ['active', 'held'] } }).sort({ updatedAt: -1 }),
-      draftModels.draftSale.find({ userId, status: { $in: ['active', 'held'] } }).sort({ updatedAt: -1 }),
-      draftModels.heldOrder.find({ userId, status: { $in: ['active', 'held'] } }).sort({ updatedAt: -1 }),
+      draftModels.savedCart.find({ organizationId: req.auth.organizationId, userId, status: { $in: ['active', 'held'] } }).sort({ updatedAt: -1 }),
+      draftModels.draftSale.find({ organizationId: req.auth.organizationId, userId, status: { $in: ['active', 'held'] } }).sort({ updatedAt: -1 }),
+      draftModels.heldOrder.find({ organizationId: req.auth.organizationId, userId, status: { $in: ['active', 'held'] } }).sort({ updatedAt: -1 }),
     ]);
 
     res.status(200).json({ savedCarts, draftSales, heldOrders });
@@ -152,7 +162,7 @@ export const getAllDraftsForUser = async (req, res) => {
 
 export const completeDraft = async (req, res) => {
   const { Model, normalizedType } = getDraftModel(req.params.draftType);
-  const userId = toObjectId(req.body?.userId || req.params.userId);
+  const userId = toObjectId(req.auth?.userId);
 
   if (!Model) {
     return res.status(400).json({ message: 'Invalid draft type.' });
@@ -164,7 +174,7 @@ export const completeDraft = async (req, res) => {
 
   try {
     const draft = await Model.findOneAndUpdate(
-      { userId, draftId: req.params.draftId },
+      { organizationId: req.auth.organizationId, userId, draftId: req.params.draftId },
       { $set: { status: 'completed', metadata: { completedAt: new Date() } } },
       { new: true }
     );
@@ -193,7 +203,11 @@ export const deleteDraft = async (req, res) => {
   }
 
   try {
-    const draft = await Model.findOneAndDelete({ userId, draftId: req.params.draftId });
+    const draft = await Model.findOneAndDelete({
+      organizationId: req.auth.organizationId,
+      userId,
+      draftId: req.params.draftId,
+    });
 
     if (!draft) {
       return res.status(404).json({ message: 'Draft not found.' });

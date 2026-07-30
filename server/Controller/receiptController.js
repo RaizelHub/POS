@@ -373,10 +373,16 @@ const createReceipt = async (req, res) => {
 // Get receipt settings
 export const getReceiptSettings = async (req, res) => {
   try {
-    let settings = await ReceiptSettings.findOne();
+    let settings = await ReceiptSettings.findOne({
+      organizationId: req.auth.organizationId,
+      branchId: req.auth.branchId,
+    });
     if (!settings) {
       // Create default settings if none exist
-      settings = new ReceiptSettings();
+      settings = new ReceiptSettings({
+        organizationId: req.auth.organizationId,
+        branchId: req.auth.branchId,
+      });
       await settings.save();
     }
     res.json(settings);
@@ -390,9 +396,15 @@ export const getReceiptSettings = async (req, res) => {
 export const updateReceiptSettings = async (req, res) => {
   try {
     const { storeName, address, contactNumber, vatNumber, headerMessage, footerMessage, showLogo, fontSize } = req.body;
-    let settings = await ReceiptSettings.findOne();
+    let settings = await ReceiptSettings.findOne({
+      organizationId: req.auth.organizationId,
+      branchId: req.auth.branchId,
+    });
     if (!settings) {
-      settings = new ReceiptSettings();
+      settings = new ReceiptSettings({
+        organizationId: req.auth.organizationId,
+        branchId: req.auth.branchId,
+      });
     }
 
     settings.storeName = storeName !== undefined ? storeName : settings.storeName;

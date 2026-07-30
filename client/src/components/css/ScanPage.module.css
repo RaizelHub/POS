@@ -4,19 +4,20 @@
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%); /* Set background color to blue */
-    font-family: Arial, sans-serif;
+    background: #f8fafc;
+    font-family: 'Inter', sans-serif;
   }
-  
+
   /* Container that holds both left and right sections */
   .container {
     display: flex;
-    width: 90%;
-    max-width: 1200px;
+    width: 95%;
+    max-width: 1400px;
     background: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     overflow: hidden;
+    border: 1px solid #e2e8f0;
   }
   
   /* Left section styling */
@@ -28,7 +29,8 @@
   
   /* Left section background and user info */
   .leftSection {
-    background-color: #f0f4fa; /* Light blue background */
+    background-color: #f8fafc;
+    border-right: 1px solid #e2e8f0;
   }
   
   .userSection {
@@ -83,17 +85,19 @@
 }
 
 .paidSection {
-  background-color: #e8f5e9; /* Light green background */
-  padding: 15px;
+  background-color: #ecfdf5;
+  padding: 16px;
   border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #d1fae5;
 }
 
 .payLaterSection {
-  background-color: #ffebee; /* Light red background */
-  padding: 15px;
+  background-color: #fff1f2;
+  padding: 16px;
   border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #ffe4e6;
 }
 
 /* Title styling for Paid and Pay Later sections */
@@ -152,18 +156,19 @@
   
   .itemPrice {
     font-weight: bold;
-    color: #007bff;
+    color: #059669;
   }
   
   /* Adding icons and more design elements */
   .userSection .userIcon {
     font-size: 2rem;
-    color: #007bff;
+    color: #059669;
   }
-  
+
   .itemsList .item:hover {
-    background-color: #e6f0ff;
+    background-color: #f8fafc;
     cursor: pointer;
+    border-color: #cbd5e1;
   }
   
   /* Scanner input box */
@@ -173,32 +178,40 @@
   }
   
   .scanBox input:focus {
-    border-color: #007bff;
+    border-color: #059669;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
   }
   .logoutButton {
   position: absolute;
   top: 10px;
   right: 10px;
-  background-color: #f44336; /* Red color */
+  background-color: #f43f5e;
   color: white;
   border: none;
   padding: 10px 20px;
-  border-radius: 5px;
+  border-radius: 6px;
   font-size: 14px;
   cursor: pointer;
- 
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+  }
+
+  .logoutButton:hover {
+    background-color: #e11d48;
   }
   .modalBox {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 300px;
+    width: 320px;
     background-color: white;
-    padding: 20px;
-    box-shadow: 24px;
-    border-radius: 8px;
+    padding: 24px;
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
     text-align: center;
+    border: 1px solid #e2e8f0;
   }
   
   .modalActions {
@@ -222,24 +235,28 @@
   }
   
   .scanButton {
-    background-color: #286740;
+    background-color: #059669;
     color: white;
     border: none;
-    padding: 10px 20px;
-    font-size: 16px;
-    border-radius: 4px;
+    padding: 12px 24px;
+    font-size: 14px;
+    border-radius: 8px;
     cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s ease;
   }
-  
+
   .scanButton:hover {
-    background-color: #0056b3;
+    background-color: #047857;
   }
   
   .scanBox input {
     width: 100%;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
   }
   
   /* Error message styling */
@@ -255,12 +272,20 @@
   }
   
   .proceedButton {
-    background-color: #4caf50;
+    background-color: #059669;
     color: white;
   }
-  
+
+  .proceedButton:hover {
+    background-color: #047857;
+  }
+
   .scanAgainButton {
-    background-color: #ff9800;
+    background-color: #f59e0b;
     color: white;
+  }
+
+  .scanAgainButton:hover {
+    background-color: #d97706;
   }
   

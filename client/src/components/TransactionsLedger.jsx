@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   FaCalendarAlt, FaUser, FaRegMoneyBillAlt, FaCheckCircle, 
-  FaHourglassHalf, FaSearch, FaArrowLeft, FaFilter, FaPrint
+  FaHourglassHalf, FaSearch, FaArrowLeft, FaFilter
 } from 'react-icons/fa';
 import config from '../config';
+import apiFetch from '../utils/apiFetch';
 
+// Props are supplied by the register modal or omitted by the manager route.
+// eslint-disable-next-line react/prop-types
 const TransactionsLedger = ({ isModalView = false, limitToCashierId = '', onClose }) => {
   const [transactions, setTransactions] = useState([]);
   const [cashiers, setCashiers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [confirmingId, setConfirmingId] = useState(null);
 
   // Filters state
   const [selectedCashier, setSelectedCashier] = useState(limitToCashierId);
@@ -26,7 +28,7 @@ const TransactionsLedger = ({ isModalView = false, limitToCashierId = '', onClos
 
   const fetchCashiers = async () => {
     try {
-      const res = await fetch(`${config.apiUrl}/api/users`);
+      const res = await apiFetch(`${config.apiUrl}/api/users`);
       if (res.ok) {
         const data = await res.json();
         // Filter only cashiers or show all accounts
@@ -47,7 +49,7 @@ const TransactionsLedger = ({ isModalView = false, limitToCashierId = '', onClos
       if (endDate) queryParams.push(`endDate=${endDate}`);
 
       const queryString = queryParams.length ? `?${queryParams.join('&')}` : '';
-      const res = await fetch(`${config.apiUrl}/api/transactions/ledger${queryString}`);
+      const res = await apiFetch(`${config.apiUrl}/api/transactions/ledger${queryString}`);
       if (res.ok) {
         const data = await res.json();
         setTransactions(data);
@@ -57,45 +59,6 @@ const TransactionsLedger = ({ isModalView = false, limitToCashierId = '', onClos
     } finally {
       setLoading(false);
     }
-  };
-
-  // Confirm Pay Later payment for individual product item
-  const handleConfirmItemPayment = async (userId, itemId) => {
-    setConfirmingId(itemId);
-    try {
-      const res = await fetch(`${config.apiUrl}/api/transactions/pay-later/confirm`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, itemId })
-      });
-      if (res.ok) {
-        // Refresh local listings
-        await fetchLedgerData();
-      } else {
-        alert("Failed to confirm payment.");
-      }
-    } catch (err) {
-      console.error("Error confirming credit item:", err);
-    } finally {
-      setConfirmingId(null);
-    }
-  };
-
-  // Group transactions by date string (e.g. YYYY-MM-DD)
-  const groupTransactionsByDate = () => {
-    const groups = {};
-    transactions.forEach(tx => {
-      const dateStr = new Date(tx.transactionDate).toLocaleDateString('en-PH', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-      if (!groups[dateStr]) {
-        groups[dateStr] = [];
-      }
-      groups[dateStr].push(tx);
-    });
-    return groups;
   };
 
   // Filter transactions by overall status
@@ -140,7 +103,7 @@ const TransactionsLedger = ({ isModalView = false, limitToCashierId = '', onClos
   }, 0);
 
   return (
-    <div className={`min-h-screen bg-slate-50 ${isModalView ? 'p-0' : 'p-6 md:p-8'} font-sans antialiased text-slate-800`}>
+    <div className={`${isModalView ? 'p-0' : ''} font-sans antialiased text-slate-800`}>
       
       {/* Title Header */}
       <div className="flex items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-200">
@@ -154,11 +117,11 @@ const TransactionsLedger = ({ isModalView = false, limitToCashierId = '', onClos
             </button>
           )}
           <div>
-            <h1 className="text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-              🧾 Transaction Ledger & Credits
+            <h1 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+              Transaction ledger
             </h1>
             <p className="text-xs text-slate-500">
-              Audit checkout entries, track payment statuses, and reconcile customer tabs.
+              Audit payments and reconcile customer credit.
             </p>
           </div>
         </div>
@@ -187,7 +150,7 @@ const TransactionsLedger = ({ isModalView = false, limitToCashierId = '', onClos
         </div>
 
         <div className="bg-white border border-slate-200/80 rounded-xl p-4 shadow-sm flex items-center gap-4">
-          <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg">
+          <div className="w-10 h-10 rounded-lg bg-slate-50 text-slate-600 flex items-center justify-center text-lg">
             <FaCheckCircle />
           </div>
           <div>
@@ -211,7 +174,7 @@ const TransactionsLedger = ({ isModalView = false, limitToCashierId = '', onClos
                 <select
                   value={selectedCashier}
                   onChange={(e) => setSelectedCashier(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-750 font-semibold focus:bg-white focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none transition-all"
+                  className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-750 font-semibold focus:bg-white focus:border-emerald-700 focus:ring-1 focus:ring-emerald-700 outline-none transition-all"
                 >
                   <option value="">All Cashiers</option>
                   {cashiers.map(c => (
@@ -230,7 +193,7 @@ const TransactionsLedger = ({ isModalView = false, limitToCashierId = '', onClos
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-750 font-semibold focus:bg-white focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none transition-all"
+                className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-750 font-semibold focus:bg-white focus:border-emerald-700 focus:ring-1 focus:ring-emerald-700 outline-none transition-all"
               />
             </div>
           </div>
@@ -243,7 +206,7 @@ const TransactionsLedger = ({ isModalView = false, limitToCashierId = '', onClos
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-750 font-semibold focus:bg-white focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none transition-all"
+                className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-750 font-semibold focus:bg-white focus:border-emerald-700 focus:ring-1 focus:ring-emerald-700 outline-none transition-all"
               />
             </div>
           </div>
@@ -256,7 +219,7 @@ const TransactionsLedger = ({ isModalView = false, limitToCashierId = '', onClos
                 <button
                   key={tab}
                   onClick={() => setStatusFilter(tab)}
-                  className={`flex-1 py-1 text-center text-xs font-bold rounded transition-all ${statusFilter === tab ? 'bg-teal-700 text-white shadow-sm' : 'text-slate-500 hover:text-slate-750 hover:bg-slate-50'}`}
+                  className={`flex-1 py-1 text-center text-xs font-bold rounded transition-all ${statusFilter === tab ? 'bg-emerald-700 text-white shadow-sm' : 'text-slate-500 hover:text-slate-750 hover:bg-slate-50'}`}
                 >
                   {tab}
                 </button>
@@ -269,7 +232,7 @@ const TransactionsLedger = ({ isModalView = false, limitToCashierId = '', onClos
       {/* Main Ledger List */}
       {loading ? (
         <div className="bg-white border border-slate-200 rounded-xl p-12 text-center shadow-sm">
-          <div className="w-8 h-8 border-2 border-teal-700 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-8 h-8 border-2 border-emerald-700 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-sm font-semibold text-slate-500">Querying transaction log sheets...</p>
         </div>
       ) : Object.keys(groupedData).length === 0 ? (
@@ -302,14 +265,14 @@ const TransactionsLedger = ({ isModalView = false, limitToCashierId = '', onClos
                         </div>
                         <div className="flex items-center gap-3 text-xs text-slate-500 font-medium">
                           <span>🕒 {new Date(tx.transactionDate).toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' })}</span>
-                          <span>👤 Cashier: <strong className="text-slate-700 font-semibold">{tx.userId ? `${tx.userId.firstname} ${tx.userId.lastname}` : 'System'}</strong></span>
+                          <span>Cashier: <strong className="text-slate-700 font-semibold">{tx.userId ? `${tx.userId.firstname} ${tx.userId.lastname}` : 'System'}</strong></span>
                           <span>💼 Client: <strong className="text-slate-700 font-semibold">{tx.customerId ? tx.customerId.name : 'Walk-in'}</strong></span>
                         </div>
                       </div>
 
                       <div className="text-right">
                         <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Gross Charge</span>
-                        <span className="text-base font-extrabold text-slate-950">₱{(tx.originalAmount - tx.discountAmount).toFixed(2)}</span>
+                        <span className="text-base font-bold text-slate-950">₱{(tx.originalAmount - tx.discountAmount).toFixed(2)}</span>
                         {tx.discountAmount > 0 && (
                           <span className="text-[10px] text-emerald-650 font-bold block">Discounted: -₱{tx.discountAmount.toFixed(2)}</span>
                         )}
@@ -333,13 +296,7 @@ const TransactionsLedger = ({ isModalView = false, limitToCashierId = '', onClos
                               </span>
 
                               {item.paymentStatus === 'Pay Later' && (
-                                <button
-                                  onClick={() => handleConfirmItemPayment(tx.userId?._id || tx.userId, item._id)}
-                                  disabled={confirmingId === item._id}
-                                  className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold px-2.5 py-1 rounded shadow-sm hover:shadow transition-all disabled:opacity-50"
-                                >
-                                  {confirmingId === item._id ? 'Confirming...' : 'Collect Pay'}
-                                </button>
+                                <span className="text-[10px] text-slate-500">Collect at register</span>
                               )}
 
                               <span className="text-slate-900 font-bold w-20 text-right">₱{item.totalPrice.toFixed(2)}</span>

@@ -8,15 +8,16 @@
 /* Card styles */
 .card {
   background: white;
-  border-radius: var(--border-radius);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-sm);
   padding: 1.5rem;
-  transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+  border: 1px solid var(--border-color);
 }
 
 .card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 /* Form styles */
@@ -29,20 +30,24 @@
   margin-bottom: 0.5rem;
   color: var(--text-secondary);
   font-weight: 500;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .form-input {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #e2e8f0;
-  border-radius: var(--border-radius);
-  transition: border-color var(--transition-speed);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+  font-size: 0.875rem;
 }
 
 .form-input:focus {
   outline: none;
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
 }
 
 /* Button styles */
@@ -51,11 +56,12 @@
   align-items: center;
   justify-content: center;
   padding: 0.75rem 1.5rem;
-  border-radius: var(--border-radius);
-  font-weight: 500;
-  transition: all var(--transition-speed);
+  border-radius: var(--border-radius-md);
+  font-weight: 600;
+  transition: all var(--transition-base);
   cursor: pointer;
   border: none;
+  font-size: 0.875rem;
 }
 
 .btn-primary {
@@ -64,7 +70,7 @@
 }
 
 .btn-primary:hover {
-  background-color: #1d4ed8;
+  background-color: var(--primary-hover);
 }
 
 .btn-secondary {
@@ -73,7 +79,7 @@
 }
 
 .btn-secondary:hover {
-  background-color: #6d28d9;
+  background-color: var(--secondary-hover);
 }
 
 /* Grid system */
@@ -138,30 +144,31 @@
 /* Alert styles */
 .alert {
   padding: 1rem;
-  border-radius: var(--border-radius);
+  border-radius: var(--border-radius-md);
   margin-bottom: 1rem;
+  font-size: 0.875rem;
 }
 
 .alert-success {
-  background-color: #dcfce7;
-  color: #166534;
-  border: 1px solid #86efac;
+  background-color: var(--success-light);
+  color: var(--success-color);
+  border: 1px solid var(--primary-200);
 }
 
 .alert-error {
-  background-color: #fee2e2;
-  color: #991b1b;
-  border: 1px solid #fca5a5;
+  background-color: var(--danger-light);
+  color: var(--danger-color);
+  border: 1px solid #fecdd3;
 }
 
 .alert-warning {
-  background-color: #fef3c7;
-  color: #92400e;
-  border: 1px solid #fcd34d;
+  background-color: var(--warning-light);
+  color: var(--warning-color);
+  border: 1px solid #fde68a;
 }
 
 .alert-info {
-  background-color: #dbeafe;
-  color: #1e40af;
-  border: 1px solid #93c5fd;
+  background-color: var(--info-light);
+  color: var(--info-color);
+  border: 1px solid #bae6fd;
 }

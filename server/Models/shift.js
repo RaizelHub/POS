@@ -2,6 +2,9 @@ import mongoose from 'mongoose';
 
 const shiftSchema = new mongoose.Schema(
   {
+    organizationId: { type: String, default: 'default', index: true },
+    branchId: { type: String, default: 'main', index: true },
+    registerId: { type: String, default: 'register-01', index: true },
     cashierId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     cashierName: { type: String, required: true },
     startTime: { type: Date, default: Date.now },
@@ -10,7 +13,8 @@ const shiftSchema = new mongoose.Schema(
     endingCash: { type: Number },
     expectedCash: { type: Number },
     transactionsCount: { type: Number, default: 0 },
-    status: { type: String, enum: ['Open', 'Closed'], default: 'Open' }
+    discrepancy: { type: Number, default: 0 },
+    status: { type: String, enum: ['Open', 'Closed'], default: 'Open', index: true }
   },
   { timestamps: true }
 );

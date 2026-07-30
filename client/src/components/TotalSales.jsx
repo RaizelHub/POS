@@ -26,6 +26,7 @@ import {
   Tooltip,
 } from '@mui/material';
 import config from '../config';
+import apiFetch from '../utils/apiFetch';
 import {
   MonetizationOn as MonetizationOnIcon,
   Payment as PaymentIcon,
@@ -91,7 +92,7 @@ function TotalSales() {
     const fetchSalesData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${config.apiUrl}/api/total-sales-details?date=${selectedDate}`);
+        const response = await apiFetch(`${config.apiUrl}/api/total-sales-details?date=${selectedDate}`);
         if (!response.ok) {
           throw new Error('Failed to fetch sales data');
         }
@@ -324,13 +325,14 @@ function TotalSales() {
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto font-sans text-slate-800 space-y-6">
+    <div className="w-full font-sans text-slate-800 space-y-6">
       
       {/* Title & Filter bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
-          <h2 className="text-xl font-bold text-slate-900">Sales Dashboard</h2>
-          <p className="text-slate-500 text-sm mt-0.5">Filter sales transactions and export data tables.</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Reporting</p>
+          <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950">Sales</h2>
+          <p className="text-slate-500 text-sm mt-1">Review daily performance and transaction detail.</p>
         </div>
 
         <div className="flex items-center gap-3">

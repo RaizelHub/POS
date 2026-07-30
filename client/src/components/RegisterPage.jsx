@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -19,6 +19,10 @@ function RegisterPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!localStorage.getItem('token')) navigate('/admin-login', { replace: true });
+  }, [navigate]);
 
   const pinRefs = useRef([]);
   pinRefs.current = Array(6).fill().map((_, i) => pinRefs.current[i] || React.createRef());
@@ -111,7 +115,10 @@ function RegisterPage() {
     try {
       setLoading(true);
       const response = await axios.post(`${config.apiUrl}/api/register`, dataToSend, {
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
       });
 
       setLoading(false);
@@ -126,7 +133,7 @@ function RegisterPage() {
         image: null,
       });
 
-      setTimeout(() => navigate("/login-selection"), 4000);
+      setTimeout(() => navigate("/dashboard/user-list"), 2000);
     } catch (error) {
       setLoading(false);
       console.error("Registration error:", error);
@@ -162,24 +169,24 @@ function RegisterPage() {
             <img src={novaLogo} alt="SUELTO Logo" className="h-14 w-auto object-contain rounded-xl shadow-sm" />
           </div>
           <h2 className="text-xl font-bold text-slate-100 tracking-tight">
-            Register Store Cashier
+            Create a cashier account
           </h2>
           <p className="text-xs leading-relaxed text-slate-450">
-            Create an employee profile to manage sales, track local held orders, settle GCash/Card transactions, and review analytics dashboards.
+            Set up secure register access for a member of your store team.
           </p>
 
           <div className="space-y-3.5 pt-4 text-xs font-semibold text-slate-400">
             <div className="flex items-center gap-2.5">
               <FaUsers className="text-slate-500" />
-              <span>Personalized cashier dashboard access</span>
+              <span>Personal cashier sign-in</span>
             </div>
             <div className="flex items-center gap-2.5">
               <FaBox className="text-slate-500" />
-              <span>Full local cart restoration logs</span>
+              <span>Held-order recovery</span>
             </div>
             <div className="flex items-center gap-2.5">
               <FaChartLine className="text-slate-500" />
-              <span>Daily/Monthly visual report exports</span>
+              <span>Shift and sales tracking</span>
             </div>
           </div>
         </div>
@@ -195,8 +202,8 @@ function RegisterPage() {
         <div className="w-full max-w-xl bg-white border border-slate-200 rounded-xl p-6 md:p-8 shadow-sm space-y-6">
 
           <div className="text-center md:text-left">
-            <h3 className="font-bold text-slate-900 text-lg">Create Cashier Account</h3>
-            <p className="text-slate-400 text-xs mt-0.5">Please provide your details and create a 6-digit PIN</p>
+            <h3 className="font-semibold text-slate-950 text-xl tracking-tight">Cashier details</h3>
+            <p className="text-slate-500 text-xs mt-1">Add the employee’s details and create a six-digit PIN.</p>
           </div>
 
           <AnimatePresence>
@@ -317,7 +324,7 @@ function RegisterPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-teal-700 hover:bg-teal-600 text-white font-bold rounded-lg text-xs transition-colors shadow-sm disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs transition-colors shadow-sm disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
@@ -333,9 +340,9 @@ function RegisterPage() {
           </form>
 
           <div className="border-t border-slate-100 pt-4 flex justify-between items-center text-xs">
-            <span className="text-slate-400">Already have an account?</span>
-            <Link to="/login-selection" className="font-bold text-slate-900 hover:underline">
-              Cashier Login
+            <span className="text-slate-400">Cashier management</span>
+            <Link to="/dashboard/user-list" className="font-bold text-slate-900 hover:underline">
+              Back to team
             </Link>
           </div>
 

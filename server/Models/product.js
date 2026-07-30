@@ -2,7 +2,22 @@ import mongoose from 'mongoose';
 
 const productSchema = new mongoose.Schema(
   {
-    branchId: { type: String, default: 'default', index: true },
+    organizationId: { type: String, default: 'default', index: true },
+    branchId: { type: String, default: 'main', index: true },
+    costPrice: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
+    costPriceCents: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
+    priceCents: {
+      type: Number,
+      min: 0,
+    },
     name: {
       type: String,
       required: true,
@@ -22,7 +37,9 @@ const productSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ['drinks', 'junkfood','others'],  // Only these categories are allowed
+      trim: true,
+      lowercase: true,
+      default: 'others',
       required: true
     },
     lowStockThreshold: {
@@ -31,14 +48,12 @@ const productSchema = new mongoose.Schema(
     },
     barcode: {
       type: String,
-      unique: true,
       required: true,
       maxlength: 20,
-      index: true, // Add index for quicker lookups
     },
-    sku: { 
-      type: String, 
-      unique: true },
+    sku: {
+      type: String,
+    },
     image: {
       type: String,
       required: true,
@@ -54,6 +69,8 @@ const productSchema = new mongoose.Schema(
   }
 );
 
+productSchema.index({ organizationId: 1, branchId: 1, barcode: 1 }, { unique: true });
+productSchema.index({ organizationId: 1, branchId: 1, sku: 1 }, { unique: true, sparse: true });
 
 const Product = mongoose.model('Product', productSchema);
 export default Product;

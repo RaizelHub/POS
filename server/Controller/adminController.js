@@ -1,69 +1,27 @@
-  import express from 'express'
   import UserModel from '../Models/user.js';
   import bcrypt from 'bcryptjs';
   import jwt from 'jsonwebtoken';
 
-  const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY
   // Get Admin Profile
   export const getAdminProfile = async (req, res) => {
     try {
-      if (!req.admin) {
+      if (!req.authUser) {
         return res.status(400).json({ message: 'Admin data not available' });
       }
-  
-      const admin = req.admin;
-      console.log('Admin profile data:', admin); // Log admin data to check
-  
-      res.status(200).json(admin);
+
+      res.status(200).json(req.authUser);
     } catch (error) {
       console.error('Error fetching admin profile:', error);
       res.status(500).json({ message: 'Server error' });
     }
   };
-  
-  
-  export const verifyAdminToken = async (req, res, next) => {
-    const token = req.headers.authorization?.split(' ')[1];
-    console.log('Received Token:', token);  // Log the received token
-  
-    if (!token) {
-      return res.status(401).json({ message: 'Token required for authentication' });
-    }
-  
-    try {
-      const decoded = jwt.verify(token, JWT_SECRET_KEY);
-      console.log('Decoded Token:', decoded);  // Log the decoded token to see what it contains
-  
-      const admin = await UserModel.findById(decoded.userId);
-      console.log('Admin from decoded token:', admin);  // Log the fetched admin
-  
-      if (!admin) {
-        return res.status(401).json({ message: 'Admin not found' });
-      }
-  
-      if (!admin.isAdmin) {
-        return res.status(401).json({ message: 'Unauthorized access' });
-      }
-  
-      req.admin = admin;  // Attach the admin to the request
-      console.log('Admin data attached to request:', req.admin);  // Log the attached admin
-  
-      next();
-    } catch (error) {
-      console.error('Token verification failed:', error);
-      return res.status(401).json({ message: 'Invalid or expired token' });
-    }
-  };
-  
-  
-
   // Update Admin Profile
   export const updateAdminProfile = async (req, res) => {
     const { firstname, lastname, email, pin, image } = req.body; // image is now a URL
   
     try {
       // Ensure the authenticated admin's ID is available
-      const adminId = req.admin?.id; // Requires middleware to set req.admin
+    const adminId = req.auth?.userId;
       if (!adminId) {
         return res.status(401).json({ message: 'Unauthorized: Admin ID not found' });
       }
@@ -100,30 +58,6 @@
       res.status(500).json({ message: 'Server error' });
     }
   };
-  
-
-  // Delete Admin Account (Optional)
-  export const deleteAdmin = async (req, res) => {
-    try {
-      // Prevent deleting the last admin
-      const adminsCount = await UserModel.countDocuments({ isAdmin: true });
-      if (adminsCount <= 1) {
-        return res.status(400).json({ message: 'Cannot delete the last admin' });
-      }
-  
-      const admin = await UserModel.findOneAndDelete({ isAdmin: true });
-  
-      if (!admin) {
-        return res.status(404).json({ message: 'Admin not found' });
-      }
-  
-      res.status(200).json({ message: 'Admin deleted successfully' });
-    } catch (error) {
-      console.error('Error deleting admin:', error);
-      res.status(500).json({ message: 'Server error' });
-    }
-  };
-  
   export const adminLogin = async (req, res) => {
     const { email, pin } = req.body;
 
@@ -152,18 +86,35 @@
       // Step 5: Generate JWT token for the admin user
       // Step 5: Generate JWT token for the admin user
   const token = jwt.sign(
-    { userId: adminUser._id, isAdmin: adminUser.isAdmin },
-    JWT_SECRET_KEY,
-    { expiresIn: '1h' } // Make sure the token expires after some time to manage session validity
+    {
+      id: adminUser._id,
+      isAdmin: adminUser.isAdmin,
+      role: 'owner',
+      organizationId: adminUser.organizationId || 'default',
+      branchId: adminUser.branchId || 'main',
+    },
+    process.env.JWT_SECRET_KEY,
+    { expiresIn: '12h' }
   );
 
 
       // Step 6: Return the token to the frontend
-      res.status(200).json({ token });
+      res.status(200).json({
+        token,
+        admin: {
+          _id: adminUser._id,
+          firstname: adminUser.firstname,
+          lastname: adminUser.lastname,
+          email: adminUser.email,
+          image: adminUser.image,
+          role: 'owner',
+          organizationId: adminUser.organizationId || 'default',
+          branchId: adminUser.branchId || 'main',
+        },
+      });
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: 'Server error. Please try again later.' });
     }
   };
-  // Middleware to verify token
-  
+  // Authentication is enforced by the shared authorization middleware.

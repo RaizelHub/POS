@@ -31,13 +31,13 @@ const CorporateHub = ({ theme = 'light' }) => {
     <div className="space-y-6 animate-fadeIn">
 
       {/* Terminal Registration Details */}
-      <div className={`border p-5 rounded-2xl space-y-4 ${
+      <div className={`border p-5 rounded-xl space-y-4 ${
         isDark ? 'bg-slate-900 border-slate-800' : 'bg-slate-50 border-slate-200'
       }`}>
         <h3 className={`font-bold text-xs uppercase tracking-wider flex items-center gap-2 ${
           isDark ? 'text-white' : 'text-slate-800'
         }`}>
-          <FaLaptopCode className={isDark ? 'text-teal-400' : 'text-teal-600'} /> Workstation Registry
+          <FaLaptopCode className={isDark ? 'text-emerald-400' : 'text-emerald-600'} /> Workstation Registry
         </h3>
         
         <div className="grid grid-cols-2 gap-x-4 gap-y-3 font-mono text-[10px]">
@@ -65,7 +65,7 @@ const CorporateHub = ({ theme = 'light' }) => {
 
       {/* Branch Announcements */}
       <div className="space-y-3">
-        <h4 className={`text-[10px] font-extrabold uppercase tracking-widest flex items-center gap-1.5 ${
+        <h4 className={`text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 ${
           isDark ? 'text-slate-400' : 'text-slate-550'
         }`}>
           <FaBullhorn /> Branch Announcements
@@ -81,10 +81,10 @@ const CorporateHub = ({ theme = 'light' }) => {
             >
               <div className="flex items-center justify-between gap-2">
                 <span className={`font-bold text-xs leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>{ann.title}</span>
-                <span className={`px-2 py-0.5 rounded text-[8px] font-extrabold border uppercase tracking-wider shrink-0 ${
+                <span className={`px-2 py-0.5 rounded text-[8px] font-bold border uppercase tracking-wider shrink-0 ${
                   ann.tag === 'IMPORTANT' 
                     ? (isDark ? 'bg-rose-950/40 text-rose-400 border-rose-900/40' : 'bg-rose-50 text-rose-700 border-rose-200')
-                    : (isDark ? 'bg-teal-950/40 text-teal-400 border-teal-900/40' : 'bg-teal-50 text-teal-700 border-teal-200')
+                    : (isDark ? 'bg-emerald-950/40 text-emerald-400 border-emerald-900/40' : 'bg-emerald-50 text-emerald-700 border-emerald-200')
                 }`}>
                   {ann.tag}
                 </span>
@@ -98,7 +98,7 @@ const CorporateHub = ({ theme = 'light' }) => {
 
       {/* Active Promotion Codes */}
       <div className="space-y-3">
-        <h4 className={`text-[10px] font-extrabold uppercase tracking-widest flex items-center gap-1.5 ${
+        <h4 className={`text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 ${
           isDark ? 'text-slate-400' : 'text-slate-555'
         }`}>
           <FaTag /> Active Promotions Banners
@@ -113,8 +113,8 @@ const CorporateHub = ({ theme = 'light' }) => {
               }`}
             >
               <div className="min-w-0 flex-1 text-left pr-3">
-                <span className={`inline-block border text-[9px] font-extrabold font-mono px-2 py-0.5 rounded uppercase tracking-wider ${
-                  isDark ? 'bg-teal-950/40 text-teal-400 border-teal-900/40' : 'bg-teal-50 text-teal-700 border-teal-200'
+                <span className={`inline-block border text-[9px] font-bold font-mono px-2 py-0.5 rounded uppercase tracking-wider ${
+                  isDark ? 'bg-emerald-950/40 text-emerald-400 border-emerald-900/40' : 'bg-emerald-50 text-emerald-700 border-emerald-200'
                 }`}>
                   {promo.code}
                 </span>

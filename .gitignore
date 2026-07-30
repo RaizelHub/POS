@@ -1,0 +1,24 @@
+# Environment and credentials
+.env
+.env.*
+!.env.example
+server/.env
+client/.env
+
+# Dependencies and build output
+node_modules/
+client/node_modules/
+server/node_modules/
+client/dist/
+
+# Runtime artifacts
+server/uploads/
+server/products/
+server/Controller/receipt_*.pdf
+*.log
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+

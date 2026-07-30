@@ -52,8 +52,8 @@ const VerifyEmailPage = () => {
           <img src={novaLogo} alt="Nova Logo" className="h-14 w-auto object-contain rounded-xl shadow-sm" />
         </div>
 
-        <h2 className="text-lg font-bold text-slate-900">Email Verification Gateway</h2>
-        <p className="text-slate-400 text-xs">Authenticating employee registry security tokens</p>
+        <h2 className="text-xl font-semibold tracking-tight text-slate-950">Verify your email</h2>
+        <p className="text-slate-500 text-sm">We’re confirming the account link.</p>
 
         <AnimatePresence mode="wait">
           {loading && (
@@ -65,7 +65,7 @@ const VerifyEmailPage = () => {
               className="flex flex-col items-center justify-center py-6 gap-3"
             >
               <div className="w-9 h-9 border-3 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
-              <span className="text-xs font-semibold text-slate-500">Checking verification status...</span>
+              <span className="text-xs font-semibold text-slate-500">Checking verification status…</span>
             </motion.div>
           )}
 
@@ -87,7 +87,7 @@ const VerifyEmailPage = () => {
                 className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs transition-colors shadow-sm flex items-center justify-center gap-2"
               >
                 <FaEnvelope className="text-[10px]" />
-                <span>Request Verification Link</span>
+                <span>Request another link</span>
               </button>
             </motion.div>
           )}
@@ -109,7 +109,7 @@ const VerifyEmailPage = () => {
                 onClick={() => navigate('/login-selection')}
                 className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs transition-colors shadow-sm flex items-center justify-center gap-2"
               >
-                <span>Navigate to Login</span>
+                <span>Continue to sign in</span>
                 <FaArrowRight className="text-[10px]" />
               </button>
             </motion.div>

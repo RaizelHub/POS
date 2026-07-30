@@ -1,57 +1,101 @@
-import React from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { FaShieldAlt, FaArrowRight } from 'react-icons/fa';
+import { FaArrowRight, FaBars, FaShieldAlt, FaTimes } from 'react-icons/fa';
 import novaLogo from '../../images/nova_logo.png';
 
-const Navbar = () => {
-  return (
-    <header className="sticky top-0 z-50 h-[72px] bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-6 lg:px-10 transition-all">
-      <div className="flex items-center gap-8 max-w-7xl mx-auto w-full justify-between">
-        
-        {/* Brand Logo & Name */}
-        <div className="flex items-center gap-3">
-          <Link to="/" className="flex items-center gap-2.5">
-            <img 
-              src={novaLogo} 
-              alt="SUELTO Logo" 
-              className="h-8 w-auto object-contain rounded-lg border border-slate-100 p-0.5 bg-white" 
-            />
-            <span className="font-bold text-slate-900 tracking-tight text-lg uppercase">
-              Suelto
-            </span>
-          </Link>
-        </div>
+const links = [
+  { label: 'Features', href: '#features' },
+  { label: 'Product tour', href: '#product-tour' },
+  { label: 'How it works', href: '#workflow' },
+  { label: 'Store types', href: '#industries' }
+];
 
-        {/* Desktop Navigation Links */}
-        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
-          <a href="#features" className="hover:text-emerald-600 transition-colors">Features</a>
-          <a href="#dashboard" className="hover:text-emerald-600 transition-colors">System Tour</a>
-          <a href="#workflow" className="hover:text-emerald-600 transition-colors">Workflow</a>
-          <a href="#industries" className="hover:text-emerald-600 transition-colors">Solutions</a>
-          <a href="#testimonials" className="hover:text-emerald-600 transition-colors">Reviews</a>
+const Navbar = () => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    const closeOnResize = () => window.innerWidth >= 768 && setIsOpen(false);
+    window.addEventListener('resize', closeOnResize);
+    return () => window.removeEventListener('resize', closeOnResize);
+  }, []);
+
+  return (
+    <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
+      <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-5 sm:px-6 lg:px-8">
+        <Link to="/" className="flex items-center gap-3" aria-label="Suelto home">
+          <span className="grid h-10 w-10 place-items-center overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            <img src={novaLogo} alt="" className="h-8 w-8 object-contain" />
+          </span>
+          <span>
+            <span className="block text-[15px] font-extrabold leading-none tracking-[-0.02em] text-slate-950">SUELTO</span>
+            <span className="mt-1 block text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-400">Retail OS</span>
+          </span>
+        </Link>
+
+        <nav className="hidden items-center gap-1 rounded-full border border-slate-200 bg-slate-50/80 p-1 md:flex" aria-label="Main navigation">
+          {links.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              className="rounded-full px-4 py-2 text-xs font-semibold text-slate-600 transition-colors hover:bg-white hover:text-slate-950 hover:shadow-sm"
+            >
+              {link.label}
+            </a>
+          ))}
         </nav>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-4">
+        <div className="hidden items-center gap-2 md:flex">
           <Link
             to="/admin-login"
-            className="flex items-center gap-2 text-slate-600 hover:text-slate-900 font-semibold text-xs transition-colors px-3 py-2 rounded-lg hover:bg-slate-50 border border-slate-200"
+            className="flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-950"
           >
-            <FaShieldAlt className="text-[10px]" />
-            <span>Admin Portal</span>
+            <FaShieldAlt className="text-[11px]" />
+            Admin
           </Link>
-          
           <Link
             to="/login-selection"
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 py-2.5 rounded-lg shadow-sm hover:shadow transition-all flex items-center gap-1.5 active:scale-98"
+            className="flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-md"
           >
-            <span>Launch POS</span>
-            <FaArrowRight className="text-[9px] translate-y-[0.5px]" />
+            Open register
+            <FaArrowRight className="text-[9px]" />
           </Link>
         </div>
 
+        <button
+          type="button"
+          className="grid h-10 w-10 place-items-center rounded-xl border border-slate-200 text-slate-700 md:hidden"
+          aria-label={isOpen ? 'Close navigation menu' : 'Open navigation menu'}
+          aria-expanded={isOpen}
+          onClick={() => setIsOpen((open) => !open)}
+        >
+          {isOpen ? <FaTimes /> : <FaBars />}
+        </button>
       </div>
+
+      {isOpen && (
+        <div className="border-t border-slate-200 bg-white px-5 pb-5 pt-3 shadow-xl md:hidden">
+          <nav className="flex flex-col" aria-label="Mobile navigation">
+            {links.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                onClick={() => setIsOpen(false)}
+                className="border-b border-slate-100 py-3.5 text-sm font-semibold text-slate-700"
+              >
+                {link.label}
+              </a>
+            ))}
+          </nav>
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <Link to="/admin-login" className="rounded-xl border border-slate-200 px-4 py-3 text-center text-xs font-bold text-slate-700">
+              Admin
+            </Link>
+            <Link to="/login-selection" className="rounded-xl bg-slate-950 px-4 py-3 text-center text-xs font-bold text-white">
+              Open register
+            </Link>
+          </div>
+        </div>
+      )}
     </header>
   );
 };

@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Modal, Image, Divider, Spin, message } from 'antd';
-import { LeftOutlined, ExclamationCircleOutlined, CheckCircleFilled } from '@ant-design/icons';
+import { Modal, Spin, message } from 'antd';
+import { LeftOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { FaPlus, FaMinus, FaMoneyBillWave, FaCreditCard, FaWallet, FaExchangeAlt, FaRegClock } from 'react-icons/fa';
 import config from '../config';
+import apiFetch from '../utils/apiFetch';
 import {
   completeDraft,
   createActiveDraftId,
@@ -24,7 +25,6 @@ function PaymentPage() {
   const [quantity, setQuantity] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [error, setError] = useState('');
   const [user, setUser] = useState(null);
   const [processingPayment, setProcessingPayment] = useState(false);
   const [sourceDraft, setSourceDraft] = useState({ draftType: null, draftId: null });
@@ -42,8 +42,8 @@ function PaymentPage() {
   const [promoValidationError, setPromoValidationError] = useState('');
   const [redeemPointsChecked, setRedeemPointsChecked] = useState(false);
   const [cashTendered, setCashTendered] = useState(0);
-
-  const baseURL = config.apiUrl;
+  const [tenderReference, setTenderReference] = useState('');
+  const saleIdempotencyKey = useRef(uuidv4());
 
   const payableItems = cartItems && cartItems.length > 0
     ? cartItems
@@ -82,7 +82,7 @@ function PaymentPage() {
       return;
     }
     try {
-      const res = await fetch(`${config.apiUrl}/api/coupons/validate/${promoCode.trim()}`);
+      const res = await apiFetch(`${config.apiUrl}/api/coupons/validate/${promoCode.trim()}`);
       const data = await res.json();
       if (res.ok && data.isValid) {
         setAppliedPromo(data.coupon);
@@ -111,14 +111,14 @@ function PaymentPage() {
         try {
           parsedUser = JSON.parse(storedUser);
           setUser(parsedUser);
-        } catch (err) {
-          setError('Invalid user data. Redirecting...');
+        } catch {
+          message.error('Invalid user data. Redirecting...');
           setTimeout(() => navigate('/'), 3000);
           setLoading(false);
           return;
         }
       } else {
-        setError('User not logged in. Redirecting...');
+        message.error('User not logged in. Redirecting...');
         setTimeout(() => navigate('/'), 3000);
         setLoading(false);
         return;
@@ -295,17 +295,23 @@ function PaymentPage() {
       return;
     }
 
-    const totalAmount = productsArray.reduce(
-      (total, item) => total + (item.price * item.quantity),
-      0
-    );
-
     if (paymentMethod === 'Split') {
       const splitSum = Number(splitCashAmount) + Number(splitDigitalAmount);
       if (Math.abs(splitSum - finalTotalPrice) > 0.01) {
         message.error(`Split amounts sum (₱${splitSum.toFixed(2)}) must equal total ₱${finalTotalPrice.toFixed(2)}.`);
         return null;
       }
+    }
+    if (
+      (paymentMethod === 'Card' || paymentMethod === 'GCash/PayMaya' || (paymentMethod === 'Split' && Number(splitDigitalAmount) > 0)) &&
+      !tenderReference.trim()
+    ) {
+      message.error('Enter the external terminal or wallet reference.');
+      return null;
+    }
+    if (paymentMethod === 'Pay Later' && !assignedCustomer) {
+      message.error('Assign a customer before creating customer credit.');
+      return null;
     }
 
     const requestData = {
@@ -326,14 +332,21 @@ function PaymentPage() {
       shiftId: shiftId || undefined,
       loyaltyPointsEarned: Math.floor(finalTotalPrice / 100),
       loyaltyPointsRedeemed: loyaltyDiscountAmt,
+      manualDiscountPercent,
+      redeemLoyaltyPoints: redeemPointsChecked,
+      registerId: user.station || 'register-01',
+      tenderReference: tenderReference.trim() || undefined,
     };
 
     console.log('Request Data:', requestData);
 
     try {
-      const response = await fetch(`${config.apiUrl}/api/transactions`, {
+      const response = await apiFetch(`${config.apiUrl}/api/transactions`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Idempotency-Key': saleIdempotencyKey.current,
+        },
         body: JSON.stringify(requestData),
       });
 
@@ -354,93 +367,6 @@ function PaymentPage() {
     }
   };
 
-  const updatePurchasedItems = () => {
-    try {
-      const storedData = JSON.parse(localStorage.getItem('purchasedData')) || {};
-      const userData = storedData[user._id] || { paidItems: [], payLaterItems: [] };
-
-      if (cartItems && cartItems.length > 0) {
-        cartItems.forEach(item => {
-          const purchaseItem = {
-            name: item.product.name,
-            price: item.product.price * item.quantity,
-            quantity: item.quantity,
-          };
-
-          if (paymentMethod !== 'Pay Later') {
-            userData.paidItems.push(purchaseItem);
-          } else {
-            userData.payLaterItems.push(purchaseItem);
-          }
-        });
-      } else if (product) {
-        const purchaseItem = {
-          name: product.name,
-          price: product.price * quantity,
-          quantity: quantity,
-        };
-
-        if (paymentMethod !== 'Pay Later') {
-          userData.paidItems.push(purchaseItem);
-        } else {
-          userData.payLaterItems.push(purchaseItem);
-        }
-      }
-
-      storedData[user._id] = userData;
-      localStorage.setItem('purchasedData', JSON.stringify(storedData));
-      console.log('Purchased items updated successfully:', storedData);
-    } catch (error) {
-      console.error('Error updating purchased items:', error.message);
-    }
-  };
-
-  const updateProductQuantity = async () => {
-    try {
-      let success = true;
-
-      if (cartItems && cartItems.length > 0) {
-        for (const item of cartItems) {
-          const response = await fetch(`${baseURL}/api/products/${item.product._id}/decrement`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ quantity: item.quantity }),
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            console.error(`Failed to update quantity for ${item.product.name}:`, errorData.message);
-            success = false;
-            break;
-          }
-
-          const data = await response.json();
-          console.log(`Product ${item.product.name} quantity updated successfully:`, data);
-        }
-      } else if (product) {
-        const response = await fetch(`${baseURL}/api/products/${product._id}/decrement`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ quantity }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Failed to update product quantity.');
-        }
-
-        const data = await response.json();
-        console.log('Product quantity updated successfully:', data);
-      }
-
-      return success;
-    } catch (error) {
-      console.error('Error updating product quantity:', error.message);
-      message.error('Failed to update product quantity. Please try again.');
-      return false;
-    }
-  };
-
   const handleConfirmPayment = async () => {
     if (processingPayment) return;
 
@@ -448,13 +374,9 @@ function PaymentPage() {
       setProcessingPayment(true);
       message.loading('Processing payment...', 0);
 
-      const isUpdated = await updateProductQuantity();
+      const transaction = await createTransaction();
 
-      if (isUpdated) {
-        const transaction = await createTransaction();
-
-        if (transaction) {
-          updatePurchasedItems();
+      if (transaction) {
           await markCurrentDraftsComplete();
           let receiptData;
           const currentTxId = transaction?.transaction?.transactionId || uuidv4();
@@ -502,7 +424,7 @@ function PaymentPage() {
           }
 
           try {
-            const response = await fetch(`${config.apiUrl}/api/generate-receipt`, {
+            const response = await apiFetch(`${config.apiUrl}/api/generate-receipt`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(receiptData),
@@ -568,7 +490,6 @@ function PaymentPage() {
             };
             navigate('/thank-you', { state: thankYouState });
           }
-        }
       }
     } catch (error) {
   console.error('Error during payment confirmation:', error.message);
@@ -589,33 +510,31 @@ if (loading) {
 }
 
 return (
-  <div className="min-h-screen bg-slate-50 text-slate-800 p-6 flex flex-col font-sans">
+  <div className="min-h-screen bg-[#f3f4f1] text-slate-800 flex flex-col font-sans">
 
     {/* Top Header Navigation */}
-    <header className="max-w-6xl w-full mx-auto flex items-center justify-between mb-8">
+    <header className="h-16 bg-slate-950 border-b border-slate-800 px-4 sm:px-6 flex items-center justify-between">
       <button
         onClick={handleBack}
-        className="flex items-center gap-2 hover:bg-slate-100 px-3.5 py-2 rounded-lg text-slate-700 font-semibold text-sm transition-all border border-slate-200"
+        className="flex items-center gap-2 hover:bg-slate-800 px-3 py-2 rounded-md text-slate-300 hover:text-white font-medium text-sm transition-colors"
       >
         <LeftOutlined className="text-xs" />
-        <span>Back to Register</span>
+        <span>Register</span>
       </button>
 
-      <div className="text-center">
-        <h1 className="text-xl font-bold text-slate-900 tracking-tight">Checkout Order</h1>
-        <p className="text-slate-400 text-xs mt-0.5">Please select a payment method to complete checkout</p>
+      <div className="text-right">
+        <h1 className="text-sm font-semibold text-white tracking-tight">Take payment</h1>
+        <p className="text-slate-400 text-[11px] mt-0.5">Review total and choose a tender</p>
       </div>
-
-      <div className="w-[120px]" /> {/* Spacer */}
     </header>
 
     {/* Main Checkout Columns */}
-    <main className="flex-1 max-w-6xl w-full mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+    <main className="flex-1 max-w-[1440px] w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-5 p-4 sm:p-6 items-start">
 
       {/* Left Side: Order Summary (Span 5) */}
-      <section className="md:col-span-5 thermal-receipt p-6 space-y-4 relative pb-8">
-        <h2 className="font-bold text-slate-900 text-base border-b border-dashed border-slate-200 pb-3 flex items-center gap-2">
-          <span>🛒</span> Order Summary
+      <section className="lg:col-span-5 bg-white border border-slate-200 rounded-lg p-5 sm:p-6 space-y-4 relative lg:sticky lg:top-6">
+        <h2 className="font-semibold text-slate-950 text-base border-b border-slate-200 pb-3">
+          Order summary
         </h2>
 
         {product ? (
@@ -642,7 +561,7 @@ return (
                 <div className="w-[50px] h-[50px] bg-white border border-slate-200 rounded-md overflow-hidden flex-shrink-0 flex items-center justify-center">
                   {item.product.image ? (
                     <img
-                      src={item.product.image.startsWith('http') ? item.product.image : `${baseURL}/${item.product.image?.replace(/\\/g, '/')}`}
+                      src={item.product.image.startsWith('http') ? item.product.image : `${config.apiUrl}/${item.product.image?.replace(/\\/g, '/')}`}
                       alt={item.product.name}
                       className="w-full h-full object-cover"
                     />
@@ -666,7 +585,7 @@ return (
         {assignedCustomer && (
           <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-4 space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-xs font-bold text-emerald-900">👤 Loyalty Customer</span>
+              <span className="text-xs font-semibold text-emerald-900">Loyalty customer</span>
               <span className="text-[10px] bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded-full">Active</span>
             </div>
             <div className="flex justify-between text-xs border-b border-emerald-100 pb-1.5">
@@ -696,7 +615,7 @@ return (
 
         {/* Discounts & Coupon Input */}
         <div className="bg-slate-50 border border-slate-200/60 rounded-xl p-4 space-y-4">
-          <span className="text-xs font-bold text-slate-700 block uppercase tracking-wider">🏷️ Discounts & Promo Code</span>
+          <span className="text-xs font-semibold text-slate-700 block">Discounts and promotion</span>
 
           <div className="space-y-1.5">
             <div className="flex gap-2">
@@ -738,6 +657,7 @@ return (
             )}
           </div>
 
+          {['owner', 'manager', 'supervisor'].includes(user?.role) && (
           <div className="pt-2 border-t border-slate-200/60">
             <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
               Or Apply Manual % Discount
@@ -758,6 +678,7 @@ return (
               ))}
             </div>
           </div>
+          )}
         </div>
 
         <div className="border-t border-slate-100 pt-4 space-y-2">
@@ -779,13 +700,13 @@ return (
           )}
           <div className="flex justify-between items-center text-slate-900 border-t border-slate-50 pt-2.5">
             <span className="font-bold text-sm">Total Payable</span>
-            <span className="font-extrabold text-lg text-slate-950 font-mono">₱{finalTotalPrice.toFixed(2)}</span>
+            <span className="font-bold text-lg text-slate-950 font-mono">₱{finalTotalPrice.toFixed(2)}</span>
           </div>
         </div>
       </section>
 
       {/* Right Side: Payment Choices (Span 7) */}
-      <section className="md:col-span-7 bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-6">
+      <section className="lg:col-span-7 bg-white border border-slate-200 rounded-lg p-5 sm:p-6 space-y-6">
 
         {/* Quantity Selector for single products only */}
         {product && (
@@ -813,7 +734,8 @@ return (
         )}
 
         <div>
-          <h3 className="font-bold text-slate-900 text-sm mb-3">Select Payment Method</h3>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Tender</p>
+          <h3 className="font-semibold text-slate-950 text-xl tracking-tight mt-1 mb-4">Payment method</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 
             {/* Cash Option */}
@@ -821,11 +743,11 @@ return (
               type="button"
               onClick={() => { setPaymentMethod('Cash'); setCashTendered(0); }}
               className={`flex items-center gap-3 p-3.5 border rounded-xl text-left transition-all hover:bg-slate-50 ${paymentMethod === 'Cash'
-                ? 'border-teal-600 bg-teal-50/20 text-teal-950 ring-1 ring-teal-600'
+                ? 'border-emerald-600 bg-emerald-50/20 text-emerald-950 ring-1 ring-emerald-600'
                 : 'border-slate-200 text-slate-800'
                 }`}
             >
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center ${paymentMethod === 'Cash' ? 'bg-teal-700 text-white' : 'bg-teal-50 text-teal-700'
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center ${paymentMethod === 'Cash' ? 'bg-emerald-700 text-white' : 'bg-emerald-50 text-emerald-700'
                 }`}>
                 <FaMoneyBillWave />
               </div>
@@ -840,11 +762,11 @@ return (
               type="button"
               onClick={() => { setPaymentMethod('Card'); setCashTendered(0); }}
               className={`flex items-center gap-3 p-3.5 border rounded-xl text-left transition-all hover:bg-slate-50 ${paymentMethod === 'Card'
-                ? 'border-teal-600 bg-teal-50/20 text-teal-950 ring-1 ring-teal-600'
+                ? 'border-emerald-600 bg-emerald-50/20 text-emerald-950 ring-1 ring-emerald-600'
                 : 'border-slate-200 text-slate-800'
                 }`}
             >
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center ${paymentMethod === 'Card' ? 'bg-teal-700 text-white' : 'bg-slate-100 text-slate-650'
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center ${paymentMethod === 'Card' ? 'bg-emerald-700 text-white' : 'bg-slate-100 text-slate-650'
                 }`}>
                 <FaCreditCard />
               </div>
@@ -859,11 +781,11 @@ return (
               type="button"
               onClick={() => { setPaymentMethod('GCash/PayMaya'); setCashTendered(0); }}
               className={`flex items-center gap-3 p-3.5 border rounded-xl text-left transition-all hover:bg-slate-50 ${paymentMethod === 'GCash/PayMaya'
-                ? 'border-teal-600 bg-teal-50/20 text-teal-950 ring-1 ring-teal-600'
+                ? 'border-emerald-600 bg-emerald-50/20 text-emerald-950 ring-1 ring-emerald-600'
                 : 'border-slate-200 text-slate-800'
                 }`}
             >
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center ${paymentMethod === 'GCash/PayMaya' ? 'bg-teal-700 text-white' : 'bg-slate-100 text-slate-655'
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center ${paymentMethod === 'GCash/PayMaya' ? 'bg-emerald-700 text-white' : 'bg-slate-100 text-slate-655'
                 }`}>
                 <FaWallet />
               </div>
@@ -883,11 +805,11 @@ return (
                 setSplitDigitalAmount(finalTotalPrice - Math.round(finalTotalPrice * 0.5));
               }}
               className={`flex items-center gap-3 p-3.5 border rounded-xl text-left transition-all hover:bg-slate-50 ${paymentMethod === 'Split'
-                ? 'border-teal-600 bg-teal-50/20 text-teal-950 ring-1 ring-teal-600'
+                ? 'border-emerald-600 bg-emerald-50/20 text-emerald-950 ring-1 ring-emerald-600'
                 : 'border-slate-200 text-slate-800'
                 }`}
             >
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center ${paymentMethod === 'Split' ? 'bg-teal-700 text-white' : 'bg-slate-100 text-slate-655'
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center ${paymentMethod === 'Split' ? 'bg-emerald-700 text-white' : 'bg-slate-100 text-slate-655'
                 }`}>
                 <FaExchangeAlt />
               </div>
@@ -918,6 +840,21 @@ return (
 
           </div>
         </div>
+
+        {(paymentMethod === 'Card' || paymentMethod === 'GCash/PayMaya' || (paymentMethod === 'Split' && splitDigitalAmount > 0)) && (
+          <label className="block rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <span className="block text-[10px] font-bold uppercase tracking-widest text-slate-500">External payment reference</span>
+            <input
+              type="text"
+              value={tenderReference}
+              onChange={(event) => setTenderReference(event.target.value)}
+              placeholder="Terminal approval or wallet reference"
+              maxLength={100}
+              className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm font-semibold outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
+            />
+            <span className="mt-2 block text-[10px] text-slate-500">Suelto records this external tender; it does not capture funds directly.</span>
+          </label>
+        )}
 
         {/* Interactive Split configuration form */}
         {paymentMethod === 'Split' && (
@@ -984,7 +921,7 @@ return (
                   value={cashTendered || ''}
                   onChange={(e) => setCashTendered(Number(e.target.value) || 0)}
                   placeholder="Enter amount received..."
-                  className="w-full pl-7 pr-4 py-2.5 border border-slate-200 focus:border-teal-650 focus:ring-1 focus:ring-teal-650 rounded-lg text-sm bg-white font-bold outline-none transition-all"
+                  className="w-full pl-7 pr-4 py-2.5 border border-slate-200 focus:border-emerald-650 focus:ring-1 focus:ring-emerald-650 rounded-lg text-sm bg-white font-bold outline-none transition-all"
                 />
               </div>
               <div className="sm:col-span-5 flex flex-wrap gap-1">
@@ -1006,7 +943,7 @@ return (
                     const currentPayable = paymentMethod === 'Split' ? splitCashAmount : finalTotalPrice;
                     setCashTendered(currentPayable);
                   }}
-                  className="w-full py-1 border border-teal-205 hover:border-teal-350 hover:bg-teal-50 rounded text-[10px] font-extrabold text-teal-800 transition-all active:scale-95"
+                  className="w-full py-1 border border-emerald-205 hover:border-emerald-350 hover:bg-emerald-50 rounded text-[10px] font-bold text-emerald-800 transition-all active:scale-95"
                 >
                   Exact Change
                 </button>
@@ -1041,7 +978,7 @@ return (
              cashTendered < (paymentMethod === 'Split' ? splitCashAmount : finalTotalPrice))
           }
           className={`w-full py-3.5 text-white font-bold rounded-xl text-sm transition-all shadow-sm hover:shadow flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed ${paymentMethod === 'Cash'
-            ? 'bg-teal-700 hover:bg-teal-650'
+            ? 'bg-emerald-700 hover:bg-emerald-650'
             : paymentMethod === 'Pay Later'
               ? 'bg-rose-600 hover:bg-rose-700'
               : 'bg-slate-900 hover:bg-slate-800'
@@ -1125,7 +1062,7 @@ return (
             <p className="text-[10px] text-slate-500 font-semibold mt-3 text-center">
               Merchant Reference: <span className="font-mono text-slate-700">SUELTO-{Date.now().toString().slice(-6)}</span>
             </p>
-            <p className="text-[11px] font-extrabold text-emerald-800 mt-1">
+            <p className="text-[11px] font-bold text-emerald-800 mt-1">
               Amount Due: ₱{(paymentMethod === 'Split' ? splitDigitalAmount : finalTotalPrice).toFixed(2)}
             </p>
           </div>

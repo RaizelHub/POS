@@ -20,7 +20,7 @@ const TerminalStatus = () => {
     <div className="space-y-6">
       
       {/* Overview Card */}
-      <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-2">
+      <div className="bg-slate-900 border border-slate-800 p-5 rounded-xl space-y-2">
         <h3 className="text-slate-100 font-bold text-sm tracking-tight flex items-center gap-2">
           <FaInfoCircle className="text-emerald-500" /> Terminal Workstation
         </h3>
@@ -31,7 +31,7 @@ const TerminalStatus = () => {
 
       {/* Checklist Grid */}
       <div className="space-y-3 pt-2">
-        <h4 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block mb-2">Hardware Peripherals</h4>
+        <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Hardware Peripherals</h4>
         
         {statusItems.map((item, idx) => (
           <div 

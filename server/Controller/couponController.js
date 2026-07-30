@@ -9,7 +9,11 @@ export const createCoupon = async (req, res) => {
       return res.status(400).json({ message: 'Code, discountType, and discountValue are required.' });
     }
 
-    const existing = await Coupon.findOne({ code: code.toUpperCase() });
+    const existing = await Coupon.findOne({
+      code: code.toUpperCase(),
+      organizationId: req.auth.organizationId,
+      branchId: req.auth.branchId,
+    });
     if (existing) {
       return res.status(400).json({ message: 'A coupon with this code already exists.' });
     }
@@ -19,6 +23,8 @@ export const createCoupon = async (req, res) => {
       discountType,
       discountValue,
       expiryDate: expiryDate ? new Date(expiryDate) : undefined,
+      organizationId: req.auth.organizationId,
+      branchId: req.auth.branchId,
     });
 
     await coupon.save();
@@ -31,7 +37,10 @@ export const createCoupon = async (req, res) => {
 // Get all coupons
 export const getCoupons = async (req, res) => {
   try {
-    const coupons = await Coupon.find().sort({ createdAt: -1 });
+    const coupons = await Coupon.find({
+      organizationId: req.auth.organizationId,
+      branchId: req.auth.branchId,
+    }).sort({ createdAt: -1 });
     res.json(coupons);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching coupons', error: error.message });
@@ -46,7 +55,11 @@ export const validateCoupon = async (req, res) => {
       return res.status(400).json({ message: 'Coupon code is required.' });
     }
 
-    const coupon = await Coupon.findOne({ code: code.toUpperCase() });
+    const coupon = await Coupon.findOne({
+      code: code.toUpperCase(),
+      organizationId: req.auth.organizationId,
+      branchId: req.auth.branchId,
+    });
     if (!coupon) {
       return res.status(404).json({ message: 'Coupon not found.', isValid: false });
     }

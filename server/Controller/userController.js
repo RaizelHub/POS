@@ -1,10 +1,8 @@
-import multer from 'multer';
 import UserModel from '../Models/user.js';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
-import axios from 'axios';
 import Transaction from '../Models/transaction.js';
 import Product from '../Models/product.js';
 import Customer from '../Models/customer.js';
@@ -12,6 +10,8 @@ import Shift from '../Models/shift.js';
 import mongoose from 'mongoose';
 import { formatDistanceToNow } from 'date-fns';
 import sendStationAssignmentEmail from '../utills/sendStationAssignmentEmail.js';
+import crypto from 'crypto';
+import { buildOrgBranchFilter } from '../utills/orgBranchFilter.js';
 
 
 
@@ -19,12 +19,10 @@ import sendStationAssignmentEmail from '../utills/sendStationAssignmentEmail.js'
 
 dotenv.config();
 
-// Set up storage for multer
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/'),
-  filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname),
+const organizationUserScope = (req) => ({
+  organizationId: req.auth.organizationId,
+  ...(!req.auth.isAdmin && req.auth.role !== 'owner' ? { branchId: req.auth.branchId } : {}),
 });
-const upload = multer({ storage: storage });
 
 // Token generation utility
 const createToken = (id, email, expiresIn = '1d') => {
@@ -62,7 +60,16 @@ export const sendVerificationEmail = (email, verificationToken) => {
 
 
 export const registerUser = async (req, res) => {
-  const { firstname, lastname, email, pin, image } = req.body;
+  const {
+    firstname,
+    lastname,
+    email,
+    pin,
+    image,
+    role = 'cashier',
+    branchId = req.auth?.branchId || 'main',
+    station = 'Unassigned',
+  } = req.body;
 
   // Validate required fields
   if (!firstname || !lastname || !email || !pin) {
@@ -87,15 +94,10 @@ export const registerUser = async (req, res) => {
   }
 
 
-  const session = await UserModel.startSession();
   try {
-    session.startTransaction();
-
-
-
-
     // Check if the email already exists
-    const existingUser = await UserModel.findOne({ email });
+    const normalizedEmail = email.trim().toLowerCase();
+    const existingUser = await UserModel.findOne({ email: normalizedEmail });
     if (existingUser) {
       return res.status(400).json({ message: "Email already exists" });
     }
@@ -104,46 +106,42 @@ export const registerUser = async (req, res) => {
     const hashedPin = await bcrypt.hash(pin, 10);
 
     // Create the user object
+    const canCreateManager = req.auth?.isAdmin || req.auth?.role === 'owner';
+    const allowedRole = role === 'manager' && !canCreateManager
+      ? 'cashier'
+      : (['manager', 'supervisor', 'cashier'].includes(role) ? role : 'cashier');
+    const assignedBranch = canCreateManager && branchId ? branchId : (req.auth?.branchId || 'main');
     const newUser = new UserModel({
       firstname,
       lastname,
-      email,
+      email: normalizedEmail,
       pin: hashedPin,
       isAdmin: false,
-      isVerified: false,
+      role: allowedRole,
+      organizationId: req.auth?.organizationId || 'default',
+      branchId: assignedBranch,
+      station,
+      isVerified: true,
+      isActive: true,
       image: image || null,
     });
 
-    // Generate and attach a verification token
-    const verificationToken = createToken(newUser._id, newUser.email, "1h");
-    newUser.verificationToken = verificationToken;
-
-    // Save the user to the database
-    await newUser.save({ session });
-
-
-    // Commit transaction
-    await session.commitTransaction();
-    console.log("User registered successfully:", newUser.email);
-
-    // Send verification email
-    try {
-      await sendVerificationEmail(email, verificationToken);
-    } catch (emailError) {
-      console.error("Failed to send verification email:", emailError);
-    }
-
-    res.status(201).json({ message: "User registered successfully! Please verify your email." });
-  } catch (error) {
-    console.error("Error during registration:", {
-      message: error.message,
-      stack: error.stack,
-      code: error.code,
+    await newUser.save();
+    res.status(201).json({
+      message: 'Cashier account created successfully.',
+      user: {
+        _id: newUser._id,
+        firstname: newUser.firstname,
+        lastname: newUser.lastname,
+        email: newUser.email,
+        role: newUser.role,
+        branchId: newUser.branchId,
+        station: newUser.station,
+      },
     });
-    await session.abortTransaction();
+  } catch (error) {
+    console.error('Error during cashier creation:', error.message);
     res.status(500).json({ message: "Internal server error. Please try again later." });
-  } finally {
-    session.endSession();
   }
 };
 
@@ -196,10 +194,10 @@ export const verifyEmail = async (req, res) => {
 
 // Login user (validate PIN)
 export const loginUser = async (req, res) => {
-  const { email, pin } = req.body;
+  const { email, userId, pin } = req.body;
 
-  if (!email || !pin) {
-    return res.status(400).json({ message: 'Email and PIN are required.' });
+  if ((!email && !userId) || !pin) {
+    return res.status(400).json({ message: 'Cashier and PIN are required.' });
   }
 
   // Validate PIN format (must be 6 digits)
@@ -208,8 +206,10 @@ export const loginUser = async (req, res) => {
   }
 
   try {
-    // Find the user by email
-    const user = await UserModel.findOne({ email });
+    const lookup = userId && mongoose.Types.ObjectId.isValid(userId)
+      ? { _id: userId }
+      : { email: email?.trim().toLowerCase() };
+    const user = await UserModel.findOne({ ...lookup, isActive: { $ne: false } });
     if (!user) {
       return res.status(404).json({ message: 'User not found.' });
     }
@@ -229,10 +229,28 @@ export const loginUser = async (req, res) => {
     // Generate JWT
     user.lastLogin = new Date();
     await user.save();
-    const token = createToken(user._id, user.email);
+    const token = jwt.sign({
+      id: user._id,
+      email: user.email,
+      role: user.isAdmin ? 'owner' : user.role,
+      organizationId: user.organizationId,
+      branchId: user.branchId,
+    }, process.env.JWT_SECRET_KEY, { expiresIn: '12h' });
 
     // Include user details in the response (excluding sensitive fields like `pin`)
-    const { _id, firstname, lastname, email: userEmail, image, createdAt, lastLogin } = user;
+    const {
+      _id,
+      firstname,
+      lastname,
+      email: userEmail,
+      image,
+      createdAt,
+      lastLogin,
+      role,
+      organizationId,
+      branchId,
+      station,
+    } = user;
 
     return res.status(200).json({
       message: 'Login successful.',
@@ -245,6 +263,10 @@ export const loginUser = async (req, res) => {
         image,
         createdAt,
         lastLogin,
+        role: user.isAdmin ? 'owner' : role,
+        organizationId,
+        branchId,
+        station,
       },
     });
 
@@ -256,14 +278,46 @@ export const loginUser = async (req, res) => {
 
 
 
-// Get all users
-export const getUsers = async (_, res) => {
+// Get cashier login directory
+export const getCashierLoginDirectory = async (req, res) => {
+  try {
+    const requestedBranch = req.query.branchId;
+    const filter = {
+      isAdmin: { $ne: true },
+      isVerified: true,
+      isActive: { $ne: false },
+    };
+
+    if (requestedBranch) {
+      filter.branchId = requestedBranch;
+    } else {
+      filter.$or = [
+        { branchId: 'main' },
+        { branchId: { $exists: false } },
+        { branchId: null },
+        { branchId: '' },
+      ];
+    }
+
+    const users = await UserModel.find(filter)
+      .select('_id firstname lastname image station branchId role')
+      .sort({ firstname: 1, lastname: 1 })
+      .lean();
+    return res.status(200).json(users);
+  } catch (error) {
+    console.error('Error fetching cashier login directory:', error);
+    return res.status(500).json({ message: 'Unable to load the cashier directory.' });
+  }
+};
+
+export const getUsers = async (req, res) => {
   try {
     // Fetch users who are verified and not admins
     const users = await UserModel.find({
       isAdmin: { $ne: true },   // Exclude admins
-      isVerified: true           // Include only verified users
-    });
+      isVerified: true,
+      ...organizationUserScope(req),
+    }).select('-pin -verificationToken');
 
     res.status(200).json(users); // Send the filtered users in the response
   } catch (error) {
@@ -274,7 +328,10 @@ export const getUsers = async (_, res) => {
 // Get user by ID
 export const getUserById = async (req, res) => {
   try {
-    const user = await UserModel.findById(req.params.id);
+    const user = await UserModel.findOne({
+      _id: req.params.id,
+      ...organizationUserScope(req),
+    }).select('-pin -verificationToken');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -292,12 +349,22 @@ export const updateUser = async (req, res) => {
       return res.status(400).json({ message: 'Invalid or missing user ID.' });
     }
     
-    const existingUser = await UserModel.findById(id);
+    const existingUser = await UserModel.findOne({
+      _id: id,
+      ...organizationUserScope(req),
+    });
     if (!existingUser) {
       return res.status(404).json({ message: 'User not found.' });
     }
 
-    const updateData = { ...req.body }; // image is now a URL
+    const allowedFields = ['firstname', 'lastname', 'email', 'pin', 'image', 'role', 'branchId', 'station', 'isActive'];
+    const updateData = Object.fromEntries(
+      Object.entries(req.body).filter(([key]) => allowedFields.includes(key))
+    );
+    if (!req.auth.isAdmin && req.auth.role !== 'owner') {
+      delete updateData.branchId;
+      if (updateData.role === 'manager') delete updateData.role;
+    }
     if (updateData.pin) {
       const hashedPin = await bcrypt.hash(updateData.pin, 10);
       updateData.pin = hashedPin;
@@ -305,7 +372,10 @@ export const updateUser = async (req, res) => {
 
     const stationChanged = updateData.station !== undefined && updateData.station !== existingUser.station;
 
-    const updatedUser = await UserModel.findByIdAndUpdate(id, updateData, { new: true });
+    const updatedUser = await UserModel.findOneAndUpdate({
+      _id: id,
+      ...organizationUserScope(req),
+    }, updateData, { new: true }).select('-pin -verificationToken');
     
     if (stationChanged) {
       sendStationAssignmentEmail(
@@ -327,7 +397,11 @@ export const updateUser = async (req, res) => {
 // Delete a user
 export const deleteUser = async (req, res) => {
   try {
-    const deletedUser = await UserModel.findByIdAndDelete(req.params.id);
+    const deletedUser = await UserModel.findOneAndUpdate({
+      _id: req.params.id,
+      ...organizationUserScope(req),
+      isAdmin: { $ne: true },
+    }, { isActive: false }, { new: true });
     if (!deletedUser) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -457,7 +531,11 @@ export const getUserTransactions = async (req, res) => {
 
   try {
     // Fetch all transactions for the given user
-    const transactions = await Transaction.find({ userId });
+    const transactions = await Transaction.find({
+      userId,
+      ...buildOrgBranchFilter(req.auth),
+      status: { $ne: 'voided' },
+    });
 
     if (!transactions.length) {
       console.log('No transactions found for this user.');
@@ -472,13 +550,20 @@ export const getUserTransactions = async (req, res) => {
       // Ensure the products array exists and has items
       if (transaction.products && Array.isArray(transaction.products) && transaction.products.length > 0) {
         // Filter products by paymentStatus and categorize them
+        const withTransactionContext = (item) => ({
+          ...item.toObject(),
+          transactionId: transaction._id,
+          receiptNumber: transaction.transactionId,
+          balanceDueCents: transaction.balanceDueCents || 0,
+          dueDate: transaction.dueDate,
+        });
         paidItems = [
           ...paidItems,
-          ...transaction.products.filter(item => item.paymentStatus === 'Paid'),
+          ...transaction.products.filter(item => item.paymentStatus === 'Paid').map(withTransactionContext),
         ];
         payLaterItems = [
           ...payLaterItems,
-          ...transaction.products.filter(item => item.paymentStatus === 'Pay Later'),
+          ...transaction.products.filter(item => item.paymentStatus === 'Pay Later').map(withTransactionContext),
         ];
       }
     });
@@ -496,15 +581,7 @@ export const getUserTransactions = async (req, res) => {
 
 export const getLoggedInUser = async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ message: 'Authorization token is missing.' });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-    console.log('Decoded Token:', decoded);
-
-    const user = await UserModel.findById(decoded.id);
+    const user = await UserModel.findById(req.auth.userId).select('-pin -verificationToken');
     if (!user) {
       return res.status(404).json({ message: 'User not found.' });
     }
@@ -521,12 +598,7 @@ export const getLoggedInUser = async (req, res) => {
 // Update logged-in user
 export const updateLoggedInUser = async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ message: 'Authorization token is missing.' });
-    }
-    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-    const userId = decoded.id;
+    const userId = req.auth.userId;
     const updateData = {};
     if (req.body.firstname?.trim()) updateData.firstname = req.body.firstname;
     if (req.body.lastname?.trim()) updateData.lastname = req.body.lastname;
@@ -538,7 +610,8 @@ export const updateLoggedInUser = async (req, res) => {
     if (Object.keys(updateData).length === 0) {
       return res.status(400).json({ message: 'No valid fields provided for update.' });
     }
-    const updatedUser = await UserModel.findByIdAndUpdate(userId, updateData, { new: true });
+    const updatedUser = await UserModel.findByIdAndUpdate(userId, updateData, { new: true })
+      .select('-pin -verificationToken');
     if (!updatedUser) {
       return res.status(404).json({ message: 'User not found.' });
     }
@@ -552,100 +625,66 @@ export const updateLoggedInUser = async (req, res) => {
 };
 
 export const forgotPin = async (req, res) => {
-  const { email } = req.body;
+  const normalizedEmail = req.body.email?.trim().toLowerCase();
+  const genericMessage = 'If the account exists, a PIN reset link has been sent.';
+  if (!normalizedEmail) return res.status(200).json({ message: genericMessage });
 
   try {
-    console.log('Request received for email:', email);
-    const user = await UserModel.findOne({ email });
-    if (!user) {
-      console.log('No user found with that email');
-      return res.status(400).json({ error: 'No user found with that email' });
-    }
+    const user = await UserModel.findOne({
+      email: normalizedEmail,
+      isActive: { $ne: false },
+    }).select('+pinResetTokenHash +pinResetExpiresAt');
+    if (!user) return res.status(200).json({ message: genericMessage });
 
-    console.log('User found:', user.email);
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    user.pinResetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
+    user.pinResetExpiresAt = new Date(Date.now() + 60 * 60 * 1000);
+    await user.save();
 
-    // Generate a reset token
-    const resetToken = jwt.sign({ email: user.email }, process.env.JWT_SECRET_KEY, { expiresIn: '1h' });
-    console.log('Reset token generated:', resetToken);
-
-    // Set up nodemailer transporter
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-      tls: {
-        rejectUnauthorized: false, // This allows self-signed certificates
-      },
-    });
-
-
-    const mailOptions = {
+    await transporter.sendMail({
       from: process.env.EMAIL_USER,
-      to: email,
-      subject: 'Reset Your PIN',
-      text: `Click on the following link to reset your PIN: ${process.env.CLIENT_URL}/reset-pin/${resetToken}`,
-    };
-
-    transporter.sendMail(mailOptions, (err, info) => {
-      if (err) {
-        console.log('Error sending email:', err);
-        return res.status(500).json({ error: 'Error sending email' });
-      }
-      console.log('Email sent:', info);
-      return res.status(200).json({ message: 'Reset link sent to your email' });
+      to: user.email,
+      subject: 'Reset your SUELTO PIN',
+      text: `Set a new PIN using this one-time link: ${process.env.CLIENT_URL}/reset-pin/${resetToken}`,
     });
-  } catch (err) {
-    console.error('Server error:', err);
-    res.status(500).json({ error: 'Server error' });
+    return res.status(200).json({ message: genericMessage });
+  } catch (error) {
+    console.error('PIN reset email failed:', error.message);
+    return res.status(200).json({ message: genericMessage });
   }
 };
 
 
 export const resetPin = async (req, res) => {
-  // Get token from either URL parameter or request body
   const token = req.params.token || req.body.token;
+  const newPin = req.body.newPin;
 
-  if (!token) {
-    return res.status(400).json({ error: 'Token is required' });
+  if (!token || !/^\d{6}$/.test(newPin || '')) {
+    return res.status(400).json({ error: 'A valid reset token and six-digit PIN are required.' });
+  }
+  if (/^(\d)\1{5}$/.test(newPin) || ['123456', '654321'].includes(newPin)) {
+    return res.status(400).json({ error: 'Choose a less predictable PIN.' });
   }
 
   try {
-    console.log('Attempting to reset PIN with token:', token);
-
-    // Verify the reset token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-    const user = await UserModel.findOne({ email: decoded.email });
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const user = await UserModel.findOne({
+      pinResetTokenHash: tokenHash,
+      pinResetExpiresAt: { $gt: new Date() },
+      isActive: { $ne: false },
+    }).select('+pinResetTokenHash +pinResetExpiresAt');
 
     if (!user) {
-      console.log('No user found for email:', decoded.email);
-      return res.status(400).json({ error: 'Invalid token or user not found' });
+      return res.status(400).json({ error: 'This reset link is invalid or has expired.' });
     }
 
-    console.log('User found:', user.email);
-
-    // Set the PIN to the default value (123456)
-    const defaultPin = '123456';
-    const hashedPin = await bcrypt.hash(defaultPin, 10);
-
-    // Update the user's PIN
-    user.pin = hashedPin;
+    user.pin = await bcrypt.hash(newPin, 12);
+    user.pinResetTokenHash = undefined;
+    user.pinResetExpiresAt = undefined;
     await user.save();
 
-    console.log('PIN reset successful for user:', user.email);
-    res.status(200).json({ message: 'PIN reset successful' });
-  } catch (err) {
-    console.error('Error resetting PIN:', err);
-
-    if (err.name === 'JsonWebTokenError') {
-      return res.status(400).json({ error: 'Invalid token' });
-    }
-
-    if (err.name === 'TokenExpiredError') {
-      return res.status(400).json({ error: 'Token has expired' });
-    }
-
-    res.status(500).json({ error: 'Server error' });
+    return res.status(200).json({ message: 'PIN reset successful.' });
+  } catch {
+    return res.status(500).json({ error: 'Failed to reset PIN.' });
   }
 };

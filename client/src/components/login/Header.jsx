@@ -31,7 +31,7 @@ const Header = ({ theme = 'light', onHelpDeskClick }) => {
           className="h-10 w-auto object-contain rounded-xl shadow-sm"
         />
         <div className="text-left">
-          <h1 className={`font-extrabold text-lg leading-tight tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>SUELTO POS</h1>
+          <h1 className={`font-bold text-lg leading-tight tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>SUELTO POS</h1>
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Retail Management System</p>
         </div>
       </div>
@@ -49,7 +49,7 @@ const Header = ({ theme = 'light', onHelpDeskClick }) => {
                 : 'bg-white border-slate-200 text-slate-650 hover:text-slate-900 hover:border-slate-300'
             }`}
           >
-            <FaQuestionCircle className={isDark ? 'text-teal-450' : 'text-slate-500'} />
+            <FaQuestionCircle className={isDark ? 'text-emerald-450' : 'text-slate-500'} />
             <span>Help Desk</span>
           </button>
         ) : (
@@ -63,7 +63,7 @@ const Header = ({ theme = 'light', onHelpDeskClick }) => {
                 : 'bg-white border-slate-200 text-slate-650 hover:text-slate-900 hover:border-slate-300'
             }`}
           >
-            <FaQuestionCircle className={isDark ? 'text-teal-450' : 'text-slate-500'} />
+            <FaQuestionCircle className={isDark ? 'text-emerald-450' : 'text-slate-500'} />
             <span>Help Desk</span>
           </a>
         )}
@@ -74,7 +74,7 @@ const Header = ({ theme = 'light', onHelpDeskClick }) => {
             ? 'bg-slate-900 border-slate-800 text-white shadow-inner' 
             : 'bg-slate-50 border-slate-200 text-slate-800'
         }`}>
-          <FaClock className="text-teal-500 animate-pulse" />
+          <FaClock className="text-emerald-500 animate-pulse" />
           <span>
             {time.toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}, {time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
           </span>

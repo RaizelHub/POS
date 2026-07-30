@@ -1,24 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaBox, FaShoppingCart, FaTrash, FaUserCircle, FaEdit, FaBarcode, FaSignOutAlt, FaCheckCircle, FaClock, FaPlus, FaMinus, FaSearch, FaChevronRight, FaMoneyBillWave, FaReceipt } from 'react-icons/fa';
-import { motion, AnimatePresence } from 'framer-motion';
+import { FaBox, FaShoppingCart, FaTrash, FaUserCircle, FaBarcode, FaSignOutAlt, FaClock, FaPlus, FaMinus, FaSearch, FaMoneyBillWave, FaReceipt } from 'react-icons/fa';
 import config from '../config';
+import apiFetch from '../utils/apiFetch';
 import novaLogo from '../images/nova_logo.png';
 import {
   Box,
-  Button,
-  Typography,
   Modal,
-  IconButton,
-  Tooltip,
   CircularProgress,
   Alert,
   Snackbar,
-  List,
-  ListItem,
-  ListItemText,
-  Divider,
-  Paper,
 } from '@mui/material';
 import {
   completeDraft,
@@ -38,7 +29,6 @@ function ScanPage() {
   const [user, setUser] = useState(null);
   const [barcode, setBarcode] = useState('');
   const [error, setError] = useState('');
-  const [paidItems, setPaidItems] = useState([]);
   const [payLaterItems, setPayLaterItems] = useState([]);
   const [selectedPayLaterItem, setSelectedPayLaterItem] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -92,7 +82,7 @@ function ScanPage() {
       return;
     }
     try {
-      const res = await fetch(`${config.apiUrl}/api/customers/search?query=${val}`);
+      const res = await apiFetch(`${config.apiUrl}/api/customers/search?query=${val}`);
       if (res.ok) {
         const data = await res.json();
         setCustomerResults(data);
@@ -121,7 +111,7 @@ function ScanPage() {
 
     try {
       setLoggingAdjustment(true);
-      const res = await fetch(`${config.apiUrl}/api/shifts/${activeShift._id}/cash-logs`, {
+      const res = await apiFetch(`${config.apiUrl}/api/shifts/${activeShift._id}/cash-logs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -156,7 +146,7 @@ function ScanPage() {
       return;
     }
     try {
-      const res = await fetch(`${config.apiUrl}/api/customers`, {
+      const res = await apiFetch(`${config.apiUrl}/api/customers`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -187,7 +177,7 @@ function ScanPage() {
 
   const checkActiveShift = async (userId) => {
     try {
-      const res = await fetch(`${config.apiUrl}/api/shifts/active/${userId}`);
+      const res = await apiFetch(`${config.apiUrl}/api/shifts/active/${userId}`);
       if (res.ok) {
         const shiftData = await res.json();
         if (shiftData) {
@@ -211,7 +201,7 @@ function ScanPage() {
       return;
     }
     try {
-      const response = await fetch(`${config.apiUrl}/api/shifts/open`, {
+      const response = await apiFetch(`${config.apiUrl}/api/shifts/open`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -243,7 +233,7 @@ function ScanPage() {
       return;
     }
     try {
-      const response = await fetch(`${config.apiUrl}/api/shifts/close`, {
+      const response = await apiFetch(`${config.apiUrl}/api/shifts/close`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -293,7 +283,7 @@ function ScanPage() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${config.apiUrl}/api/${userId}/transactions`);
+      const response = await apiFetch(`${config.apiUrl}/api/${userId}/transactions`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch transactions');
@@ -303,19 +293,15 @@ function ScanPage() {
       console.log('Fetched Transactions:', data);
 
       if (data?.paid && data?.payLater) {
-        const paidItems = data.paid.filter(item => item.paymentStatus === 'Paid');
         const payLaterItems = data.payLater.filter(item => item.paymentStatus === 'Pay Later');
 
-        setPaidItems(paidItems);
         setPayLaterItems(payLaterItems);
       } else {
         console.error('Invalid response structure:', data);
-        setPaidItems([]);
         setPayLaterItems([]);
       }
     } catch (error) {
       console.error('Error fetching transactions:', error);
-      setPaidItems([]);
       setPayLaterItems([]);
     } finally {
       setLoading(false);
@@ -432,7 +418,7 @@ function ScanPage() {
     console.log('Attempting to fetch product with barcode:', trimmedBarcode);
 
     try {
-      const response = await fetch(`${config.apiUrl}/api/products/barcode/${encodeURIComponent(trimmedBarcode)}`);
+      const response = await apiFetch(`${config.apiUrl}/api/products/barcode/${encodeURIComponent(trimmedBarcode)}`);
 
       if (!response.ok) {
         const errorResponse = await response.json();
@@ -589,7 +575,7 @@ function ScanPage() {
 
   const fetchAvailableProducts = async () => {
     try {
-      const response = await fetch(`${config.apiUrl}/api/products`);
+      const response = await apiFetch(`${config.apiUrl}/api/products`);
       if (!response.ok) {
         throw new Error('Failed to fetch products');
       }
@@ -610,11 +596,10 @@ function ScanPage() {
   };
 
   const handleLogout = () => {
-    const purchasedData = localStorage.getItem('purchasedData');
-    localStorage.clear();
-    if (purchasedData) {
-      localStorage.setItem('purchasedData', purchasedData);
-    }
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('activeShiftId');
+    localStorage.removeItem('lastPurchase');
     navigate('/login-selection');
   };
 
@@ -635,12 +620,13 @@ function ScanPage() {
 
     const payload = {
       userId: user?._id,
+      transactionId: selectedPayLaterItem?.transactionId,
       itemId: selectedPayLaterItem?._id,
       shiftId: activeShift?._id,
     };
 
     try {
-      const response = await fetch(`${config.apiUrl}/api/transactions/pay-later/confirm`, {
+      const response = await apiFetch(`${config.apiUrl}/api/transactions/pay-later/confirm`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -652,15 +638,12 @@ function ScanPage() {
       }
 
       const data = await response.json();
-      setPayLaterItems((prev) => prev.filter((i) => i._id !== selectedPayLaterItem._id));
-      setPaidItems((prev) => [...prev, selectedPayLaterItem]);
       setShowPaymentModal(false);
-
-      const itemName = selectedPayLaterItem.name;
-      const itemPrice = selectedPayLaterItem.price.toFixed(2);
+      await fetchTransactions(user._id);
+      const amountPaid = ((data.payment?.amountCents || 0) / 100).toFixed(2);
       setSelectedPayLaterItem(null);
 
-      setSnackbarMessage(`Payment successful! ₱${itemPrice} paid for ${itemName}`);
+      setSnackbarMessage(`Credit payment recorded: ₱${amountPaid}`);
       setSnackbarOpen(true);
     } catch (error) {
       console.error('Error confirming payment:', error.message);
@@ -678,37 +661,67 @@ function ScanPage() {
   });
 
   const cartTotal = cart.reduce((total, item) => total + (item.product.price * item.quantity), 0);
+  const cartItemCount = cart.reduce((total, item) => total + item.quantity, 0);
+  const catalogCategories = [
+    'all',
+    ...Array.from(new Set(availableProducts.map((product) => product.category).filter(Boolean))),
+  ];
+  const creditTransactions = Array.from(
+    new Map(payLaterItems.map((item) => [String(item.transactionId), item])).values()
+  );
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#f3f4f1] text-slate-800 flex flex-col font-sans">
       {/* Top Navbar */}
-      <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
-        <div className="flex items-center gap-3">
-          <img src={novaLogo} alt="SUELTO Logo" className="h-8 w-auto object-contain rounded-lg" />
-          <h1 className="font-bold text-slate-900 tracking-tight text-lg">
-            SUELTO POS Console
-          </h1>
+      <header className="h-16 bg-slate-950 border-b border-slate-800 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30">
+        <div className="flex items-center gap-3 min-w-0">
+          <img src={novaLogo} alt="SUELTO" className="h-8 w-8 object-contain rounded-md bg-white" />
+          <div className="min-w-0">
+            <h1 className="font-semibold text-white tracking-tight text-sm sm:text-base truncate">SUELTO Register</h1>
+            <div className="flex items-center gap-2 text-[11px] text-slate-400">
+              <span>Main branch</span>
+              <span className="text-slate-700">/</span>
+              <button
+                type="button"
+                onClick={() => {
+                  if (activeShift) {
+                    setShowCloseShiftModal(true);
+                  } else {
+                    setShowShiftModal(true);
+                  }
+                }}
+                className={`flex items-center gap-1 font-semibold transition-all px-2 py-0.5 rounded cursor-pointer ${
+                  activeShift
+                    ? 'text-emerald-400 bg-emerald-950/60 border border-emerald-800/80 hover:bg-emerald-900/60'
+                    : 'text-amber-300 bg-amber-950/70 border border-amber-800/80 hover:bg-amber-900/70 animate-pulse'
+                }`}
+                title={activeShift ? "Click to close shift" : "Click to open shift"}
+              >
+                <span>{activeShift ? 'Shift open' : 'Shift closed (Click to Start)'}</span>
+              </button>
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-4">
-          <button
-            onClick={handleEditProfile}
-            className="flex items-center gap-2 hover:bg-slate-50 border border-transparent hover:border-slate-200 px-3 py-1.5 rounded-lg transition-all"
-          >
-            {user?.image ? (
-              <img src={user.image} alt="User" className="w-7 h-7 rounded-full object-cover border border-slate-200" />
-            ) : (
-              <FaUserCircle className="text-slate-400 text-lg" />
-            )}
-            <span className="text-sm font-medium text-slate-700">{user?.firstname} {user?.lastname}</span>
-          </button>
+        <div className="flex items-center gap-1.5 sm:gap-2">
           {activeShift && (
             <>
               <button
                 onClick={() => setShowLedgerModal(true)}
-                className="flex items-center gap-1.5 text-xs text-slate-700 hover:bg-slate-50 border border-slate-250 hover:border-slate-355 px-3 py-2 rounded-lg font-semibold transition-all active:scale-95"
+                className="hidden md:flex items-center gap-2 text-xs text-slate-300 hover:text-white hover:bg-slate-800 px-3 py-2 rounded-md font-medium transition-colors"
               >
                 <FaReceipt />
-                <span>Ledger & Credits</span>
+                <span>Ledger</span>
+              </button>
+              <button
+                onClick={() => {
+                  setSelectedPayLaterItem(null);
+                  setShowPaymentModal(true);
+                }}
+                disabled={loading || creditTransactions.length === 0}
+                className="hidden md:flex items-center gap-2 text-xs text-slate-300 hover:text-white hover:bg-slate-800 px-3 py-2 rounded-md font-medium transition-colors disabled:opacity-40"
+              >
+                <FaMoneyBillWave />
+                <span>Credit ({creditTransactions.length})</span>
               </button>
               <button
                 onClick={() => {
@@ -717,82 +730,97 @@ function ScanPage() {
                   setCashAdjustmentType('Cash-In');
                   setShowCashAdjustmentModal(true);
                 }}
-                className="flex items-center gap-1.5 text-xs text-teal-800 bg-teal-50 hover:bg-teal-100/80 px-3 py-2 rounded-lg font-semibold transition-all border border-teal-200 active:scale-95"
+                className="hidden lg:flex items-center gap-2 text-xs text-slate-300 hover:text-white hover:bg-slate-800 px-3 py-2 rounded-md font-medium transition-colors"
               >
                 <FaMoneyBillWave />
-                <span>Drawer Adjust</span>
+                <span>Cash drawer</span>
               </button>
               <button
                 onClick={() => {
                   setEndingCash(0);
                   setShowCloseShiftModal(true);
                 }}
-                className="flex items-center gap-1.5 text-xs text-amber-800 bg-amber-50 border border-amber-200 hover:bg-amber-100/80 px-3 py-2 rounded-lg font-semibold transition-all border border-amber-200 active:scale-95"
+                className="hidden sm:flex items-center gap-2 text-xs text-amber-300 hover:text-amber-200 hover:bg-amber-400/10 px-3 py-2 rounded-md font-medium transition-colors"
               >
                 <FaClock />
-                <span>Close Shift</span>
+                <span>Close shift</span>
               </button>
             </>
           )}
           <button
+            onClick={handleEditProfile}
+            className="flex items-center gap-2 hover:bg-slate-800 px-2 py-1.5 rounded-md transition-colors"
+            aria-label="Open cashier profile"
+          >
+            {user?.image ? (
+              <img src={user.image} alt="" className="w-7 h-7 rounded-full object-cover ring-1 ring-slate-700" />
+            ) : (
+              <FaUserCircle className="text-slate-400 text-xl" />
+            )}
+            <span className="hidden xl:inline text-xs font-medium text-slate-300">{user?.firstname} {user?.lastname}</span>
+          </button>
+          <button
             onClick={handleLogout}
-            className="flex items-center gap-1.5 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 px-3 py-1.5 rounded-lg font-medium transition-all"
+            className="w-9 h-9 grid place-items-center text-slate-500 hover:text-rose-300 hover:bg-rose-400/10 rounded-md transition-colors"
+            aria-label="Sign out"
           >
             <FaSignOutAlt />
-            <span>Logout</span>
           </button>
         </div>
       </header>
 
       {/* Main Container */}
-      <main className="flex-1 max-w-[1600px] w-full mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <main className="flex-1 w-full grid grid-cols-1 lg:grid-cols-12 items-start">
 
         {/* Left Panel: Catalog (Span 8) */}
-        <section className="lg:col-span-8 space-y-6">
+        <section className="lg:col-span-8 xl:col-span-9 p-4 sm:p-6 lg:pr-5">
 
           {/* Product Catalog Card */}
-          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm flex flex-col min-h-[500px]">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-              <div className="flex items-center gap-2">
-                <FaBox className="text-slate-600 text-lg" />
-                <h2 className="font-semibold text-slate-900 text-lg">Product Catalog</h2>
+          <div className="flex flex-col min-h-[500px]">
+            <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-4 mb-5">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">New sale</p>
+                <div className="flex items-baseline gap-3 mt-1">
+                  <h2 className="font-semibold text-slate-950 text-2xl tracking-tight">Products</h2>
+                  <span className="text-xs text-slate-500">{filteredProducts.length} available</span>
+                </div>
               </div>
 
               {/* Catalog Search & Category Filters */}
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="relative">
-                  <FaSearch className="absolute left-3 top-3 text-slate-400 text-sm" />
+              <div className="relative w-full xl:w-[340px]">
+                  <FaSearch className="absolute left-3.5 top-3.5 text-slate-400 text-sm" />
                   <input
                     type="text"
-                    placeholder="Search name or barcode..."
+                    placeholder="Search product or barcode"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 focus:bg-white focus:outline-none focus:border-slate-400 w-[200px] transition-all"
+                    className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg text-sm bg-white focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/10 transition-shadow placeholder:text-slate-400"
+                    aria-label="Search product catalog"
                   />
-                </div>
-                <div className="flex items-center gap-1.5 bg-slate-50 p-1.5 border border-slate-200 rounded-lg">
-                  {['all', 'drinks', 'junkfood', 'others'].map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => setActiveCategory(cat)}
-                      className={`text-xs font-bold px-3 py-1.5 rounded-md transition-all ${activeCategory === cat
-                        ? 'bg-teal-700 text-white shadow-sm'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                        }`}
-                    >
-                      {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                    </button>
-                  ))}
-                </div>
               </div>
             </div>
 
+            <div className="flex gap-2 overflow-x-auto pb-4 mb-1 no-scrollbar" aria-label="Product categories">
+                  {catalogCategories.map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setActiveCategory(cat)}
+                      className={`whitespace-nowrap text-xs font-semibold px-3.5 py-2 rounded-full border transition-colors ${activeCategory === cat
+                        ? 'bg-slate-950 text-white border-slate-950'
+                        : 'bg-white text-slate-600 border-slate-300 hover:border-slate-500 hover:text-slate-950'
+                        }`}
+                    >
+                      {cat === 'all' ? 'All products' : cat.replace(/[-_]/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())}
+                    </button>
+                  ))}
+            </div>
+
             {/* Catalog Grid */}
-            <div className="flex-1 overflow-y-auto max-h-[550px] pr-1">
+            <div className="flex-1 overflow-y-auto max-h-[calc(100vh-225px)] pr-1">
               {productsLoading ? (
                 <div className="flex justify-center items-center py-20"><CircularProgress /></div>
               ) : filteredProducts.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-3">
                   {filteredProducts.map((product) => {
                     const isOutOfStock = product.quantity <= 0;
                     const isLowStock = product.quantity <= (product.lowStockThreshold || 5) && !isOutOfStock;
@@ -812,13 +840,21 @@ function ScanPage() {
                             setSnackbarOpen(true);
                           }
                         }}
-                        className={`flex gap-4 p-4 border rounded-xl transition-all ${isOutOfStock
-                          ? 'bg-slate-50/50 border-slate-100 cursor-not-allowed opacity-60'
-                          : 'bg-white hover:bg-slate-50/50 border-slate-200 hover:border-slate-300 cursor-pointer hover:shadow-sm'
+                        className={`group text-left flex gap-3.5 p-3.5 border rounded-lg transition-all ${isOutOfStock
+                          ? 'bg-slate-100/70 border-slate-200 cursor-not-allowed opacity-60'
+                          : 'bg-white border-slate-200 cursor-pointer hover:border-slate-400 hover:shadow-[0_2px_8px_rgba(15,23,42,0.06)] active:translate-y-px'
                           }`}
+                        role="button"
+                        tabIndex={isOutOfStock ? -1 : 0}
+                        onKeyDown={(event) => {
+                          if (!isOutOfStock && (event.key === 'Enter' || event.key === ' ')) {
+                            event.preventDefault();
+                            addToCart(product);
+                          }
+                        }}
                       >
                         {/* Image */}
-                        <div className="w-[70px] h-[70px] bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        <div className="w-16 h-16 bg-[#f4f4f0] border border-slate-200 rounded-md flex items-center justify-center flex-shrink-0 overflow-hidden">
                           {product.image ? (
                             <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
                           ) : (
@@ -829,27 +865,27 @@ function ScanPage() {
                         {/* Details */}
                         <div className="flex-1 min-w-0 flex flex-col justify-between">
                           <div>
-                            <h4 className="font-semibold text-slate-800 truncate text-sm">{product.name}</h4>
-                            <span className="text-xs text-slate-400 font-mono block mt-0.5">BC: {product.barcode}</span>
+                            <h4 className="font-semibold text-slate-900 truncate text-sm">{product.name}</h4>
+                            <span className="text-[11px] text-slate-400 font-mono block mt-0.5">{product.barcode}</span>
                           </div>
 
                           <div className="flex items-center gap-2 mt-2">
-                            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${isOutOfStock
-                              ? 'bg-red-50 text-red-600 border border-red-100'
+                            <span className={`text-[10px] font-semibold ${isOutOfStock
+                              ? 'text-rose-600'
                               : isLowStock
-                                ? 'bg-amber-50 text-amber-600 border border-amber-100'
-                                : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                                ? 'text-amber-700'
+                                : 'text-slate-500'
                               }`}>
-                              {isOutOfStock ? 'Out of Stock' : isLowStock ? `Low Stock: ${product.quantity}` : `Stock: ${product.quantity}`}
+                              {isOutOfStock ? 'Out of stock' : isLowStock ? `Only ${product.quantity} left` : `${product.quantity} in stock`}
                             </span>
                           </div>
                         </div>
 
                         {/* Price */}
                         <div className="text-right flex flex-col justify-between items-end flex-shrink-0">
-                          <span className="font-bold text-slate-900 text-base">₱{product.price.toFixed(2)}</span>
-                          <span className="text-slate-400 text-xs flex items-center gap-0.5 hover:text-slate-700 transition-colors">
-                            Add <FaChevronRight className="text-[10px]" />
+                          <span className="font-semibold text-slate-950 text-sm">₱{product.price.toFixed(2)}</span>
+                          <span className="w-7 h-7 rounded-full bg-slate-100 text-slate-500 grid place-items-center group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                            <FaPlus className="text-[9px]" />
                           </span>
                         </div>
                       </div>
@@ -859,7 +895,8 @@ function ScanPage() {
               ) : (
                 <div className="text-center py-20 text-slate-400">
                   <FaBox className="mx-auto text-4xl mb-4 text-slate-300" />
-                  <p className="text-sm">No products found matching your filters.</p>
+                  <p className="text-sm font-medium text-slate-600">No matching products</p>
+                  <p className="text-xs mt-1">Try another name, barcode, or category.</p>
                 </div>
               )}
             </div>
@@ -868,25 +905,31 @@ function ScanPage() {
         </section>
 
         {/* Right Panel: Checkout Panel (Span 4) */}
-        <section className="lg:col-span-4 bg-white border border-slate-200 rounded-xl p-5 shadow-sm flex flex-col h-[calc(100vh-140px)] sticky top-24 overflow-hidden">
+        <section className="lg:col-span-4 xl:col-span-3 bg-white border-l border-slate-200 p-4 sm:p-5 flex flex-col h-[calc(100vh-64px)] sticky top-16 overflow-hidden">
 
           {/* Section Header */}
-          <div className="flex items-center gap-2 mb-4 flex-shrink-0">
-            <FaShoppingCart className="text-slate-700 text-lg" />
-            <h2 className="font-semibold text-slate-900 text-lg">Active Order</h2>
+          <div className="flex items-center justify-between mb-4 flex-shrink-0">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Current ticket</p>
+              <h2 className="font-semibold text-slate-950 text-xl tracking-tight mt-0.5">Order</h2>
+            </div>
+            <span className="min-w-8 h-8 px-2 grid place-items-center rounded-full bg-slate-100 text-xs font-semibold text-slate-700" aria-label={`${cartItemCount} items`}>
+              {cartItemCount}
+            </span>
           </div>
 
           {/* Barcode / Scan Input Field */}
           <div className="relative mb-5 flex-shrink-0">
-            <FaBarcode className="absolute left-3.5 top-3.5 text-slate-400 text-lg" />
+            <FaBarcode className="absolute left-3.5 top-3.5 text-slate-500 text-lg" />
             <input
               ref={inputRef}
               type="text"
-              placeholder="Scan barcode or enter manually (Enter)"
+              placeholder="Scan barcode"
               value={barcode}
               onChange={(e) => setBarcode(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="w-full pl-11 pr-4 py-3 border border-slate-200 focus:border-slate-400 focus:outline-none rounded-lg text-sm bg-slate-50 focus:bg-white transition-all font-mono placeholder:font-sans"
+              className="w-full pl-11 pr-4 py-3 border border-slate-300 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/10 focus:outline-none rounded-lg text-sm bg-white transition-shadow font-mono placeholder:font-sans placeholder:text-slate-400"
+              aria-label="Scan or enter a barcode"
             />
             {error && (
               <span className="text-red-500 text-xs block mt-1.5 font-medium pl-1">{error}</span>
@@ -898,8 +941,8 @@ function ScanPage() {
             {selectedCustomer ? (
               <div className="bg-emerald-50/50 border border-emerald-100 rounded-lg p-3 flex items-center justify-between">
                 <div>
-                  <h4 className="font-semibold text-slate-800 text-xs">👤 {selectedCustomer.name}</h4>
-                  <span className="text-[10px] text-emerald-700 font-bold block mt-0.5">Points: {selectedCustomer.loyaltyPoints} | Phone: {selectedCustomer.phone || 'N/A'}</span>
+                  <h4 className="font-semibold text-slate-800 text-xs">{selectedCustomer.name}</h4>
+                  <span className="text-[10px] text-emerald-700 font-semibold block mt-0.5">{selectedCustomer.loyaltyPoints} points · {selectedCustomer.phone || 'No phone'}</span>
                 </div>
                 <button
                   onClick={() => setSelectedCustomer(null)}
@@ -911,7 +954,7 @@ function ScanPage() {
             ) : (
               <div className="space-y-1.5">
                 <div className="flex justify-between items-center">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest pl-1">Assign Customer</label>
+                  <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest pl-1">Customer</label>
                   <button
                     onClick={() => {
                       setError('');
@@ -919,13 +962,13 @@ function ScanPage() {
                     }}
                     className="text-[10px] font-bold text-emerald-700 hover:text-emerald-800 transition-colors"
                   >
-                    + Register Profile
+                    Add new
                   </button>
                 </div>
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="Search by phone number or name..."
+                    placeholder="Search name or phone"
                     value={customerSearchQuery}
                     onChange={(e) => handleCustomerSearch(e.target.value)}
                     className="w-full px-3 py-2 border border-slate-200 focus:border-slate-350 focus:outline-none rounded-lg text-xs bg-slate-50 focus:bg-white transition-all"
@@ -954,12 +997,12 @@ function ScanPage() {
           </div>
 
           {/* Active Cart list scroll wrapper */}
-          <div className="flex-1 overflow-y-auto border-t border-b border-slate-100 py-4 space-y-3 scrollbar-thin">
+          <div className="flex-1 overflow-y-auto border-t border-slate-200 py-3 space-y-2 scrollbar-thin">
             {cart.length > 0 ? (
               cart.map((item) => (
-                <div key={item.product._id} className="flex gap-3 bg-slate-50 border border-slate-100 rounded-lg p-3">
+                <div key={item.product._id} className="flex gap-3 border-b border-slate-100 py-3 last:border-0">
                   {/* Cart Thumbnail */}
-                  <div className="w-[50px] h-[50px] bg-white border border-slate-200 rounded-md overflow-hidden flex-shrink-0 flex items-center justify-center">
+                  <div className="w-12 h-12 bg-[#f4f4f0] border border-slate-200 rounded-md overflow-hidden flex-shrink-0 flex items-center justify-center">
                     {item.product.image ? (
                       <img src={item.product.image} alt={item.product.name} className="w-full h-full object-cover" />
                     ) : (
@@ -970,7 +1013,7 @@ function ScanPage() {
                   {/* Info and Quantity Controls */}
                   <div className="flex-1 min-w-0 flex flex-col justify-between">
                     <div>
-                      <h5 className="font-semibold text-slate-800 text-xs truncate">{item.product.name}</h5>
+                      <h5 className="font-semibold text-slate-900 text-xs truncate">{item.product.name}</h5>
                       <span className="text-slate-400 text-[10px]">₱{item.product.price.toFixed(2)} each</span>
                     </div>
 
@@ -1007,34 +1050,39 @@ function ScanPage() {
               ))
             ) : (
               <div className="h-full flex flex-col justify-center items-center py-20 text-slate-400 text-center">
-                <FaShoppingCart className="text-4xl mb-3 text-slate-300" />
-                <h4 className="font-medium text-sm text-slate-500">Cart is Empty</h4>
-                <p className="text-xs text-slate-400 mt-1 max-w-[200px]">Scan a barcode or click catalog products to add them to this order.</p>
+                <div className="w-12 h-12 rounded-full bg-slate-100 grid place-items-center mb-3">
+                  <FaShoppingCart className="text-lg text-slate-400" />
+                </div>
+                <h4 className="font-medium text-sm text-slate-600">No items yet</h4>
+                <p className="text-xs text-slate-400 mt-1 max-w-[210px]">Scan a barcode or select a product from the catalog.</p>
               </div>
             )}
           </div>
 
           {/* Pricing Totals & Checkout Button */}
-          <div className="pt-4 mt-auto flex-shrink-0 space-y-4">
-            <div className="flex justify-between items-center text-slate-800">
-              <span className="text-sm font-medium">Cart Subtotal:</span>
-              <span className="text-lg font-bold text-slate-900">₱{cartTotal.toFixed(2)}</span>
+          <div className="pt-4 mt-auto border-t border-slate-200 flex-shrink-0 space-y-4">
+            <div className="flex justify-between items-end text-slate-800">
+              <div>
+                <span className="text-xs font-medium text-slate-500 block">Total</span>
+                <span className="text-[11px] text-slate-400">{cartItemCount} {cartItemCount === 1 ? 'item' : 'items'}</span>
+              </div>
+              <span className="text-2xl font-semibold tracking-tight text-slate-950">₱{cartTotal.toFixed(2)}</span>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={handleHoldOrder}
                 disabled={cart.length === 0}
-                className="w-full py-2.5 border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold rounded-lg text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-98"
+                className="w-full py-3 border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold rounded-lg text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Hold Order
               </button>
               <button
                 onClick={proceedToCheckout}
                 disabled={cart.length === 0}
-                className="w-full py-3 bg-teal-700 hover:bg-teal-650 text-white font-bold rounded-lg text-sm shadow-sm hover:shadow transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-98"
+                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm transition-colors disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed"
               >
-                Proceed to Checkout
+                Charge
               </button>
             </div>
           </div>
@@ -1060,7 +1108,7 @@ function ScanPage() {
           </p>
 
           <div className="border border-slate-100 rounded-lg overflow-hidden max-h-[300px] overflow-y-auto mb-4 space-y-1 pr-1 scrollbar-thin">
-            {restoreDrafts.map((draft, idx) => {
+            {restoreDrafts.map((draft) => {
               const draftCart = draft.cartItems || [];
               const total = draftCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
               const label = draft.draftType === DRAFT_TYPES.HELD_ORDER ? "Held Order" : "Saved Cart";
@@ -1116,6 +1164,21 @@ function ScanPage() {
               </div>
             </div>
           )}
+          {!selectedPayLaterItem && (
+            <div className="mb-5 max-h-72 space-y-2 overflow-y-auto">
+              {creditTransactions.length ? creditTransactions.map((item) => (
+                <button
+                  key={String(item.transactionId)}
+                  type="button"
+                  onClick={() => handlePayLaterClick(item)}
+                  className="w-full rounded-lg border border-slate-200 p-3 text-left hover:border-emerald-500 hover:bg-emerald-50"
+                >
+                  <span className="block text-xs font-bold text-slate-900">{item.receiptNumber || item.transactionId}</span>
+                  <span className="mt-1 block text-xs text-slate-500">Balance ₱{((item.balanceDueCents || 0) / 100).toFixed(2)}</span>
+                </button>
+              )) : <p className="py-6 text-center text-sm text-slate-500">No outstanding credit sales.</p>}
+            </div>
+          )}
           <div className="flex justify-end gap-3">
             <button
               onClick={() => setShowPaymentModal(false)}
@@ -1123,12 +1186,12 @@ function ScanPage() {
             >
               Cancel
             </button>
-            <button
+            {selectedPayLaterItem && <button
               onClick={handleConfirmPayment}
-              className="bg-teal-700 hover:bg-teal-655 text-white font-bold text-sm px-4 py-2.5 rounded-lg transition-all active:scale-95 shadow-sm"
+              className="bg-emerald-700 hover:bg-emerald-655 text-white font-bold text-sm px-4 py-2.5 rounded-lg transition-all active:scale-95 shadow-sm"
             >
               Confirm Settlement
-            </button>
+            </button>}
           </div>
         </Box>
       </Modal>
@@ -1136,7 +1199,7 @@ function ScanPage() {
       {/* Open Shift Modal */}
       <Modal
         open={showShiftModal}
-        onClose={(event, reason) => {
+        onClose={() => {
           if (activeShift) {
             setShowShiftModal(false);
           }
@@ -1147,8 +1210,8 @@ function ScanPage() {
         <Box
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-lg max-w-[450px] w-[90%] p-6 focus:outline-none border border-slate-200"
         >
-          <h3 id="shift-modal-title" className="font-extrabold text-slate-900 text-lg mb-1 flex items-center gap-2">
-            🚀 Initialize Cashier Shift
+          <h3 id="shift-modal-title" className="font-bold text-slate-900 text-lg mb-1 flex items-center gap-2">
+            Open cashier shift
           </h3>
           <p className="text-xs text-slate-500 mb-4">
             Before scanning items or collecting payments, please declare the starting cash float in your drawer.
@@ -1216,7 +1279,7 @@ function ScanPage() {
         <Box
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-lg max-w-[450px] w-[90%] p-6 focus:outline-none border border-slate-200"
         >
-          <h3 id="close-shift-title" className="font-extrabold text-slate-900 text-lg mb-1 flex items-center gap-2">
+          <h3 id="close-shift-title" className="font-bold text-slate-900 text-lg mb-1 flex items-center gap-2">
             🛑 Close Cashier Shift
           </h3>
           <p className="text-xs text-slate-500 mb-4">
@@ -1292,8 +1355,8 @@ function ScanPage() {
         <Box
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-lg max-w-[450px] w-[90%] p-6 focus:outline-none border border-slate-200"
         >
-          <h3 id="add-customer-title" className="font-extrabold text-slate-900 text-lg mb-1 flex items-center gap-2">
-            👤 Register Customer Profile
+          <h3 id="add-customer-title" className="font-bold text-slate-900 text-lg mb-1 flex items-center gap-2">
+            Add customer
           </h3>
           <p className="text-xs text-slate-500 mb-4">
             Create a profile to log loyalty points and purchase stats.
@@ -1355,7 +1418,7 @@ function ScanPage() {
             </button>
             <button
               onClick={handleAddCustomer}
-              className="bg-teal-700 hover:bg-teal-650 text-white font-bold text-sm px-4 py-2.5 rounded-lg transition-colors shadow-sm"
+              className="bg-emerald-700 hover:bg-emerald-650 text-white font-bold text-sm px-4 py-2.5 rounded-lg transition-colors shadow-sm"
             >
               Register Customer
             </button>
@@ -1372,7 +1435,7 @@ function ScanPage() {
         <Box
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-lg max-w-[450px] w-[90%] p-6 focus:outline-none border border-slate-200"
         >
-          <h3 id="cash-adjust-title" className="font-extrabold text-slate-900 text-lg mb-1 flex items-center gap-2">
+          <h3 id="cash-adjust-title" className="font-bold text-slate-900 text-lg mb-1 flex items-center gap-2">
             💵 Cash Drawer Adjustment
           </h3>
           <p className="text-xs text-slate-500 mb-4">
@@ -1388,7 +1451,7 @@ function ScanPage() {
                 <button
                   type="button"
                   onClick={() => setCashAdjustmentType('Cash-In')}
-                  className={`flex-1 py-2.5 border rounded-lg text-xs font-bold transition-all ${cashAdjustmentType === 'Cash-In' ? 'bg-teal-700 text-white border-teal-700' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-350'}`}
+                  className={`flex-1 py-2.5 border rounded-lg text-xs font-bold transition-all ${cashAdjustmentType === 'Cash-In' ? 'bg-emerald-700 text-white border-emerald-700' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-350'}`}
                 >
                   Cash-In (Deposit)
                 </button>
@@ -1444,7 +1507,7 @@ function ScanPage() {
             <button
               onClick={handleLogCashAdjustment}
               disabled={loggingAdjustment}
-              className={`text-white font-bold text-sm px-4 py-2.5 rounded-lg transition-colors shadow-sm disabled:opacity-50 ${cashAdjustmentType === 'Cash-In' ? 'bg-teal-700 hover:bg-teal-650' : 'bg-rose-600 hover:bg-rose-700'}`}
+              className={`text-white font-bold text-sm px-4 py-2.5 rounded-lg transition-colors shadow-sm disabled:opacity-50 ${cashAdjustmentType === 'Cash-In' ? 'bg-emerald-700 hover:bg-emerald-650' : 'bg-rose-600 hover:bg-rose-700'}`}
             >
               {loggingAdjustment ? 'Logging...' : 'Submit Log'}
             </button>
@@ -1464,7 +1527,7 @@ function ScanPage() {
         }}
       >
         <Box
-          className="absolute inset-4 md:inset-8 bg-white rounded-2xl shadow-2xl p-6 focus:outline-none border border-slate-200 overflow-y-auto"
+          className="absolute inset-4 md:inset-8 bg-white rounded-lg shadow-lg p-6 focus:outline-none border border-slate-200 overflow-y-auto"
         >
           <TransactionsLedger isModalView={true} limitToCashierId={user?._id} onClose={() => setShowLedgerModal(false)} />
         </Box>

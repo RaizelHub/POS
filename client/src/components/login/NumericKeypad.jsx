@@ -15,7 +15,7 @@ const NumericKeypad = ({ onKeyPress, theme = 'light' }) => {
     { label: '9', value: '9' },
     { label: <FaBackspace className={isDark ? 'text-slate-400' : 'text-slate-500'} />, value: 'backspace' },
     { label: '0', value: '0' },
-    { label: <FaCheck className={isDark ? 'text-teal-400' : 'text-teal-650'} />, value: 'enter' }
+    { label: <FaCheck className={isDark ? 'text-emerald-400' : 'text-emerald-650'} />, value: 'enter' }
   ];
 
   return (
@@ -31,7 +31,7 @@ const NumericKeypad = ({ onKeyPress, theme = 'light' }) => {
               : 'border-slate-200 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-800'
           } ${
             k.value === 'enter' 
-              ? (isDark ? 'border-teal-700/60 bg-teal-950/40 text-teal-400 hover:bg-teal-900/40' : 'border-teal-200 bg-teal-50 text-teal-750 hover:bg-teal-100/70') 
+              ? (isDark ? 'border-emerald-700/60 bg-emerald-950/40 text-emerald-400 hover:bg-emerald-900/40' : 'border-emerald-200 bg-emerald-50 text-emerald-750 hover:bg-emerald-100/70')
               : ''
           }`}
         >

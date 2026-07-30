@@ -2,13 +2,13 @@ import mongoose from 'mongoose';
 
 const couponSchema = new mongoose.Schema(
   {
+    organizationId: { type: String, default: 'default', index: true },
+    branchId: { type: String, default: 'main', index: true },
     code: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
       uppercase: true,
-      index: true,
     },
     discountType: {
       type: String,
@@ -32,6 +32,8 @@ const couponSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+couponSchema.index({ organizationId: 1, branchId: 1, code: 1 }, { unique: true });
 
 const Coupon = mongoose.model('Coupon', couponSchema);
 export default Coupon;

@@ -32,21 +32,50 @@ const userSchema = new mongoose.Schema(
     verificationToken: {
       type: String,
     },
+    pinResetTokenHash: {
+      type: String,
+      select: false,
+    },
+    pinResetExpiresAt: {
+      type: Date,
+      select: false,
+    },
     isAdmin: {  // Add this to differentiate admin users
       type: Boolean,
       default: false,  // Default is a regular user
     },
+    role: {
+      type: String,
+      enum: ['owner', 'manager', 'supervisor', 'cashier'],
+      default: 'cashier',
+      index: true,
+    },
+    organizationId: {
+      type: String,
+      default: 'default',
+      index: true,
+    },
+    branchId: {
+      type: String,
+      default: 'main',
+      index: true,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+      index: true,
+    },
     image: {
       type: String,
-      default: 'https://path/to/default-image.jpg', // Use default image if no image is provided
+      default: '',
     },
     stampdate: {
       type: Date,
       default: Date.now,
     },
-    lastLogin: { // Field to track the last login timestamp
+    lastLogin: {
       type: Date,
-      default: null, // Default is null if the user hasn't logged in yet
+      default: null,
     },
     station: {
       type: String,

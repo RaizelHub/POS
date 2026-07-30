@@ -1,4 +1,5 @@
 import config from '../config';
+import apiFetch from './apiFetch';
 
 const DB_NAME = 'pos_transaction_recovery';
 const DB_VERSION = 1;
@@ -178,7 +179,7 @@ export const deleteDraftLocal = async ({ userId, draftType, draftId }) => {
 
 export const saveDraftRemote = async (draft) => {
   const normalizedDraft = normalizeDraft(draft);
-  const response = await fetch(`${config.apiUrl}/api/drafts/${normalizedDraft.draftType}/${normalizedDraft.draftId}`, {
+  const response = await apiFetch(`${config.apiUrl}/api/drafts/${normalizedDraft.draftType}/${normalizedDraft.draftId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(normalizedDraft),
@@ -221,7 +222,7 @@ const decorateServerDrafts = (drafts = [], draftType) =>
   );
 
 export const fetchDraftsRemote = async (userId) => {
-  const response = await fetch(`${config.apiUrl}/api/drafts/user/${userId}`);
+  const response = await apiFetch(`${config.apiUrl}/api/drafts/user/${userId}`);
 
   if (!response.ok) {
     throw new Error('Unable to fetch server drafts.');
@@ -285,7 +286,7 @@ export const completeDraft = async ({ userId, draftType, draftId }) => {
   }
 
   try {
-    await fetch(`${config.apiUrl}/api/drafts/${draftType}/${draftId}/complete`, {
+    await apiFetch(`${config.apiUrl}/api/drafts/${draftType}/${draftId}/complete`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId }),

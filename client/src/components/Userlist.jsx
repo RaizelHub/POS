@@ -12,10 +12,11 @@ import {
   Alert,
   Tooltip,
 } from "@mui/material";
-import { FaUserCircle, FaSearch, FaTimes, FaMoneyBillWave, FaClock, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
+import { FaUserCircle, FaSearch, FaTimes, FaMoneyBillWave, FaClock, FaCheckCircle, FaExclamationCircle, FaPlus } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
-import axios from "axios";
+import api from '../utils/api';
 import config from '../config';
+import { Link } from 'react-router-dom';
 
 function UserList() {
   const [users, setUsers] = useState([]);
@@ -32,7 +33,7 @@ function UserList() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get(`${config.apiUrl}/api/users`);
+        const response = await api.get(`${config.apiUrl}/api/users`);
         const filteredUsers = response.data.filter((user) => !user.isAdmin);
         setUsers(filteredUsers);
       } catch (error) {
@@ -49,7 +50,7 @@ function UserList() {
 
   const fetchTransactionHistory = async (userId) => {
     try {
-      const response = await axios.get(`${config.apiUrl}/api/${userId}/transactions`);
+      const response = await api.get(`${config.apiUrl}/api/${userId}/transactions`);
       setTransactions({ paid: response.data.paid, payLater: response.data.payLater });
     } catch (error) {
       console.error("Error fetching transaction history:", error.message);
@@ -59,7 +60,7 @@ function UserList() {
 
   const handleAssignStation = async (userId, newStation) => {
     try {
-      const response = await axios.put(`${config.apiUrl}/api/user/${userId}`, {
+      const response = await api.put(`${config.apiUrl}/api/user/${userId}`, {
         station: newStation
       });
       
@@ -130,25 +131,31 @@ function UserList() {
   }
 
   return (
-    <div className="w-full max-w-5xl mx-auto font-sans text-slate-800 space-y-6">
+    <div className="w-full font-sans text-slate-800 space-y-6">
       
       {/* Title Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
-          <h2 className="text-xl font-bold text-slate-900">Cashier Accounts</h2>
-          <p className="text-slate-500 text-sm mt-0.5">Manage store registers and cashier sales records.</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Team</p>
+          <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950">Cashiers</h2>
+          <p className="text-slate-500 text-sm mt-1">Assign registers and review cashier activity.</p>
         </div>
 
         {/* Search Input field */}
-        <div className="relative max-w-xs w-full">
-          <FaSearch className="absolute left-3.5 top-3.5 text-slate-400 text-xs" />
-          <input
-            type="text"
-            placeholder="Search cashier profile..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 border border-slate-200 focus:border-teal-700 focus:ring-1 focus:ring-teal-700 outline-none rounded-lg text-xs bg-white font-semibold transition-all"
-          />
+        <div className="flex w-full max-w-md gap-2">
+          <div className="relative flex-1">
+            <FaSearch className="absolute left-3.5 top-3.5 text-slate-400 text-xs" />
+            <input
+              type="text"
+              placeholder="Search cashiers"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 border border-slate-200 focus:border-emerald-700 focus:ring-1 focus:ring-emerald-700 outline-none rounded-lg text-xs bg-white font-semibold transition-all"
+            />
+          </div>
+          <Link to="/register" className="inline-flex items-center gap-2 rounded-lg bg-slate-950 px-3.5 py-2 text-xs font-bold text-white hover:bg-emerald-700">
+            <FaPlus className="text-[9px]" /> Add
+          </Link>
         </div>
       </div>
 
@@ -202,11 +209,11 @@ function UserList() {
                   </div>
                 </div>
                 <div className="flex flex-col gap-1.5 text-left border-t border-slate-100 pt-3 mt-1">
-                  <span className="font-extrabold text-slate-450 uppercase text-[9px] tracking-wider">Assigned POS Workstation</span>
+                  <span className="font-bold text-slate-450 uppercase text-[9px] tracking-wider">Assigned POS Workstation</span>
                   <select
                     value={user.station || 'Unassigned'}
                     onChange={(e) => handleAssignStation(user._id, e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-205 focus:border-teal-700 focus:ring-1 focus:ring-teal-700 rounded-lg py-1.5 px-2.5 outline-none font-semibold text-xs text-slate-700 transition-all cursor-pointer"
+                    className="w-full bg-slate-50 border border-slate-205 focus:border-emerald-700 focus:ring-1 focus:ring-emerald-700 rounded-lg py-1.5 px-2.5 outline-none font-semibold text-xs text-slate-700 transition-all cursor-pointer"
                   >
                     <option value="Unassigned">Standby / Unassigned</option>
                     <option value="POS-01">Register Station 01 (POS-01)</option>
