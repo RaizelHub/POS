@@ -11,11 +11,11 @@ const types = [
 ];
 
 const BusinessTypes = () => (
-  <section id="industries" className="border-y border-slate-200 bg-[#f4f7f3] px-5 py-20 sm:px-6 sm:py-24 lg:px-8">
+  <section id="industries" className="border-y border-slate-200 bg-[#f8faf9] px-5 py-20 sm:px-6 sm:py-24 lg:px-8">
     <div className="mx-auto max-w-7xl">
       <div className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
         <div>
-          <span className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-emerald-700">Made for local commerce</span>
+          <span className="text-[10px] font-mono font-semibold uppercase tracking-[0.2em] text-slate-400">Merchant Profiles</span>
           <h2 className="mt-4 text-4xl font-extrabold tracking-[-0.045em] text-slate-950 sm:text-5xl">One system, many kinds of counter.</h2>
         </div>
         <p className="max-w-2xl text-sm font-medium leading-7 text-slate-600 sm:text-base lg:justify-self-end">
@@ -34,11 +34,11 @@ const BusinessTypes = () => (
           <motion.article
             key={title}
             variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.35 } } }}
-            className="group flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-lg hover:shadow-slate-900/5"
+            className="group flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-slate-400 hover:shadow-lg hover:shadow-slate-900/5"
           >
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-700 transition-colors group-hover:bg-emerald-700 group-hover:text-white"><Icon /></span>
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-slate-100 text-slate-700 transition-colors group-hover:bg-slate-950 group-hover:text-white"><Icon /></span>
             <span>
-              <strong className="block text-sm font-extrabold text-slate-950">{title}</strong>
+              <strong className="block text-sm font-bold text-slate-950">{title}</strong>
               <span className="mt-1 block text-xs font-medium leading-5 text-slate-500">{desc}</span>
             </span>
           </motion.article>

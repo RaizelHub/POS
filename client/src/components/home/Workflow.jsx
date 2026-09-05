@@ -9,10 +9,10 @@ const steps = [
 ];
 
 const Workflow = () => (
-  <section id="workflow" className="bg-white px-5 py-20 sm:px-6 sm:py-28 lg:px-8">
+  <section id="workflow" className="bg-white px-5 py-20 sm:px-6 sm:py-28 lg:px-8 border-b border-slate-200/60">
     <div className="mx-auto max-w-7xl">
       <div className="max-w-2xl">
-        <span className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-emerald-700">The everyday flow</span>
+        <span className="text-[10px] font-mono font-semibold uppercase tracking-[0.2em] text-slate-400">Standard Operations</span>
         <h2 className="mt-4 text-4xl font-extrabold tracking-[-0.045em] text-slate-950 sm:text-5xl">Four steps from open to settled.</h2>
       </div>
       <motion.div
@@ -27,7 +27,7 @@ const Workflow = () => (
           <motion.article
             key={title}
             variants={{ hidden: { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
-            className="relative rounded-[22px] border border-slate-200 bg-white p-6"
+            className="relative rounded-[22px] border border-slate-200/90 bg-white p-6 shadow-xs hover:border-slate-400 transition-colors"
           >
             <div className="relative z-10 flex items-center justify-between">
               <span className="grid h-14 w-14 place-items-center rounded-2xl bg-slate-950 text-white shadow-lg shadow-slate-900/10"><Icon /></span>

@@ -22,34 +22,34 @@ const TerminalStatus = () => {
       {/* Overview Card */}
       <div className="bg-slate-900 border border-slate-800 p-5 rounded-xl space-y-2">
         <h3 className="text-slate-100 font-bold text-sm tracking-tight flex items-center gap-2">
-          <FaInfoCircle className="text-emerald-500" /> Terminal Workstation
+          <FaInfoCircle className="text-slate-400" /> Terminal Workstation
         </h3>
         <p className="text-slate-400 text-xs leading-relaxed">
-          Welcome to the POS terminal. Verify that local peripheral hardware status checks are green before signing into checkout sessions.
+          Welcome to the POS terminal. Verify that local peripheral hardware diagnostics are operational before signing into checkout sessions.
         </p>
       </div>
 
       {/* Checklist Grid */}
-      <div className="space-y-3 pt-2">
+      <div className="space-y-2.5 pt-2">
         <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Hardware Peripherals</h4>
         
         {statusItems.map((item, idx) => (
           <div 
             key={idx}
-            className="flex items-center justify-between p-3.5 bg-slate-900/60 border border-slate-800/80 rounded-xl hover:border-slate-800 transition-colors"
+            className="flex items-center justify-between p-3 bg-slate-900/60 border border-slate-800/80 rounded-xl hover:border-slate-700 transition-colors"
           >
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-8 h-8 rounded-lg bg-slate-850 flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-slate-800/80 flex items-center justify-center shrink-0">
                 {item.icon}
               </div>
               <div className="min-w-0 text-left">
-                <span className="block text-[10px] text-slate-450 uppercase font-bold leading-tight">{item.label}</span>
-                <span className="block text-[11px] text-slate-350 font-mono mt-0.5 truncate">{item.val}</span>
+                <span className="block text-[10px] text-slate-400 uppercase font-semibold leading-tight">{item.label}</span>
+                <span className="block text-[11px] text-slate-200 font-mono mt-0.5 truncate">{item.val}</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-1 bg-emerald-950/45 px-2.5 py-1 rounded-full border border-emerald-900/60 text-[9px] font-bold text-emerald-400 shrink-0">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 block animate-pulse" />
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-slate-750 bg-slate-800/80 text-[9px] font-mono font-medium text-slate-300 shrink-0">
+              <FaCheckCircle className="text-[8.5px] text-slate-400" />
               <span>OK</span>
             </div>
           </div>

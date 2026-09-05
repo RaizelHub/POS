@@ -5,20 +5,20 @@ const StatusBadge = ({ role, theme = 'light' }) => {
   const getColors = () => {
     switch (role?.toLowerCase()) {
       case 'admin':
-        return isDark ? 'bg-rose-950/40 text-rose-400 border-rose-900/30' : 'bg-rose-50 text-rose-750 border-rose-200';
+        return isDark ? 'bg-slate-800 text-slate-200 border-slate-700' : 'bg-slate-900 text-white border-slate-900';
       case 'manager':
-        return isDark ? 'bg-purple-950/40 text-purple-400 border-purple-900/30' : 'bg-purple-50 text-purple-750 border-purple-200';
+        return isDark ? 'bg-slate-850 text-slate-300 border-slate-700' : 'bg-slate-100 text-slate-800 border-slate-300';
       case 'supervisor':
-        return isDark ? 'bg-blue-950/40 text-blue-400 border-blue-900/30' : 'bg-blue-50 text-blue-750 border-blue-200';
+        return isDark ? 'bg-slate-850 text-slate-300 border-slate-750' : 'bg-slate-100 text-slate-700 border-slate-200';
       case 'senior cashier':
-        return isDark ? 'bg-emerald-950/40 text-emerald-400 border-emerald-900/30' : 'bg-emerald-50 text-emerald-750 border-emerald-200';
+        return isDark ? 'bg-slate-850 text-slate-300 border-slate-750' : 'bg-slate-100 text-slate-700 border-slate-200';
       default:
-        return isDark ? 'bg-slate-800/85 text-slate-300 border-slate-700/50' : 'bg-slate-100 text-slate-600 border-slate-200';
+        return isDark ? 'bg-slate-900 text-slate-400 border-slate-800' : 'bg-slate-50 text-slate-500 border-slate-200';
     }
   };
 
   return (
-    <span className={`px-2 py-0.5 rounded-md text-[8.5px] font-bold uppercase border tracking-wider ${getColors()}`}>
+    <span className={`px-2 py-0.5 rounded-md text-[8.5px] font-mono font-semibold uppercase border tracking-wider ${getColors()}`}>
       {role}
     </span>
   );

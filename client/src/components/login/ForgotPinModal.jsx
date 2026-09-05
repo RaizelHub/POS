@@ -92,14 +92,14 @@ const ForgotPinModal = ({ isOpen, onClose, onSubmit, selectedUser, loading, rese
             <button
               type="button"
               onClick={onClose}
-              className="py-2.5 border border-slate-200 text-slate-650 hover:bg-slate-50 font-bold rounded-lg text-xs transition-all active:scale-95"
+              className="py-2.5 border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold rounded-xl text-xs transition-all active:scale-95"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold rounded-lg text-xs transition-colors shadow-sm"
+              className="py-2.5 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 text-white font-semibold rounded-xl text-xs transition-all shadow-xs active:scale-98"
             >
               {loading ? 'Requesting...' : 'Request PIN Reset'}
             </button>

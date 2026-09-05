@@ -14,14 +14,14 @@ const DashboardPreview = () => (
         <ul className="mt-8 space-y-4">
           {['Live sales and catalog signals', 'Clear inventory attention list', 'Fast access to every back-office tool'].map((item) => (
             <li key={item} className="flex items-center gap-3 text-sm font-semibold text-slate-200">
-              <span className="grid h-6 w-6 place-items-center rounded-full bg-emerald-400/15 text-emerald-400"><FaCheck className="text-[8px]" /></span>
+              <span className="grid h-6 w-6 place-items-center rounded-lg bg-slate-850 border border-slate-800 text-slate-300"><FaCheck className="text-[7.5px]" /></span>
               {item}
             </li>
           ))}
         </ul>
         <a href="#product-tour" className="group mt-9 inline-flex items-center gap-3 text-sm font-bold text-white">
           Explore every screen
-          <FaArrowRight className="text-[10px] text-emerald-400 transition-transform group-hover:translate-x-1" />
+          <FaArrowRight className="text-[10px] text-slate-400 transition-transform group-hover:translate-x-1" />
         </a>
       </div>
 
@@ -32,16 +32,16 @@ const DashboardPreview = () => (
         transition={{ duration: 0.6 }}
         className="relative"
       >
-        <div className="absolute -inset-10 bg-emerald-500/10 blur-3xl" />
+        <div className="absolute -inset-10 bg-slate-800/20 blur-3xl" />
         <div className="relative overflow-hidden rounded-[24px] border border-white/10 bg-slate-900 p-2 shadow-2xl shadow-black/30">
-          <div className="flex items-center justify-between px-3 py-2.5">
+          <div className="flex items-center justify-between px-3 py-2.5 border-b border-slate-800/80 mb-2">
             <div className="flex gap-1.5">
               <span className="h-2.5 w-2.5 rounded-full bg-slate-700" />
               <span className="h-2.5 w-2.5 rounded-full bg-slate-700" />
-              <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+              <span className="h-2.5 w-2.5 rounded-full bg-slate-700" />
             </div>
-            <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500">Suelto administration</span>
-            <span className="text-[9px] font-bold text-emerald-400">Live</span>
+            <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-slate-400">Suelto administration</span>
+            <span className="text-[9px] font-mono font-semibold text-slate-400 tracking-wider">LIVE</span>
           </div>
           <img src={adminDashboard} alt="Suelto administration dashboard" className="w-full rounded-[17px] bg-white" />
         </div>

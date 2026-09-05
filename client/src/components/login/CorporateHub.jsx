@@ -37,7 +37,7 @@ const CorporateHub = ({ theme = 'light' }) => {
         <h3 className={`font-bold text-xs uppercase tracking-wider flex items-center gap-2 ${
           isDark ? 'text-white' : 'text-slate-800'
         }`}>
-          <FaLaptopCode className={isDark ? 'text-emerald-400' : 'text-emerald-600'} /> Workstation Registry
+          <FaLaptopCode className="text-slate-400" /> Workstation Registry
         </h3>
         
         <div className="grid grid-cols-2 gap-x-4 gap-y-3 font-mono text-[10px]">
@@ -55,9 +55,8 @@ const CorporateHub = ({ theme = 'light' }) => {
           </div>
           <div>
             <span className={`block font-bold text-[9px] uppercase ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Node Security</span>
-            <span className={`${isDark ? 'text-emerald-400' : 'text-emerald-600'} font-bold flex items-center gap-1`}>
-              <span className={`w-1.5 h-1.5 rounded-full inline-block animate-pulse ${isDark ? 'bg-emerald-400' : 'bg-emerald-500'}`} />
-              AES-256 ACTIVE
+            <span className={`font-mono font-semibold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+              AES-256 VERIFIED
             </span>
           </div>
         </div>
@@ -66,31 +65,31 @@ const CorporateHub = ({ theme = 'light' }) => {
       {/* Branch Announcements */}
       <div className="space-y-3">
         <h4 className={`text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 ${
-          isDark ? 'text-slate-400' : 'text-slate-550'
+          isDark ? 'text-slate-400' : 'text-slate-500'
         }`}>
           <FaBullhorn /> Branch Announcements
         </h4>
         
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {announcements.map((ann, idx) => (
             <div 
               key={idx}
-              className={`p-4 border rounded-xl hover:border-slate-400/50 transition-colors space-y-2 text-left ${
-                isDark ? 'bg-slate-900/40 border-slate-850' : 'bg-slate-50/70 border-slate-200'
+              className={`p-4 border rounded-xl hover:border-slate-700 transition-colors space-y-2 text-left ${
+                isDark ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50/70 border-slate-200'
               }`}
             >
               <div className="flex items-center justify-between gap-2">
                 <span className={`font-bold text-xs leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>{ann.title}</span>
-                <span className={`px-2 py-0.5 rounded text-[8px] font-bold border uppercase tracking-wider shrink-0 ${
+                <span className={`px-2 py-0.5 rounded-md text-[8.5px] font-mono font-semibold border uppercase tracking-wider shrink-0 ${
                   ann.tag === 'IMPORTANT' 
-                    ? (isDark ? 'bg-rose-950/40 text-rose-400 border-rose-900/40' : 'bg-rose-50 text-rose-700 border-rose-200')
-                    : (isDark ? 'bg-emerald-950/40 text-emerald-400 border-emerald-900/40' : 'bg-emerald-50 text-emerald-700 border-emerald-200')
+                    ? (isDark ? 'bg-rose-950/30 text-rose-300 border-rose-900/40' : 'bg-rose-50 text-rose-700 border-rose-200')
+                    : (isDark ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-slate-100 text-slate-700 border-slate-200')
                 }`}>
                   {ann.tag}
                 </span>
               </div>
               <p className={`text-[11px] leading-normal ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{ann.desc}</p>
-              <span className={`text-[9px] font-semibold uppercase block ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{ann.date}</span>
+              <span className={`text-[9px] font-mono font-medium uppercase block ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{ann.date}</span>
             </div>
           ))}
         </div>
@@ -99,12 +98,12 @@ const CorporateHub = ({ theme = 'light' }) => {
       {/* Active Promotion Codes */}
       <div className="space-y-3">
         <h4 className={`text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 ${
-          isDark ? 'text-slate-400' : 'text-slate-555'
+          isDark ? 'text-slate-400' : 'text-slate-500'
         }`}>
-          <FaTag /> Active Promotions Banners
+          <FaTag /> Active Promotion Codes
         </h4>
         
-        <div className="grid grid-cols-1 gap-3">
+        <div className="grid grid-cols-1 gap-2.5">
           {promotions.map((promo, idx) => (
             <div 
               key={idx}
@@ -113,18 +112,17 @@ const CorporateHub = ({ theme = 'light' }) => {
               }`}
             >
               <div className="min-w-0 flex-1 text-left pr-3">
-                <span className={`inline-block border text-[9px] font-bold font-mono px-2 py-0.5 rounded uppercase tracking-wider ${
-                  isDark ? 'bg-emerald-950/40 text-emerald-400 border-emerald-900/40' : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                <span className={`inline-block border text-[9px] font-mono font-semibold px-2 py-0.5 rounded-md uppercase tracking-wider ${
+                  isDark ? 'bg-slate-800 text-slate-200 border-slate-700' : 'bg-slate-100 text-slate-800 border-slate-200'
                 }`}>
                   {promo.code}
                 </span>
-                <p className={`text-[10.5px] mt-1 leading-normal ${isDark ? 'text-slate-350' : 'text-slate-600'}`}>{promo.desc}</p>
+                <p className={`text-[10.5px] mt-1 leading-normal ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{promo.desc}</p>
               </div>
               
-              <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full border text-[9px] font-bold shrink-0 ${
-                isDark ? 'bg-emerald-950/45 border-emerald-900/60 text-emerald-400' : 'bg-emerald-50 border-emerald-250 text-emerald-700'
+              <div className={`px-2 py-0.5 rounded-md border text-[9px] font-mono font-semibold tracking-wider shrink-0 ${
+                isDark ? 'bg-slate-800 border-slate-700 text-slate-300' : 'bg-slate-100 border-slate-200 text-slate-700'
               }`}>
-                <span className={`w-1.5 h-1.5 rounded-full block animate-pulse ${isDark ? 'bg-emerald-500' : 'bg-emerald-500'}`} />
                 <span>ACTIVE</span>
               </div>
             </div>

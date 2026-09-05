@@ -93,12 +93,12 @@ const Screenshots = () => {
               <div className="flex items-center gap-2">
                 <span className="block h-2.5 w-2.5 rounded-full bg-slate-300" />
                 <span className="block h-2.5 w-2.5 rounded-full bg-slate-300" />
-                <span className="block h-2.5 w-2.5 rounded-full bg-emerald-400" />
+                <span className="block h-2.5 w-2.5 rounded-full bg-slate-300" />
               </div>
               <div className="w-[55%] truncate rounded-lg bg-slate-100 px-4 py-1.5 text-center text-[9px] font-bold uppercase tracking-[0.14em] text-slate-500 sm:w-[40%]">
                 Suelto · {activeScreen.path}
               </div>
-              <div className="w-10 text-right text-[9px] font-bold text-emerald-600">LIVE</div>
+              <div className="w-10 text-right text-[9px] font-mono font-bold text-slate-500">LIVE</div>
             </div>
 
             <div className="flex justify-center bg-slate-100 p-2 sm:p-3">

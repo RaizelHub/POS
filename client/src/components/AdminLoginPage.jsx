@@ -189,7 +189,7 @@ const AdminLoginPage = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs transition-colors shadow-sm disabled:opacity-50 flex items-center justify-center gap-2 mt-6"
+              className="w-full py-3 bg-slate-950 hover:bg-slate-800 text-white font-semibold rounded-xl text-xs transition-all shadow-xs disabled:opacity-50 flex items-center justify-center gap-2 mt-6 active:scale-98"
             >
               {loading ? (
                 <>

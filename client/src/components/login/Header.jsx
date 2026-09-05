@@ -49,7 +49,7 @@ const Header = ({ theme = 'light', onHelpDeskClick }) => {
                 : 'bg-white border-slate-200 text-slate-650 hover:text-slate-900 hover:border-slate-300'
             }`}
           >
-            <FaQuestionCircle className={isDark ? 'text-emerald-450' : 'text-slate-500'} />
+            <FaQuestionCircle className="text-slate-400" />
             <span>Help Desk</span>
           </button>
         ) : (
@@ -63,18 +63,18 @@ const Header = ({ theme = 'light', onHelpDeskClick }) => {
                 : 'bg-white border-slate-200 text-slate-650 hover:text-slate-900 hover:border-slate-300'
             }`}
           >
-            <FaQuestionCircle className={isDark ? 'text-emerald-450' : 'text-slate-500'} />
+            <FaQuestionCircle className="text-slate-400" />
             <span>Help Desk</span>
           </a>
         )}
 
         {/* Premium Digital Clock Badge */}
-        <div className={`flex items-center gap-2 px-3 py-1.5 border rounded-xl font-mono text-[10.5px] font-bold ${
+        <div className={`flex items-center gap-2 px-3 py-1.5 border rounded-xl font-mono text-[10.5px] font-semibold ${
           isDark 
-            ? 'bg-slate-900 border-slate-800 text-white shadow-inner' 
-            : 'bg-slate-50 border-slate-200 text-slate-800'
+            ? 'bg-slate-900 border-slate-800 text-slate-200' 
+            : 'bg-slate-50 border-slate-200 text-slate-700'
         }`}>
-          <FaClock className="text-emerald-500 animate-pulse" />
+          <FaClock className="text-slate-400 text-xs" />
           <span>
             {time.toLocaleDateString('en-US', { month: 'short', day: '2-digit' })}, {time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
           </span>

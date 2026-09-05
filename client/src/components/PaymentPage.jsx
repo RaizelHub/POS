@@ -1046,9 +1046,9 @@ return (
 
         {/* Dynamic QR Code display for GCash/PayMaya or Split (with digital portion) */}
         {(paymentMethod === 'GCash/PayMaya' || (paymentMethod === 'Split' && splitDigitalAmount > 0)) && (
-          <div className="flex flex-col items-center justify-center p-4 bg-emerald-50/30 border border-emerald-100 rounded-xl relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] font-bold text-emerald-700 tracking-wider uppercase mb-2">Scan QR Code to Pay</span>
+          <div className="flex flex-col items-center justify-center p-4 bg-slate-50 border border-slate-200 rounded-xl relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-0.5 bg-slate-900" />
+            <span className="text-[11px] font-mono font-semibold text-slate-700 tracking-wider uppercase mb-2">Scan QR Code to Pay</span>
             <div className="relative p-2 bg-white border border-slate-200 rounded-lg shadow-sm w-44 h-44 overflow-hidden">
               {/* Dynamic QR code generated with exact price */}
               <img 

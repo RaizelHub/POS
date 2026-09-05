@@ -15,23 +15,23 @@ const NumericKeypad = ({ onKeyPress, theme = 'light' }) => {
     { label: '9', value: '9' },
     { label: <FaBackspace className={isDark ? 'text-slate-400' : 'text-slate-500'} />, value: 'backspace' },
     { label: '0', value: '0' },
-    { label: <FaCheck className={isDark ? 'text-emerald-400' : 'text-emerald-650'} />, value: 'enter' }
+    { label: <FaCheck className={isDark ? 'text-slate-200' : 'text-slate-800'} />, value: 'enter' }
   ];
 
   return (
-    <div className="grid grid-cols-3 gap-3">
+    <div className="grid grid-cols-3 gap-2.5">
       {keys.map((k, idx) => (
         <button
           key={idx}
           type="button"
           onClick={() => onKeyPress(k.value)}
-          className={`h-14 rounded-xl border flex items-center justify-center font-bold text-base transition-all active:scale-95 shadow-sm ${
+          className={`h-12 rounded-xl border flex items-center justify-center font-mono font-semibold text-base transition-all active:scale-95 ${
             isDark 
-              ? 'border-slate-800 bg-slate-900 hover:bg-slate-850 active:bg-slate-800 text-white' 
-              : 'border-slate-200 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-800'
+              ? 'border-slate-800/80 bg-slate-900 hover:bg-slate-800 hover:border-slate-700 active:bg-slate-750 text-slate-100' 
+              : 'border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 active:bg-slate-100 text-slate-900 shadow-xs'
           } ${
             k.value === 'enter' 
-              ? (isDark ? 'border-emerald-700/60 bg-emerald-950/40 text-emerald-400 hover:bg-emerald-900/40' : 'border-emerald-200 bg-emerald-50 text-emerald-750 hover:bg-emerald-100/70')
+              ? (isDark ? 'border-slate-700 bg-slate-800/90 text-white hover:bg-slate-750' : 'border-slate-300 bg-slate-100 text-slate-900 hover:bg-slate-200')
               : ''
           }`}
         >
