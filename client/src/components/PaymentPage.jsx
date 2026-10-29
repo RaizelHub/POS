@@ -541,8 +541,8 @@ if (loading) {
 return (
   <div className="min-h-screen bg-[#f3f4f1] text-slate-800 flex flex-col font-sans">
 
-    {/* Top Header Navigation */}
-    <header className="h-16 bg-slate-950 border-b border-slate-800 px-4 sm:px-6 flex items-center justify-between">
+    {/* Top Header Navigation — Uniform h-14 (56px) */}
+    <header className="h-14 bg-slate-950 border-b border-slate-800 px-4 sm:px-6 flex items-center justify-between select-none">
       <button
         onClick={handleBack}
         className="flex items-center gap-2 hover:bg-slate-800 px-3 py-2 rounded-md text-slate-300 hover:text-white font-medium text-sm transition-colors"

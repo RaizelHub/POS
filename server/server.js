@@ -91,7 +91,9 @@ const limiter = rateLimit({
   legacyHeaders: false,
 });
 app.use(limiter);
-connectDB();
+if (process.env.NODE_ENV !== 'test') {
+  connectDB();
+}
 
 // Serve static files (e.g., images)
 const __filename = fileURLToPath(import.meta.url);
@@ -164,13 +166,20 @@ app.use((err, req, res, next) => {
   });
 });
 
-const server = app.listen(port, () => {
+let server;
+if (process.env.NODE_ENV !== 'test') {
+  server = app.listen(port, () => {
     console.log(`Connected to PORT ${port}`);
-});
+  });
+}
 
 // Graceful shutdown handling for containerless PaaS deployments (Render, Railway, VPS)
 const handleGracefulShutdown = (signal) => {
   console.log(`Received ${signal}. Starting graceful shutdown...`);
+  if (!server) {
+    process.exit(0);
+    return;
+  }
   server.close(async () => {
     console.log('HTTP server closed.');
     try {
@@ -195,3 +204,6 @@ const handleGracefulShutdown = (signal) => {
 
 process.on('SIGTERM', () => handleGracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => handleGracefulShutdown('SIGINT'));
+
+export { app, server };
+export default app;

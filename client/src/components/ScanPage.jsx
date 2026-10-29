@@ -713,13 +713,13 @@ function ScanPage() {
 
   return (
     <div className="min-h-screen bg-[#f3f4f1] text-slate-800 flex flex-col font-sans">
-      {/* Top Navbar */}
-      <header className="h-16 bg-slate-950 border-b border-slate-800 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30">
-        <div className="flex items-center gap-3 min-w-0">
-          <img src={novaLogo} alt="SUELTO" className="h-8 w-8 object-contain rounded-md bg-white" />
+      {/* Top Navbar — Uniform h-14 (56px) */}
+      <header className="h-14 bg-slate-950 border-b border-slate-800 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30 select-none">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <img src={novaLogo} alt="SUELTO" className="h-7 w-7 object-contain rounded-md bg-white p-0.5" />
           <div className="min-w-0">
-            <h1 className="font-semibold text-white tracking-tight text-sm sm:text-base truncate">SUELTO Register</h1>
-            <div className="flex items-center gap-2 text-[11px] text-slate-400">
+            <h1 className="font-semibold text-white tracking-tight text-xs sm:text-sm truncate leading-tight">SUELTO Register</h1>
+            <div className="flex items-center gap-2 text-[10px] text-slate-400">
               <span>Main branch</span>
               <span className="text-slate-700">/</span>
               <button
@@ -958,7 +958,7 @@ function ScanPage() {
         </section>
 
         {/* Right Panel: Checkout Panel (Span 4) */}
-        <section className={`lg:col-span-4 xl:col-span-3 bg-white border-l border-slate-200 p-4 sm:p-5 flex-col h-[calc(100vh-64px)] sticky top-16 overflow-hidden ${mobileView === 'catalog' ? 'hidden lg:flex' : 'flex'}`}>
+        <section className={`lg:col-span-4 xl:col-span-3 bg-white border-l border-slate-200 p-4 sm:p-5 flex-col h-[calc(100vh-56px)] sticky top-14 overflow-hidden ${mobileView === 'catalog' ? 'hidden lg:flex' : 'flex'}`}>
 
           {/* Mobile Back Button */}
           {mobileView === 'cart' && (

@@ -190,7 +190,7 @@ const LoginSelectionPage = () => {
   });
 
   return (
-    <div className="w-screen h-screen bg-slate-50 flex items-center justify-center font-sans text-slate-800 antialiased selection:bg-slate-900 selection:text-white overflow-hidden relative">
+    <div className="w-screen h-screen bg-slate-50 flex flex-col font-sans text-slate-800 antialiased selection:bg-slate-900 selection:text-white overflow-hidden relative">
 
       {/* Success/Error toasts */}
       <AnimatePresence>
@@ -199,7 +199,7 @@ const LoginSelectionPage = () => {
             initial={{ opacity: 0, y: -40, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
-            className="fixed top-6 right-6 bg-slate-900 border border-slate-750 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-2.5 z-50 text-xs font-medium"
+            className="fixed top-16 right-6 bg-slate-900 border border-slate-750 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-2.5 z-50 text-xs font-medium"
           >
             <FaCheckCircle className="text-slate-300 text-sm" />
             <span>{snackbarMessage}</span>
@@ -207,48 +207,39 @@ const LoginSelectionPage = () => {
         )}
       </AnimatePresence>
 
+      {/* Top Header — Uniform h-14 (56px) across the entire workstation */}
+      <Header theme="light" onHelpDeskClick={() => setIsHelpDeskOpen(true)} />
+
       {/* Full-Screen Workspace Grid */}
-      <div className="w-full h-full bg-slate-950 grid grid-cols-1 lg:grid-cols-12 relative z-10">
+      <div className="flex-1 w-full bg-slate-50 grid grid-cols-1 lg:grid-cols-12 relative z-10 overflow-hidden">
 
-        {/* Left Side Branding & Retail Visual (Full Screen Left Panel) */}
-        <div className="hidden lg:block lg:col-span-5 h-full relative overflow-hidden bg-slate-900">
-          <div className="absolute inset-0 bg-slate-900 flex flex-col justify-between p-10 text-white border-r border-slate-800">
-
-            {/* Top Logo */}
-            <div className="flex items-center gap-2.5">
-              <img
-                src={novaLogo}
-                alt="SUELTO Logo"
-                className="h-10 w-auto object-contain rounded-xl shadow-sm"
-              />
-              <div className="text-left">
-                <h2 className="font-bold text-white text-base leading-none tracking-tight">SUELTO POS</h2>
-                <p className="text-[9px] font-semibold text-slate-500 uppercase tracking-widest mt-1">Register terminal</p>
-              </div>
+        {/* Left Side: Workstation Information & Corporate Hub */}
+        <div className="hidden lg:flex lg:col-span-5 xl:col-span-4 h-full flex-col justify-between p-6 bg-slate-900 text-white border-r border-slate-800 overflow-y-auto no-scrollbar">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Workstation Status</span>
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-mono font-semibold bg-emerald-950/60 text-emerald-400 border border-emerald-800/60">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                ACTIVE POS-01
+              </span>
             </div>
+            <CorporateHub theme="dark" />
+          </div>
 
-            {/* Middle Active Workstation Corporate Hub */}
-            <div className="flex-1 my-6 overflow-y-auto pr-2 no-scrollbar max-h-[68vh]">
-              <CorporateHub theme="dark" />
-            </div>
-
-            {/* Bottom Slogan */}
-            <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
-              SUELTO Retail · Register access
-            </div>
+          <div className="pt-4 border-t border-slate-800 text-[10px] text-slate-500 font-mono flex items-center justify-between">
+            <span>SUELTO RETAIL v1.1</span>
+            <span>STATION SECURE</span>
           </div>
         </div>
 
-        <div className="lg:col-span-7 p-6 md:p-10 flex flex-col justify-between overflow-y-auto bg-white h-full border-l border-slate-200">
-
-          {/* Header info */}
-          <Header theme="light" onHelpDeskClick={() => setIsHelpDeskOpen(true)} />
+        {/* Right Side: Cashier Selection & PIN Entry */}
+        <div className="col-span-12 lg:col-span-7 xl:col-span-8 p-4 md:p-8 flex flex-col justify-between overflow-y-auto bg-slate-50 h-full">
 
           {/* Main changing view */}
-          <div className="flex-grow flex flex-col justify-center max-w-[500px] w-full mx-auto py-8">
+          <div className="flex-grow flex flex-col justify-center max-w-[460px] w-full mx-auto py-4">
             <motion.div
               layout
-              className="bg-white border border-slate-200 rounded-xl p-6 md:p-8 shadow-sm space-y-6 text-slate-800 relative overflow-hidden"
+              className="bg-white border border-slate-200/90 rounded-xl p-5 md:p-7 shadow-xs space-y-5 text-slate-800 relative overflow-hidden"
             >
               <AnimatePresence mode="wait">
                 {!selectedUser ? (

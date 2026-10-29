@@ -82,7 +82,7 @@ body {
   margin: 0;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   min-width: 320px;
-  background-color: #f3f4f1;
+  background-color: #f8fafc;
   color: var(--text-primary);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
