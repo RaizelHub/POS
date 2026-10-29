@@ -1,3 +1,4 @@
+import os from 'os';
 import nodemailer from 'nodemailer';
 import pdfkit from 'pdfkit';
 import { google } from 'googleapis';
@@ -41,7 +42,7 @@ const transporter = nodemailer.createTransport({
 // Helper function to generate the PDF receipt
 const generatePDFReceipt = (receiptData) => {
   const doc = new pdfkit();
-  const filePath = path.resolve(__dirname, `receipt_${Date.now()}.pdf`);
+  const filePath = path.resolve(os.tmpdir(), `receipt_${Date.now()}_${uuidv4().slice(0, 8)}.pdf`);
   const writeStream = fs.createWriteStream(filePath);
 
   doc.pipe(writeStream);
@@ -307,53 +308,41 @@ const createReceipt = async (req, res) => {
     receiptData.productPrice = product.price;
   }
 
+  let filePathPDF = null;
+  let emailSent = false;
+  let driveUpload = false;
+  let driveFileId = null;
+  let fileUrl = null;
+
   try {
-    // Generate PDF receipt
-    const filePathPDF = await generatePDFReceipt(receiptData);
-    console.log('PDF receipt generated at:', filePathPDF);
-
-    // Send email with styled HTML content and PDF attachment
-    await sendEmailWithAttachment(user.email, filePathPDF, receiptData);
-    console.log('Email sent successfully to:', user.email);
-
-    let driveFileId = null;
-    let fileUrl = null;
+    filePathPDF = await generatePDFReceipt(receiptData);
 
     try {
-      // Try to upload receipt to Google Drive
-      driveFileId = await uploadToGoogleDrive(filePathPDF);
-      fileUrl = getGoogleDriveFileUrl(driveFileId);
-      console.log('Receipt uploaded to Google Drive, file ID:', driveFileId);
-    } catch (driveError) {
-      console.error('Google Drive upload failed:', driveError);
-      // Continue without Google Drive upload - we'll still return success since the email was sent
+      if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+        await sendEmailWithAttachment(user.email, filePathPDF, receiptData);
+        emailSent = true;
+      }
+    } catch (emailErr) {
+      console.warn('Receipt email delivery bypassed or failed:', emailErr.message);
     }
 
-    // Clean up the file after upload and email
     try {
-      fs.unlinkSync(filePathPDF);
-      console.log('Temporary PDF file deleted');
-    } catch (unlinkError) {
-      console.error('Error deleting temporary file:', unlinkError);
-      // Non-critical error, continue
+      if (process.env.GOOGLE_REFRESH_TOKEN) {
+        driveFileId = await uploadToGoogleDrive(filePathPDF);
+        fileUrl = getGoogleDriveFileUrl(driveFileId);
+        driveUpload = true;
+      }
+    } catch (driveErr) {
+      console.warn('Google Drive receipt upload bypassed or failed:', driveErr.message);
     }
 
-    // If Google Drive upload failed but email was sent, we still consider it a success
-    if (!driveFileId) {
-      return res.status(200).send({
-        message: 'Receipt generated and emailed successfully, but Google Drive upload failed.',
-        emailSent: true,
-        driveUpload: false
-      });
-    }
-
-    // Full success response
-    res.status(200).send({
-      message: 'Receipt generated, emailed, and uploaded to Google Drive.',
-      driveFileId: driveFileId,
-      fileUrl: fileUrl,
-      emailSent: true,
-      driveUpload: true
+    return res.status(200).json({
+      message: 'Receipt generated successfully.',
+      emailSent,
+      driveUpload,
+      driveFileId,
+      fileUrl,
+      transactionId,
     });
   } catch (error) {
     console.error('Error creating receipt:', error);

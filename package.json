@@ -1,0 +1,27 @@
+{
+  "name": "mern-pos-system",
+  "version": "1.0.0",
+  "description": "Production-grade, audit-ready MERN Point-of-Sale (POS) and retail management system",
+  "private": true,
+  "scripts": {
+    "dev:server": "npm run dev --prefix server",
+    "dev:client": "npm run dev --prefix client",
+    "build:client": "npm run build --prefix client",
+    "test": "npm test --prefix server",
+    "test:server": "npm test --prefix server",
+    "seed:demo": "npm run seed:demo --prefix server",
+    "install:all": "npm install --prefix server && npm install --prefix client"
+  },
+  "keywords": [
+    "pos",
+    "point-of-sale",
+    "mern",
+    "react",
+    "express",
+    "mongodb",
+    "inventory-management",
+    "retail"
+  ],
+  "license": "ISC"
+}
+

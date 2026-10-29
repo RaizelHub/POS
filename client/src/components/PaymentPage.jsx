@@ -45,6 +45,11 @@ function PaymentPage() {
   const [tenderReference, setTenderReference] = useState('');
   const saleIdempotencyKey = useRef(uuidv4());
 
+  // Refresh idempotency key whenever payable items, total, or payment method changes
+  useEffect(() => {
+    saleIdempotencyKey.current = uuidv4();
+  }, [cartItems, product, quantity, finalTotalPrice, paymentMethod]);
+
   const payableItems = cartItems && cartItems.length > 0
     ? cartItems
     : product
@@ -433,6 +438,11 @@ function PaymentPage() {
             const data = await response.json();
             console.log('Receipt API response:', data);
 
+            const payableTender = paymentMethod === 'Split' ? splitCashAmount : finalTotalPrice;
+            const changeDueAmount = (paymentMethod === 'Cash' || paymentMethod === 'Split')
+              ? Math.max(0, cashTendered - payableTender)
+              : 0;
+
             const thankYouState = {
               cartItems,
               product,
@@ -441,6 +451,13 @@ function PaymentPage() {
               originalAmount: subtotalPrice,
               discountAmount: finalDiscountAmt,
               finalPrice: finalTotalPrice,
+              cashTendered: (paymentMethod === 'Cash' || paymentMethod === 'Split') ? cashTendered : undefined,
+              changeDue: changeDueAmount,
+              splitDetails: paymentMethod === 'Split' ? {
+                cashAmount: splitCashAmount,
+                digitalAmount: splitDigitalAmount,
+              } : undefined,
+              tenderReference: tenderReference.trim() || undefined,
               customer: assignedCustomer,
               loyaltyPointsEarned: Math.floor(finalTotalPrice / 100),
               loyaltyPointsRedeemed: loyaltyDiscountAmt,
@@ -468,6 +485,11 @@ function PaymentPage() {
           } catch (receiptError) {
             console.error('Error generating receipt:', receiptError);
             message.warning('Payment processed, but receipt generation failed. Proceeding.');
+            const payableTender = paymentMethod === 'Split' ? splitCashAmount : finalTotalPrice;
+            const changeDueAmount = (paymentMethod === 'Cash' || paymentMethod === 'Split')
+              ? Math.max(0, cashTendered - payableTender)
+              : 0;
+
             const thankYouState = {
               cartItems,
               product,
@@ -476,6 +498,13 @@ function PaymentPage() {
               originalAmount: subtotalPrice,
               discountAmount: finalDiscountAmt,
               finalPrice: finalTotalPrice,
+              cashTendered: (paymentMethod === 'Cash' || paymentMethod === 'Split') ? cashTendered : undefined,
+              changeDue: changeDueAmount,
+              splitDetails: paymentMethod === 'Split' ? {
+                cashAmount: splitCashAmount,
+                digitalAmount: splitDigitalAmount,
+              } : undefined,
+              tenderReference: tenderReference.trim() || undefined,
               customer: assignedCustomer,
               loyaltyPointsEarned: Math.floor(finalTotalPrice / 100),
               loyaltyPointsRedeemed: loyaltyDiscountAmt,
@@ -901,66 +930,76 @@ return (
 
         {/* Cash Tendered Calculator (Commercial POS style) */}
         {(paymentMethod === 'Cash' || paymentMethod === 'Split') && (
-          <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-4">
+          <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-xs font-semibold text-slate-750 block uppercase tracking-wide">
+              <span className="text-xs font-semibold text-slate-700 block uppercase tracking-wide">
                 Cash Tendered Calculator
               </span>
-              <span className="text-[10px] text-slate-400 font-bold font-mono">
-                PAYABLE: ₱{(paymentMethod === 'Split' ? splitCashAmount : finalTotalPrice).toFixed(2)}
+              <span className="text-xs text-slate-500 font-bold font-mono">
+                DUE: ₱{(paymentMethod === 'Split' ? splitCashAmount : finalTotalPrice).toFixed(2)}
               </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
               <div className="sm:col-span-7 relative">
-                <span className="absolute left-3 top-3 text-slate-450 font-bold text-sm">₱</span>
+                <span className="absolute left-3.5 top-3 text-slate-400 font-bold text-sm">₱</span>
                 <input
                   type="number"
                   min="0"
-                  step="1"
+                  step="0.01"
                   value={cashTendered || ''}
                   onChange={(e) => setCashTendered(Number(e.target.value) || 0)}
-                  placeholder="Enter amount received..."
-                  className="w-full pl-7 pr-4 py-2.5 border border-slate-200 focus:border-emerald-650 focus:ring-1 focus:ring-emerald-650 rounded-lg text-sm bg-white font-bold outline-none transition-all"
+                  placeholder="Enter cash received..."
+                  className="w-full pl-8 pr-4 py-2.5 border border-slate-300 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 rounded-lg text-base font-bold outline-none transition-all font-mono"
+                  aria-label="Cash tendered amount"
                 />
               </div>
-              <div className="sm:col-span-5 flex flex-wrap gap-1">
-                {[20, 50, 100, 200, 500, 1000].map((denom) => (
-                  <button
-                    key={denom}
-                    type="button"
-                    onClick={() => {
-                      setCashTendered((prev) => prev + denom);
-                    }}
-                    className="flex-1 py-1 px-2 border border-slate-250 hover:border-slate-355 hover:bg-slate-100 rounded text-[10px] font-bold text-slate-700 transition-all active:scale-95"
-                  >
-                    +{denom}
-                  </button>
-                ))}
+              <div className="sm:col-span-5 flex flex-wrap gap-1.5">
                 <button
                   type="button"
                   onClick={() => {
                     const currentPayable = paymentMethod === 'Split' ? splitCashAmount : finalTotalPrice;
                     setCashTendered(currentPayable);
                   }}
-                  className="w-full py-1 border border-emerald-205 hover:border-emerald-350 hover:bg-emerald-50 rounded text-[10px] font-bold text-emerald-800 transition-all active:scale-95"
+                  className="flex-1 py-1.5 px-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded text-xs font-bold text-emerald-800 transition-colors"
                 >
-                  Exact Change
+                  Exact
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCashTendered(0)}
+                  className="py-1.5 px-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded text-xs font-bold text-slate-600 transition-colors"
+                >
+                  Clear
                 </button>
               </div>
             </div>
 
+            {/* Common denomination quick-add buttons */}
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {[20, 50, 100, 200, 500, 1000].map((denom) => (
+                <button
+                  key={denom}
+                  type="button"
+                  onClick={() => setCashTendered((prev) => prev + denom)}
+                  className="flex-1 min-w-[50px] py-1.5 border border-slate-200 hover:border-slate-400 bg-white hover:bg-slate-50 rounded text-xs font-semibold text-slate-700 transition-all active:scale-95"
+                >
+                  +₱{denom}
+                </button>
+              ))}
+            </div>
+
             {/* Change display */}
-            <div className="flex justify-between items-center border-t border-slate-250/60 pt-3">
-              <span className="text-xs font-semibold text-slate-500">Change Due:</span>
+            <div className="flex justify-between items-center border-t border-slate-200 pt-3">
+              <span className="text-xs font-semibold text-slate-600">Change Due:</span>
               <div className="text-right">
                 {cashTendered >= (paymentMethod === 'Split' ? splitCashAmount : finalTotalPrice) ? (
-                  <span className="text-2xl font-black text-emerald-600 font-mono">
+                  <span className="text-2xl font-bold text-emerald-600 font-mono">
                     ₱{(cashTendered - (paymentMethod === 'Split' ? splitCashAmount : finalTotalPrice)).toFixed(2)}
                   </span>
                 ) : (
-                  <span className="text-xs font-semibold text-red-500">
-                    Short ₱{((paymentMethod === 'Split' ? splitCashAmount : finalTotalPrice) - cashTendered).toFixed(2)}
+                  <span className="text-xs font-semibold text-rose-600">
+                    Short by ₱{((paymentMethod === 'Split' ? splitCashAmount : finalTotalPrice) - cashTendered).toFixed(2)}
                   </span>
                 )}
               </div>

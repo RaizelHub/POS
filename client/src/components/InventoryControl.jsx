@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { FaBoxes, FaClipboardCheck, FaExchangeAlt, FaTruckLoading } from 'react-icons/fa';
+import { FaBoxes, FaClipboardCheck, FaExchangeAlt, FaTruckLoading, FaSearch } from 'react-icons/fa';
 import api from '../utils/api';
 
 const movementLabels = {
@@ -23,6 +23,8 @@ const InventoryControl = () => {
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [movementSearch, setMovementSearch] = useState('');
+  const [movementTypeFilter, setMovementTypeFilter] = useState('all');
 
   const load = async () => {
     const [productsResponse, movementsResponse] = await Promise.all([
@@ -147,25 +149,80 @@ const InventoryControl = () => {
           </button>
         </form>
 
-        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-200 p-5">
-            <h2 className="font-bold text-slate-950">Recent movement ledger</h2>
-            <p className="mt-1 text-xs text-slate-500">The latest 100 stock-changing events.</p>
-          </div>
-          <div className="max-h-[650px] divide-y divide-slate-100 overflow-y-auto">
-            {movements.map((movement) => (
-              <div key={movement._id} className="grid grid-cols-[1fr_auto] gap-4 p-4 text-xs">
-                <div>
-                  <p className="font-bold text-slate-900">{movement.productId?.name || 'Archived product'}</p>
-                  <p className="mt-1 text-slate-500">{movementLabels[movement.type] || movement.type} · {movement.reason || 'No note'}</p>
-                  <p className="mt-1 text-[10px] text-slate-400">{new Date(movement.createdAt).toLocaleString('en-PH')}</p>
-                </div>
-                <div className="text-right">
-                  <p className={`font-bold ${movement.quantityDelta >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>{movement.quantityDelta >= 0 ? '+' : ''}{movement.quantityDelta}</p>
-                  <p className="mt-1 text-[10px] text-slate-400">{movement.resultingQuantity} on hand</p>
-                </div>
+        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col">
+          <div className="border-b border-slate-200 p-5 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h2 className="font-bold text-slate-950 text-base">Recent movement ledger</h2>
+                <p className="mt-0.5 text-xs text-slate-500">Audit trail of stock adjustments and movements.</p>
               </div>
-            ))}
+              <span className="text-[11px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full w-fit">
+                {movements.length} logged
+              </span>
+            </div>
+
+            {/* Filter controls */}
+            <div className="flex flex-col sm:flex-row gap-2 pt-1">
+              <div className="relative flex-1">
+                <FaSearch className="absolute left-2.5 top-2.5 text-slate-400 text-xs" />
+                <input
+                  type="text"
+                  placeholder="Filter product or note…"
+                  value={movementSearch}
+                  onChange={(e) => setMovementSearch(e.target.value)}
+                  className="w-full pl-8 pr-3 py-1.5 border border-slate-200 rounded-lg text-xs bg-slate-50 focus:bg-white focus:border-emerald-600 outline-none"
+                />
+              </div>
+              <select
+                aria-label="Filter movements by type"
+                value={movementTypeFilter}
+                onChange={(e) => setMovementTypeFilter(e.target.value)}
+                className="px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs bg-slate-50 focus:bg-white text-slate-700 font-semibold outline-none"
+              >
+                <option value="all">All Types</option>
+                <option value="receiving">Received</option>
+                <option value="adjustment">Adjusted</option>
+                <option value="cycle_count">Counted</option>
+                <option value="wastage">Wastage</option>
+                <option value="sale">Sales</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="max-h-[600px] divide-y divide-slate-100 overflow-y-auto flex-1">
+            {movements
+              .filter((m) => {
+                const matchesType = movementTypeFilter === 'all' || m.type === movementTypeFilter;
+                const prodName = m.productId?.name || '';
+                const reasonText = m.reason || '';
+                const matchesSearch = !movementSearch.trim() || 
+                  prodName.toLowerCase().includes(movementSearch.toLowerCase()) ||
+                  reasonText.toLowerCase().includes(movementSearch.toLowerCase());
+                return matchesType && matchesSearch;
+              })
+              .map((movement) => (
+                <div key={movement._id} className="grid grid-cols-[1fr_auto] gap-4 p-4 text-xs hover:bg-slate-50/60 transition-colors">
+                  <div>
+                    <p className="font-bold text-slate-900">{movement.productId?.name || 'Archived product'}</p>
+                    <p className="mt-1 text-slate-500">
+                      <span className="font-semibold text-slate-700">{movementLabels[movement.type] || movement.type}</span>
+                      {movement.reason ? ` · ${movement.reason}` : ''}
+                    </p>
+                    <p className="mt-1 text-[10px] text-slate-400">{new Date(movement.createdAt).toLocaleString('en-PH')}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className={`font-mono font-bold ${movement.quantityDelta >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                      {movement.quantityDelta >= 0 ? '+' : ''}{movement.quantityDelta}
+                    </p>
+                    <p className="mt-1 text-[10px] text-slate-400 font-mono">{movement.resultingQuantity} on hand</p>
+                  </div>
+                </div>
+              ))}
+            {movements.length === 0 && (
+              <div className="p-8 text-center text-xs text-slate-400">
+                No inventory movements recorded yet.
+              </div>
+            )}
           </div>
         </section>
       </div>

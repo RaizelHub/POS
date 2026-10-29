@@ -71,6 +71,9 @@ const productSchema = new mongoose.Schema(
 
 productSchema.index({ organizationId: 1, branchId: 1, barcode: 1 }, { unique: true });
 productSchema.index({ organizationId: 1, branchId: 1, sku: 1 }, { unique: true, sparse: true });
+productSchema.index({ organizationId: 1, branchId: 1, isActive: 1, category: 1 });
+productSchema.index({ organizationId: 1, branchId: 1, isActive: 1, name: 1 });
+productSchema.index({ organizationId: 1, branchId: 1, isActive: 1, quantity: 1 });
 
 const Product = mongoose.model('Product', productSchema);
 export default Product;

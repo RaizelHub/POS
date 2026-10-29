@@ -18,6 +18,7 @@ const TransactionsLedger = ({ isModalView = false, limitToCashierId = '', onClos
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [statusFilter, setStatusFilter] = useState('All'); // 'All', 'Paid', 'Pay Later'
+  const [txSearchQuery, setTxSearchQuery] = useState('');
 
   useEffect(() => {
     if (!limitToCashierId) {
@@ -61,14 +62,23 @@ const TransactionsLedger = ({ isModalView = false, limitToCashierId = '', onClos
     }
   };
 
-  // Filter transactions by overall status
+  // Filter transactions by overall status and search query
   const getFilteredTransactions = () => {
-    if (statusFilter === 'All') return transactions;
-    return transactions.filter(tx => {
-      // Check if any product item matches status
-      const hasStatus = tx.products.some(p => p.paymentStatus === statusFilter);
-      return hasStatus;
-    });
+    let result = transactions;
+    if (statusFilter !== 'All') {
+      result = result.filter(tx => tx.products.some(p => p.paymentStatus === statusFilter));
+    }
+    if (txSearchQuery.trim()) {
+      const q = txSearchQuery.toLowerCase();
+      result = result.filter(tx =>
+        (tx.transactionId && tx.transactionId.toLowerCase().includes(q)) ||
+        (tx._id && tx._id.toLowerCase().includes(q)) ||
+        (tx.customerId?.name && tx.customerId.name.toLowerCase().includes(q)) ||
+        (tx.products && tx.products.some(p => p.name && p.name.toLowerCase().includes(q))) ||
+        (tx.tenderReference && tx.tenderReference.toLowerCase().includes(q))
+      );
+    }
+    return result;
   };
 
   const filteredTransactions = getFilteredTransactions();
@@ -162,8 +172,20 @@ const TransactionsLedger = ({ isModalView = false, limitToCashierId = '', onClos
 
       {/* Filters Toolbar */}
       <div className="bg-white border border-slate-200/80 rounded-xl p-4 mb-6 shadow-sm space-y-4">
-        <div className="flex items-center gap-2 text-slate-700 font-bold text-xs uppercase tracking-wide">
-          <FaFilter className="text-[10px] text-slate-400" /> Filter Logs
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-slate-700 font-bold text-xs uppercase tracking-wide">
+            <FaFilter className="text-[10px] text-slate-400" /> Filter Logs
+          </div>
+          <div className="relative min-w-[240px]">
+            <FaSearch className="absolute left-3 top-2.5 text-slate-400 text-xs" />
+            <input
+              type="text"
+              placeholder="Search TXID, customer, item…"
+              value={txSearchQuery}
+              onChange={(e) => setTxSearchQuery(e.target.value)}
+              className="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium focus:bg-white focus:border-emerald-700 outline-none transition-all"
+            />
+          </div>
         </div>
         <div className={`grid grid-cols-1 ${limitToCashierId ? 'md:grid-cols-3' : 'md:grid-cols-4'} gap-4 items-end`}>
           {!limitToCashierId && (

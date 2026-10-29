@@ -50,6 +50,7 @@ function ScanPage() {
   // Redesign filter and search states
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
+  const [mobileView, setMobileView] = useState('catalog'); // 'catalog' or 'cart'
 
   // Shift state
   const [activeShift, setActiveShift] = useState(null);
@@ -400,6 +401,40 @@ function ScanPage() {
     };
   }, [cart, user?._id]);
 
+  // Auto-refocus scanner input when modals close
+  const isAnyModalOpen = showShiftModal || showCloseShiftModal || showRestoreModal || 
+                         showPaymentModal || showCashAdjustmentModal || showAddCustomerModal || showLedgerModal;
+
+  useEffect(() => {
+    if (!isAnyModalOpen && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isAnyModalOpen]);
+
+  // Global cashier keyboard shortcuts
+  useEffect(() => {
+    const handleGlobalShortcuts = (e) => {
+      const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT';
+
+      if (e.key === 'F2') {
+        e.preventDefault();
+        inputRef.current?.focus();
+        inputRef.current?.select();
+      } else if (e.key === 'F9' || (e.ctrlKey && e.key === 'Enter')) {
+        e.preventDefault();
+        if (cart.length > 0) {
+          proceedToCheckout();
+        }
+      } else if (e.key === '/' && !isInput) {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalShortcuts);
+    return () => window.removeEventListener('keydown', handleGlobalShortcuts);
+  }, [cart, activeShift]);
+
   const handleKeyDown = (event) => {
     if (event.key === 'Enter') {
       event.preventDefault();
@@ -446,6 +481,7 @@ function ScanPage() {
       setSnackbarOpen(true);
     } finally {
       setBarcode('');
+      setTimeout(() => inputRef.current?.focus(), 50);
     }
   };
 
@@ -457,7 +493,7 @@ function ScanPage() {
         const currentQtyInCart = prevCart[existingProductIndex].quantity;
         if (currentQtyInCart >= product.quantity) {
           setError(`Cannot add more of ${product.name}. Only ${product.quantity} in stock.`);
-          setSnackbarMessage(`Warning: Only ${product.quantity} in stock.`);
+          setSnackbarMessage(`Warning: Only ${product.quantity} in stock for ${product.name}.`);
           setSnackbarOpen(true);
           return prevCart;
         }
@@ -484,8 +520,13 @@ function ScanPage() {
       return prevCart.map(item => {
         if (item.product._id === productId) {
           const maxQuantity = item.product.quantity;
-          const safeQuantity = Math.min(newQuantity, maxQuantity);
-          return { ...item, quantity: safeQuantity };
+          if (newQuantity > maxQuantity) {
+            setError(`Stock limit reached for ${item.product.name} (Available: ${maxQuantity}).`);
+            setSnackbarMessage(`Warning: Only ${maxQuantity} in stock for ${item.product.name}.`);
+            setSnackbarOpen(true);
+            return { ...item, quantity: maxQuantity };
+          }
+          return { ...item, quantity: newQuantity };
         }
         return item;
       });
@@ -703,6 +744,18 @@ function ScanPage() {
           </div>
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Mobile Cart Toggle Pill */}
+          <button
+            type="button"
+            onClick={() => setMobileView(mobileView === 'catalog' ? 'cart' : 'catalog')}
+            className="lg:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-bold shadow-sm"
+            aria-label="Toggle shopping cart"
+          >
+            <FaShoppingCart className="text-xs" />
+            <span>{cartItemCount}</span>
+            <span className="text-[11px] opacity-90 font-mono">₱{cartTotal.toFixed(0)}</span>
+          </button>
+
           {activeShift && (
             <>
               <button
@@ -770,10 +823,10 @@ function ScanPage() {
       </header>
 
       {/* Main Container */}
-      <main className="flex-1 w-full grid grid-cols-1 lg:grid-cols-12 items-start">
+      <main className="flex-1 w-full grid grid-cols-1 lg:grid-cols-12 items-start pb-20 lg:pb-0">
 
         {/* Left Panel: Catalog (Span 8) */}
-        <section className="lg:col-span-8 xl:col-span-9 p-4 sm:p-6 lg:pr-5">
+        <section className={`lg:col-span-8 xl:col-span-9 p-4 sm:p-6 lg:pr-5 ${mobileView === 'cart' ? 'hidden lg:block' : 'block'}`}>
 
           {/* Product Catalog Card */}
           <div className="flex flex-col min-h-[500px]">
@@ -905,7 +958,18 @@ function ScanPage() {
         </section>
 
         {/* Right Panel: Checkout Panel (Span 4) */}
-        <section className="lg:col-span-4 xl:col-span-3 bg-white border-l border-slate-200 p-4 sm:p-5 flex flex-col h-[calc(100vh-64px)] sticky top-16 overflow-hidden">
+        <section className={`lg:col-span-4 xl:col-span-3 bg-white border-l border-slate-200 p-4 sm:p-5 flex-col h-[calc(100vh-64px)] sticky top-16 overflow-hidden ${mobileView === 'catalog' ? 'hidden lg:flex' : 'flex'}`}>
+
+          {/* Mobile Back Button */}
+          {mobileView === 'cart' && (
+            <button
+              type="button"
+              onClick={() => setMobileView('catalog')}
+              className="lg:hidden mb-3 inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 hover:text-slate-950 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 w-fit transition-colors"
+            >
+              ← Back to Products
+            </button>
+          )}
 
           {/* Section Header */}
           <div className="flex items-center justify-between mb-4 flex-shrink-0">
@@ -924,13 +988,16 @@ function ScanPage() {
             <input
               ref={inputRef}
               type="text"
-              placeholder="Scan barcode"
+              placeholder="Scan barcode or press [/]"
               value={barcode}
               onChange={(e) => setBarcode(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="w-full pl-11 pr-4 py-3 border border-slate-300 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/10 focus:outline-none rounded-lg text-sm bg-white transition-shadow font-mono placeholder:font-sans placeholder:text-slate-400"
+              className="w-full pl-11 pr-14 py-3 border border-slate-300 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/10 focus:outline-none rounded-lg text-sm bg-white transition-shadow font-mono placeholder:font-sans placeholder:text-slate-400"
               aria-label="Scan or enter a barcode"
             />
+            <span className="hidden sm:block absolute right-3 top-3 text-[10px] text-slate-400 font-mono font-bold bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+              F2
+            </span>
             {error && (
               <span className="text-red-500 text-xs block mt-1.5 font-medium pl-1">{error}</span>
             )}
@@ -1080,9 +1147,10 @@ function ScanPage() {
               <button
                 onClick={proceedToCheckout}
                 disabled={cart.length === 0}
-                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm transition-colors disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed"
+                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm transition-colors disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 shadow-sm"
               >
-                Charge
+                <span>Charge</span>
+                <span className="hidden sm:inline-block text-[10px] bg-emerald-700 text-emerald-100 font-mono font-bold px-1 rounded">F9</span>
               </button>
             </div>
           </div>
@@ -1090,6 +1158,32 @@ function ScanPage() {
         </section>
 
       </main>
+
+      {/* Mobile Floating Bottom Summary Bar */}
+      {mobileView === 'catalog' && cart.length > 0 && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-sm text-white px-4 py-3 border-t border-slate-800 z-20 flex items-center justify-between shadow-2xl">
+          <div>
+            <span className="text-[11px] text-slate-400 block">{cartItemCount} {cartItemCount === 1 ? 'item' : 'items'} in ticket</span>
+            <span className="text-xl font-bold font-mono text-white">₱{cartTotal.toFixed(2)}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setMobileView('cart')}
+              className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg border border-slate-700 transition-colors"
+            >
+              View Ticket
+            </button>
+            <button
+              type="button"
+              onClick={proceedToCheckout}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg shadow-sm transition-colors"
+            >
+              Charge ₱{cartTotal.toFixed(0)}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Recover Drafts Modal */}
       <Modal

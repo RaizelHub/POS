@@ -167,6 +167,8 @@ transactionSchema.index(
   { unique: true, sparse: true }
 );
 transactionSchema.index({ organizationId: 1, branchId: 1, transactionDate: -1 });
+transactionSchema.index({ organizationId: 1, branchId: 1, status: 1, transactionDate: -1 });
+transactionSchema.index({ organizationId: 1, branchId: 1, shiftId: 1 });
 
 transactionSchema.pre('save', function (next) {
   this.lastUpdated = Date.now();

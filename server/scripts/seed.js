@@ -18,6 +18,12 @@ const seedDatabase = async () => {
     process.exit(1);
   }
 
+  // Safety check: Prevent running destructive seed in production
+  if (process.env.NODE_ENV === 'production' && !process.argv.includes('--force')) {
+    console.error('BLOCKED: Cannot run destructive seed in production without --force.');
+    process.exit(1);
+  }
+
   try {
     console.log('Connecting to database for seeding...');
     await mongoose.connect(MONGODB_URI);

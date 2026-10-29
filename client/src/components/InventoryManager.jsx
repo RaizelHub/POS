@@ -35,6 +35,7 @@ function InventoryManager() {
   const [formPhone, setFormPhone] = useState('');
   const [formSelectedProducts, setFormSelectedProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [poSearch, setPoSearch] = useState('');
   
   // Alerts
   const [alert, setAlert] = useState(null);
@@ -96,16 +97,25 @@ function InventoryManager() {
     );
   };
 
-  // Filter low-stock items by selected supplier
+  // Filter low-stock items by selected supplier and search query
   const getFilteredLowStock = () => {
-    if (selectedSupplierId === 'all') {
-      return lowStockItems;
+    let items = lowStockItems;
+    if (selectedSupplierId !== 'all') {
+      const currentSupplier = suppliers.find(s => s._id === selectedSupplierId);
+      if (currentSupplier) {
+        const supplierProductIds = (currentSupplier.products || []).map(p => typeof p === 'object' ? p._id : p);
+        items = items.filter(item => supplierProductIds.includes(item._id));
+      }
     }
-    const currentSupplier = suppliers.find(s => s._id === selectedSupplierId);
-    if (!currentSupplier) return lowStockItems;
-
-    const supplierProductIds = (currentSupplier.products || []).map(p => typeof p === 'object' ? p._id : p);
-    return lowStockItems.filter(item => supplierProductIds.includes(item._id));
+    if (poSearch.trim()) {
+      const q = poSearch.toLowerCase();
+      items = items.filter(item =>
+        (item.name && item.name.toLowerCase().includes(q)) ||
+        (item.barcode && item.barcode.includes(q)) ||
+        (item.category && item.category.toLowerCase().includes(q))
+      );
+    }
+    return items;
   };
 
   // Export Purchase Order Excel Sheet
@@ -342,8 +352,8 @@ function InventoryManager() {
         <div className="space-y-6 animate-fadeIn">
           
           {/* Supplier Selector Parameters */}
-          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
-            <div>
+          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+            <div className="md:col-span-5">
               <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
                 Filter by Associated Supplier
               </label>
@@ -359,10 +369,26 @@ function InventoryManager() {
               </select>
             </div>
 
-            <div className="flex items-center justify-end gap-3">
+            <div className="md:col-span-4">
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                Search Low-Stock Items
+              </label>
+              <div className="relative">
+                <FaSearch className="absolute left-3 top-3.5 text-slate-400 text-xs" />
+                <input
+                  type="text"
+                  placeholder="Filter name, barcode…"
+                  value={poSearch}
+                  onChange={(e) => setPoSearch(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-lg outline-none transition-all focus:bg-white focus:border-emerald-700 focus:ring-1 focus:ring-emerald-700"
+                />
+              </div>
+            </div>
+
+            <div className="md:col-span-3 flex items-center justify-end gap-2">
               <button
                 onClick={fetchLowStock}
-                className="p-3 border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-650 hover:text-slate-900 transition-colors"
+                className="p-2.5 border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-650 hover:text-slate-900 transition-colors"
                 title="Refresh stock data"
               >
                 <FaSync className={loadingItems ? 'animate-spin' : ''} />
@@ -371,9 +397,9 @@ function InventoryManager() {
               <button
                 onClick={handleExportPO}
                 disabled={exporting || getFilteredLowStock().length === 0}
-                className="bg-emerald-700 hover:bg-emerald-650 text-white text-xs font-bold px-5 py-3 rounded-lg shadow-sm flex items-center gap-2 transition-all active:scale-98 disabled:opacity-50"
+                className="flex-1 bg-emerald-700 hover:bg-emerald-650 text-white text-xs font-bold px-3 py-2.5 rounded-lg shadow-sm flex items-center justify-center gap-2 transition-all active:scale-98 disabled:opacity-50"
               >
-                <FaFileExcel /> Export Supplier Excel PO
+                <FaFileExcel /> Export PO
               </button>
             </div>
           </div>

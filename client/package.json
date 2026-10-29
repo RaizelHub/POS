@@ -7,10 +7,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "build:redirects": "node netlify-build-fix.js",
+    "build:redirects": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "netlify-build": "vite build && node netlify-build-fix.js"
+    "netlify-build": "vite build"
   },
   "dependencies": {
     "@ant-design/icons": "^5.5.1",

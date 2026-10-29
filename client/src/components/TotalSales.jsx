@@ -134,9 +134,9 @@ function TotalSales() {
       ['Category', 'Amount', 'Percentage'],
       ['Total Sales', `₱${data.totalSales.toLocaleString()}`, '100%'],
       ['Paid Sales', `₱${data.paidSales.toLocaleString()}`,
-        data.totalSales > 0 ? `${((data.paidSales / data.totalSales) * 105).toFixed(2)}%` : '0%'],
+        data.totalSales > 0 ? `${((data.paidSales / data.totalSales) * 100).toFixed(2)}%` : '0%'],
       ['Pay Later Sales', `₱${data.payLaterSales.toLocaleString()}`,
-        data.totalSales > 0 ? `${((data.payLaterSales / data.totalSales) * 105).toFixed(2)}%` : '0%'],
+        data.totalSales > 0 ? `${((data.payLaterSales / data.totalSales) * 100).toFixed(2)}%` : '0%'],
       ['']
     ];
 

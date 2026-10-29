@@ -35,9 +35,16 @@ dotenvSafe.config({
 dotenv.config();
 const port = process.env.PORT || 8000;
 
-// Flexible CORS configuration
+// Flexible CORS configuration (supports comma-separated CLIENT_URL)
+const configuredOrigins = (process.env.CLIENT_URL || '')
+    .split(',')
+    .map(url => url.trim().replace(/\/$/, ''))
+    .filter(Boolean);
+
 const whitelist = [
-    process.env.CLIENT_URL?.trim().replace(/\/$/, ''),
+    ...configuredOrigins,
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
     'http://localhost:3000',
     'http://localhost:3454',
     'http://127.0.0.1:3000',
@@ -100,11 +107,21 @@ if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
 
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    uptimeSeconds: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+  });
+});
+
 // API routes
 app.use('/api', userRoutes);
 app.use('/api', adminRoutes);
-app.use('/api', productRoutes)
-app.use('/api', salesRoutes)
+app.use('/api', productRoutes);
+app.use('/api', salesRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/', receipt);
 app.use('/api', draftOrderRoutes);
@@ -118,28 +135,63 @@ app.use('/api', returnRoutes);
 app.use('/api', reportRoutes);
 app.use('/api', auditRoutes);
 
+// Unhandled API 404 handler
+app.use('/api/*', (req, res) => {
+  res.status(404).json({
+    message: `API endpoint ${req.method} ${req.originalUrl} not found.`,
+    code: 'NOT_FOUND',
+  });
+});
 
 // Global error handler
 app.use((err, req, res, next) => {
-    console.error('Server error:', err.stack);
+  console.error('Server error:', err);
 
-    // Check if the error is a CORS error
-    if (err.message && err.message.includes('CORS')) {
-        console.error('CORS Error:', err.message);
-        return res.status(403).json({
-            message: "CORS error: Origin not allowed",
-            error: err.message
-        });
-    }
-
-    // For other errors, send a generic message
-    res.status(500).json({
-        message: "Server error. Please try again later.",
-        error: process.env.NODE_ENV === 'development' ? err.message : undefined
+  // Check if the error is a CORS error
+  if (err.message && err.message.includes('CORS')) {
+    return res.status(403).json({
+      message: 'CORS error: Origin not allowed',
+      code: 'CORS_ERROR',
+      error: err.message,
     });
+  }
 
+  const statusCode = err.status || err.statusCode || 500;
+  res.status(statusCode).json({
+    message: err.message || 'Server error. Please try again later.',
+    code: err.code || (statusCode === 500 ? 'INTERNAL_SERVER_ERROR' : 'REQUEST_FAILED'),
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined,
+  });
 });
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
     console.log(`Connected to PORT ${port}`);
 });
+
+// Graceful shutdown handling for containerless PaaS deployments (Render, Railway, VPS)
+const handleGracefulShutdown = (signal) => {
+  console.log(`Received ${signal}. Starting graceful shutdown...`);
+  server.close(async () => {
+    console.log('HTTP server closed.');
+    try {
+      const mongoose = (await import('mongoose')).default;
+      if (mongoose.connection.readyState !== 0) {
+        await mongoose.disconnect();
+        console.log('MongoDB connection closed.');
+      }
+      process.exit(0);
+    } catch (err) {
+      console.error('Error during graceful shutdown:', err);
+      process.exit(1);
+    }
+  });
+
+  // Force shutdown if cleanup hangs past 10 seconds
+  setTimeout(() => {
+    console.error('Graceful shutdown timed out. Forcing process exit.');
+    process.exit(1);
+  }, 10000).unref();
+};
+
+process.on('SIGTERM', () => handleGracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => handleGracefulShutdown('SIGINT'));
