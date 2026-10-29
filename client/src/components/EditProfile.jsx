@@ -184,7 +184,7 @@ function EditProfile() {
                 required
                 value={user.firstname}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2.5 border border-slate-200 focus:border-slate-450 focus:outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
+                className="w-full px-3 py-2.5 border border-slate-200 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600/20 focus:outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
               />
             </div>
             <div className="space-y-1">
@@ -195,7 +195,7 @@ function EditProfile() {
                 required
                 value={user.lastname}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2.5 border border-slate-200 focus:border-slate-450 focus:outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
+                className="w-full px-3 py-2.5 border border-slate-200 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600/20 focus:outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
               />
             </div>
           </div>
@@ -208,7 +208,7 @@ function EditProfile() {
                 type="email"
                 readOnly
                 value={user.email}
-                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg text-xs bg-slate-100 font-semibold cursor-not-allowed text-slate-450"
+                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg text-xs bg-slate-100 font-semibold cursor-not-allowed text-slate-400"
               />
             </div>
           </div>
@@ -229,7 +229,7 @@ function EditProfile() {
                 maxLength={6}
                 inputMode="numeric"
                 pattern="[0-9]*"
-                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 focus:border-slate-450 focus:outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
+                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600/20 focus:outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
               />
             </div>
           </div>

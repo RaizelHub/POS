@@ -426,9 +426,9 @@ function TotalSales() {
                   mb: 4,
                   borderBottom: 1,
                   borderColor: 'divider',
-                  '& .MuiTab-root': { fontWeight: 600, textTransform: 'none', fontSize: '14px', color: '#64748b' },
-                  '& .Mui-selected': { color: '#0f172a' },
-                  '& .MuiTabs-indicator': { backgroundColor: '#0f172a', height: 2.5 }
+                  '& .MuiTab-root': { fontWeight: 600, textTransform: 'none', fontSize: '13px', color: '#64748b' },
+                  '& .Mui-selected': { color: '#059669' },
+                  '& .MuiTabs-indicator': { backgroundColor: '#059669', height: 2.5 }
                 }}
               >
                 <Tab label="Products Sold" icon={<ShoppingCartIcon className="text-sm" />} iconPosition="start" />
@@ -521,15 +521,15 @@ function TotalSales() {
                           </AccordionSummary>
                           <AccordionDetails className="p-4 bg-white border-t border-slate-100 space-y-3">
                             <div className="grid grid-cols-3 gap-4 text-center">
-                              <div className="border border-slate-250 bg-slate-50/50 rounded-lg p-2.5">
+                              <div className="border border-slate-200 bg-slate-50/50 rounded-lg p-2.5">
                                 <span className="text-[10px] text-slate-400 uppercase font-semibold block">Spent Today</span>
                                 <span className="text-sm font-bold text-slate-800 mt-1 block">₱{userPurchase.totalSpent.toLocaleString()}</span>
                               </div>
-                              <div className="border border-slate-250 bg-emerald-50/30 rounded-lg p-2.5">
+                              <div className="border border-slate-200 bg-emerald-50/30 rounded-lg p-2.5">
                                 <span className="text-[10px] text-emerald-700 uppercase font-semibold block">Paid Share</span>
                                 <span className="text-sm font-bold text-emerald-600 mt-1 block">₱{userPurchase.paidAmount.toLocaleString()}</span>
                               </div>
-                              <div className="border border-slate-250 bg-amber-50/30 rounded-lg p-2.5">
+                              <div className="border border-slate-200 bg-amber-50/30 rounded-lg p-2.5">
                                 <span className="text-[10px] text-amber-700 uppercase font-semibold block">Unpaid Share</span>
                                 <span className="text-sm font-bold text-amber-600 mt-1 block">₱{userPurchase.payLaterAmount.toLocaleString()}</span>
                               </div>

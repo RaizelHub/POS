@@ -56,7 +56,7 @@ function ForgotPin() {
             <img src={novaLogo} alt="SUELTO Logo" className="h-14 w-auto object-contain rounded-xl shadow-sm" />
           </div>
           <h2 className="text-lg font-bold text-slate-900">Forgot security PIN?</h2>
-          <p className="text-slate-450 text-xs leading-relaxed max-w-xs mx-auto">
+          <p className="text-slate-500 text-xs leading-relaxed max-w-xs mx-auto">
             Provide your registered account email, and we will send a password reset code.
           </p>
         </div>
@@ -88,7 +88,7 @@ function ForgotPin() {
         <form onSubmit={handleSubmit} className="space-y-4">
           
           <div className="space-y-1">
-            <label className="text-[10px] font-bold text-slate-450 uppercase block pl-1 tracking-wider">Account Email</label>
+            <label className="text-[10px] font-bold text-slate-500 uppercase block pl-1 tracking-wider">Account Email</label>
             <div className="relative">
               <FaEnvelope className="absolute left-3.5 top-3.5 text-slate-400 text-sm" />
               <input
@@ -97,7 +97,7 @@ function ForgotPin() {
                 placeholder="cashier@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-11 pr-4 py-2.5 border border-slate-200 focus:border-slate-450 focus:outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
+                className="w-full pl-11 pr-4 py-2.5 border border-slate-200 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600/20 focus:outline-none rounded-lg text-xs bg-slate-50 focus:bg-white font-semibold transition-all"
               />
             </div>
           </div>

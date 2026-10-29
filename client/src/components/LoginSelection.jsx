@@ -293,7 +293,7 @@ const LoginSelectionPage = () => {
                       </div>
                     ) : (
                       <div className="bg-slate-50 border border-slate-200 rounded-xl p-8 text-center space-y-3">
-                        <FaUserCircle className="text-slate-450 text-4xl mx-auto" />
+                        <FaUserCircle className="text-slate-400 text-4xl mx-auto" />
                         <h4 className="text-sm font-bold text-slate-800">No Cashiers Found</h4>
                         <p className="text-slate-500 text-[11px] leading-relaxed max-w-xs mx-auto">
                           No cashier profiles match this search.
@@ -467,7 +467,7 @@ const LoginSelectionPage = () => {
                   </div>
                   <div>
                     <h3 className="font-bold text-lg text-white leading-none tracking-tight">Workstation Support Desk</h3>
-                    <p className="text-[10.5px] text-slate-450 mt-1.5 font-semibold uppercase tracking-wider">Secure Terminal Guide & Hotkeys</p>
+                    <p className="text-[10.5px] text-slate-400 mt-1.5 font-semibold uppercase tracking-wider">Secure Terminal Guide & Hotkeys</p>
                   </div>
                 </div>
                 <button

@@ -127,11 +127,12 @@ const TransactionsLedger = ({ isModalView = false, limitToCashierId = '', onClos
             </button>
           )}
           <div>
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-              Transaction ledger
-            </h1>
-            <p className="text-xs text-slate-500">
-              Audit payments and reconcile customer credit.
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Audit & Ledger</p>
+            <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950 flex items-center gap-2">
+              Transactions
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Audit recorded sales and reconcile payment tabs.
             </p>
           </div>
         </div>
@@ -241,7 +242,7 @@ const TransactionsLedger = ({ isModalView = false, limitToCashierId = '', onClos
                 <button
                   key={tab}
                   onClick={() => setStatusFilter(tab)}
-                  className={`flex-1 py-1 text-center text-xs font-bold rounded transition-all ${statusFilter === tab ? 'bg-emerald-700 text-white shadow-sm' : 'text-slate-500 hover:text-slate-750 hover:bg-slate-50'}`}
+                  className={`flex-1 py-1 text-center text-xs font-bold rounded transition-all ${statusFilter === tab ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'}`}
                 >
                   {tab}
                 </button>
@@ -303,7 +304,7 @@ const TransactionsLedger = ({ isModalView = false, limitToCashierId = '', onClos
 
                     {/* Products details table */}
                     <div className="space-y-2">
-                      <span className="text-[10px] text-slate-450 font-bold block uppercase tracking-wider">Scanned Products Log</span>
+                      <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Scanned Products Log</span>
                       <div className="divide-y divide-slate-100">
                         {tx.products.map((item, idx) => (
                           <div key={idx} className="py-2 flex items-center justify-between text-xs font-semibold">

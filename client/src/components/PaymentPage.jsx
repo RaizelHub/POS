@@ -573,7 +573,7 @@ return (
               {product.image ? (
                 <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
               ) : (
-                <div className="text-slate-350 text-2xl font-bold">P</div>
+                <div className="text-slate-400 text-2xl font-bold">P</div>
               )}
             </div>
             <div>
@@ -699,7 +699,7 @@ return (
                   onClick={() => setManualDiscountPercent(pct)}
                   className={`flex-1 py-1.5 border rounded-lg text-[10px] font-bold transition-all ${manualDiscountPercent === pct && !appliedPromo
                     ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
-                    : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-350'
+                    : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-400'
                     } disabled:opacity-50 disabled:cursor-not-allowed active:scale-95`}
                 >
                   {pct === 0 ? 'None' : `${pct}%`}
@@ -976,13 +976,13 @@ return (
             </div>
 
             {/* Common denomination quick-add buttons */}
-            <div className="flex flex-wrap gap-1.5 pt-1">
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 pt-1">
               {[20, 50, 100, 200, 500, 1000].map((denom) => (
                 <button
                   key={denom}
                   type="button"
                   onClick={() => setCashTendered((prev) => prev + denom)}
-                  className="flex-1 min-w-[50px] py-1.5 border border-slate-200 hover:border-slate-400 bg-white hover:bg-slate-50 rounded text-xs font-semibold text-slate-700 transition-all active:scale-95"
+                  className="py-2 px-1 border border-slate-200 hover:border-emerald-500 bg-white hover:bg-emerald-50/50 rounded-lg text-xs font-semibold text-slate-800 transition-all active:scale-95 text-center shadow-xs"
                 >
                   +₱{denom}
                 </button>
@@ -1017,7 +1017,7 @@ return (
              cashTendered < (paymentMethod === 'Split' ? splitCashAmount : finalTotalPrice))
           }
           className={`w-full py-3.5 text-white font-bold rounded-xl text-sm transition-all shadow-sm hover:shadow flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed ${paymentMethod === 'Cash'
-            ? 'bg-emerald-700 hover:bg-emerald-650'
+            ? 'bg-emerald-600 hover:bg-emerald-700'
             : paymentMethod === 'Pay Later'
               ? 'bg-rose-600 hover:bg-rose-700'
               : 'bg-slate-900 hover:bg-slate-800'

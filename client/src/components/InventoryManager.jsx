@@ -305,7 +305,7 @@ function InventoryManager() {
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Inventory</p>
           <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950 flex items-center gap-2">
-            <FaBox className="text-emerald-650" /> Restocking
+            <FaBox className="text-emerald-600" /> Restocking
           </h2>
           <p className="text-slate-500 text-sm mt-1">
             Connect suppliers to products and prepare purchase orders.
@@ -319,7 +319,7 @@ function InventoryManager() {
             className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
               activeTab === 'po' 
                 ? 'bg-white text-slate-800 shadow-sm' 
-                : 'text-slate-500 hover:text-slate-850'
+                : 'text-slate-500 hover:text-slate-900'
             }`}
           >
             Purchase orders
@@ -329,7 +329,7 @@ function InventoryManager() {
             className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
               activeTab === 'suppliers' 
                 ? 'bg-white text-slate-800 shadow-sm' 
-                : 'text-slate-500 hover:text-slate-850'
+                : 'text-slate-500 hover:text-slate-900'
             }`}
           >
             Manage Suppliers
@@ -340,8 +340,8 @@ function InventoryManager() {
       {alert && (
         <div className={`p-4 rounded-xl border flex items-center gap-3 shadow-sm transition-all ${
           alert.type === 'success' 
-            ? 'bg-emerald-50 border-emerald-250 text-emerald-800' 
-            : 'bg-rose-50 border-rose-250 text-rose-800'
+            ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
+            : 'bg-rose-50 border-rose-200 text-rose-800'
         }`}>
           <span className="text-sm font-semibold">{alert.message}</span>
         </div>
@@ -424,7 +424,7 @@ function InventoryManager() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm border-collapse">
                   <thead>
-                    <tr className="bg-slate-50 border-b border-slate-200 text-slate-450 font-semibold uppercase text-[10px] tracking-wider">
+                    <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold uppercase text-[10px] tracking-wider">
                       <th className="px-6 py-4">Product details</th>
                       <th className="px-6 py-4">Category</th>
                       <th className="px-6 py-4">Current stock</th>
@@ -513,7 +513,7 @@ function InventoryManager() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {suppliers.map(sup => (
-                <div key={sup._id} className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm flex flex-col justify-between hover:border-slate-350 transition-colors gap-4">
+                <div key={sup._id} className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm flex flex-col justify-between hover:border-slate-400 transition-colors gap-4">
                   <div className="space-y-3">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-2">
@@ -598,7 +598,7 @@ function InventoryManager() {
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-1.5 text-slate-450 hover:bg-slate-150 rounded-lg transition-colors"
+                className="p-1.5 text-slate-400 hover:bg-slate-100 rounded-lg transition-colors"
               >
                 <FaTimes />
               </button>
@@ -667,7 +667,7 @@ function InventoryManager() {
 
                 {/* Bulk select visible options */}
                 {filteredCatalogForSearch.length > 0 && (
-                  <div className="flex items-center gap-2 text-[10px] font-bold text-slate-450 uppercase tracking-wide">
+                  <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-wide">
                     <span>Batch:</span>
                     <button
                       type="button"
@@ -726,7 +726,7 @@ function InventoryManager() {
                   )}
                 </div>
 
-                <div className="text-[10px] text-slate-450 font-semibold text-right">
+                <div className="text-[10px] text-slate-400 font-semibold text-right">
                   Selected count: {formSelectedProducts.length} items
                 </div>
 

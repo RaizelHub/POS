@@ -269,7 +269,7 @@ function ReceiptCustomizer() {
           {/* Simulated receipt paper */}
           <div className="w-[300px] bg-white border border-slate-300 shadow-lg px-4 py-8 rounded-b-md flex flex-col font-mono text-slate-800 relative select-none">
             {/* Top jagged cut line */}
-            <div className="absolute top-0 left-0 right-0 h-1.5 bg-slate-200 border-b border-dashed border-slate-350" />
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-slate-200 border-b border-dashed border-slate-300" />
             
             {/* Store title */}
             <div className="text-center font-bold tracking-tight text-slate-900 border-b border-dashed border-slate-300 pb-2 mb-2">
@@ -344,7 +344,7 @@ function ReceiptCustomizer() {
             </div>
             
             {/* Bottom jagged cutout indicator */}
-            <div className="absolute -bottom-1 left-0 right-0 h-1.5 bg-slate-200 border-t border-dashed border-slate-350" />
+            <div className="absolute -bottom-1 left-0 right-0 h-1.5 bg-slate-200 border-t border-dashed border-slate-300" />
           </div>
         </div>
 

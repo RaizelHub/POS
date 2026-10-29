@@ -167,10 +167,10 @@ function UserList() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center py-16 bg-white border border-slate-200 rounded-xl space-y-3"
           >
-            <FaUserCircle className="text-4xl text-slate-350 mx-auto" />
+            <FaUserCircle className="text-4xl text-slate-400 mx-auto" />
             <div className="space-y-1">
               <h4 className="font-bold text-slate-900 text-sm">No Cashiers Found</h4>
-              <p className="text-slate-450 text-xs max-w-xs mx-auto">There are no registered cashiers matching your query details.</p>
+              <p className="text-slate-500 text-xs max-w-xs mx-auto">There are no registered cashiers matching your query details.</p>
             </div>
           </motion.div>
         ) : (
@@ -209,7 +209,7 @@ function UserList() {
                   </div>
                 </div>
                 <div className="flex flex-col gap-1.5 text-left border-t border-slate-100 pt-3 mt-1">
-                  <span className="font-bold text-slate-450 uppercase text-[9px] tracking-wider">Assigned POS Workstation</span>
+                  <span className="font-bold text-slate-500 uppercase text-[9px] tracking-wider">Assigned POS Workstation</span>
                   <select
                     value={user.station || 'Unassigned'}
                     onChange={(e) => handleAssignStation(user._id, e.target.value)}
@@ -226,7 +226,7 @@ function UserList() {
                 <div className="border-t border-slate-100 pt-3 flex justify-end">
                   <button
                     onClick={() => handleOpenUserDetails(user)}
-                    className="px-3 py-1.5 border border-slate-200 hover:border-slate-350 hover:bg-slate-50 text-slate-700 font-bold rounded-lg text-xs transition-all active:scale-97"
+                    className="px-3 py-1.5 border border-slate-200 hover:border-slate-400 hover:bg-slate-50 text-slate-700 font-semibold rounded-lg text-xs transition-all active:scale-97"
                   >
                     View Cash Logs
                   </button>

@@ -213,7 +213,7 @@ function AdminProfile() {
                   type="email"
                   readOnly
                   value={formData.email}
-                  className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-xs bg-slate-100 font-semibold cursor-not-allowed text-slate-450"
+                  className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-xs bg-slate-100 font-semibold cursor-not-allowed text-slate-400"
                 />
               </div>
             </div>

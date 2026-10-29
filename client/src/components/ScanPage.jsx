@@ -841,25 +841,25 @@ function ScanPage() {
 
               {/* Catalog Search & Category Filters */}
               <div className="relative w-full xl:w-[340px]">
-                  <FaSearch className="absolute left-3.5 top-3.5 text-slate-400 text-sm" />
+                  <FaSearch className="absolute left-3.5 top-3 text-slate-400 text-sm" />
                   <input
                     type="text"
                     placeholder="Search product or barcode"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg text-sm bg-white focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/10 transition-shadow placeholder:text-slate-400"
+                    className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/10 transition-shadow placeholder:text-slate-400"
                     aria-label="Search product catalog"
                   />
               </div>
             </div>
 
-            <div className="flex gap-2 overflow-x-auto pb-4 mb-1 no-scrollbar" aria-label="Product categories">
+            <div className="flex gap-2 overflow-x-auto pb-3 mb-1 no-scrollbar" aria-label="Product categories">
                   {catalogCategories.map((cat) => (
                     <button
                       key={cat}
                       onClick={() => setActiveCategory(cat)}
-                      className={`whitespace-nowrap text-xs font-semibold px-3.5 py-2 rounded-full border transition-colors ${activeCategory === cat
-                        ? 'bg-slate-950 text-white border-slate-950'
+                      className={`whitespace-nowrap text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${activeCategory === cat
+                        ? 'bg-slate-950 text-white border-slate-950 shadow-xs'
                         : 'bg-white text-slate-600 border-slate-300 hover:border-slate-500 hover:text-slate-950'
                         }`}
                     >
@@ -1038,7 +1038,7 @@ function ScanPage() {
                     placeholder="Search name or phone"
                     value={customerSearchQuery}
                     onChange={(e) => handleCustomerSearch(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-200 focus:border-slate-350 focus:outline-none rounded-lg text-xs bg-slate-50 focus:bg-white transition-all"
+                    className="w-full px-3 py-2 border border-slate-200 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600/20 focus:outline-none rounded-lg text-xs bg-slate-50 focus:bg-white transition-all"
                   />
                   {customerResults.length > 0 && (
                     <div className="absolute top-full left-0 right-0 bg-white border border-slate-200 rounded-lg shadow-lg mt-1 max-h-[150px] overflow-y-auto z-20 divide-y divide-slate-50">
@@ -1107,7 +1107,7 @@ function ScanPage() {
                     <span className="font-bold text-slate-800 text-sm">₱{(item.product.price * item.quantity).toFixed(2)}</span>
                     <button
                       onClick={() => removeFromCart(item.product._id)}
-                      className="text-red-500 hover:text-red-600 hover:bg-red-50 p-1 rounded transition-all"
+                      className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 p-1 rounded transition-all"
                     >
                       <FaTrash className="text-xs" />
                     </button>
@@ -1545,14 +1545,14 @@ function ScanPage() {
                 <button
                   type="button"
                   onClick={() => setCashAdjustmentType('Cash-In')}
-                  className={`flex-1 py-2.5 border rounded-lg text-xs font-bold transition-all ${cashAdjustmentType === 'Cash-In' ? 'bg-emerald-700 text-white border-emerald-700' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-350'}`}
+                  className={`flex-1 py-2.5 border rounded-lg text-xs font-bold transition-all ${cashAdjustmentType === 'Cash-In' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-400'}`}
                 >
                   Cash-In (Deposit)
                 </button>
                 <button
                   type="button"
                   onClick={() => setCashAdjustmentType('Cash-Out')}
-                  className={`flex-1 py-2.5 border rounded-lg text-xs font-bold transition-all ${cashAdjustmentType === 'Cash-Out' ? 'bg-rose-600 text-white border-rose-600' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-350'}`}
+                  className={`flex-1 py-2.5 border rounded-lg text-xs font-bold transition-all ${cashAdjustmentType === 'Cash-Out' ? 'bg-rose-600 text-white border-rose-600' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-400'}`}
                 >
                   Cash-Out (Payout)
                 </button>

@@ -145,7 +145,7 @@ function RegisterPage() {
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row font-sans text-slate-800 antialiased">
 
       {/* Left side: Premium branding & features highlight */}
-      <div className="w-full md:w-[420px] bg-slate-900 text-slate-350 p-8 flex flex-col justify-between border-r border-slate-800">
+      <div className="w-full md:w-[420px] bg-slate-900 text-slate-400 p-8 flex flex-col justify-between border-r border-slate-800">
 
         {/* Top Logo link */}
         <div className="flex items-center gap-3">
@@ -171,7 +171,7 @@ function RegisterPage() {
           <h2 className="text-xl font-bold text-slate-100 tracking-tight">
             Create a cashier account
           </h2>
-          <p className="text-xs leading-relaxed text-slate-450">
+          <p className="text-xs leading-relaxed text-slate-400">
             Set up secure register access for a member of your store team.
           </p>
 

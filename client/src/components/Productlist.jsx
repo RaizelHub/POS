@@ -244,7 +244,7 @@ function ProductList() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Inventory & Catalog</p>
-          <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-900">Product Management</h2>
+          <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950">Product Management</h2>
           <p className="text-slate-500 text-sm mt-1">Configure pricing, barcodes, reorder thresholds, and active stock.</p>
         </div>
 

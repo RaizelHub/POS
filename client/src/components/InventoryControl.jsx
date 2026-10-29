@@ -86,9 +86,9 @@ const InventoryControl = () => {
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Stock control</p>
-        <h1 className="mt-1 text-2xl font-bold text-slate-950">Inventory movements</h1>
-        <p className="mt-1 text-sm text-slate-500">Receive, count, and adjust stock with a permanent audit trail.</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Stock Control</p>
+        <h2 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950">Inventory Movements</h2>
+        <p className="mt-0.5 text-sm text-slate-500">Receive, count, and adjust stock with a permanent audit trail.</p>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[0.42fr_0.58fr]">
@@ -104,7 +104,7 @@ const InventoryControl = () => {
                 key={value}
                 type="button"
                 onClick={() => setMode(value)}
-                className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-xs font-bold ${mode === value ? 'border-emerald-700 bg-emerald-700 text-white' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-xs font-semibold transition-all ${mode === value ? 'border-emerald-600 bg-emerald-600 text-white shadow-xs' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}
               >
                 <Icon /> {label}
               </button>
@@ -144,7 +144,7 @@ const InventoryControl = () => {
 
           {error && <p className="rounded-lg bg-rose-50 p-3 text-xs font-semibold text-rose-700">{error}</p>}
           {notice && <p className="rounded-lg bg-emerald-50 p-3 text-xs font-semibold text-emerald-700">{notice}</p>}
-          <button disabled={saving} className="w-full rounded-lg bg-slate-950 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-50">
+          <button disabled={saving} className="w-full rounded-lg bg-emerald-600 hover:bg-emerald-700 px-4 py-3 text-sm font-semibold text-white transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
             {saving ? 'Recording…' : 'Record movement'}
           </button>
         </form>

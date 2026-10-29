@@ -132,7 +132,7 @@ function ThankYou() {
   const isCashOrSplit = paymentMethod === 'Cash' || paymentMethod === 'Split';
 
   return (
-    <div className="min-h-screen bg-slate-100 font-sans text-slate-800 py-8 px-4 sm:px-6 relative antialiased">
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-800 py-8 px-4 sm:px-6 relative antialiased">
       
       {/* CSS print override styles */}
       <style dangerouslySetInnerHTML={{__html: `
@@ -343,11 +343,11 @@ function ThankYou() {
             <button
               type="button"
               onClick={() => navigate('/scan')}
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-sm font-bold transition-all shadow-sm active:scale-95"
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition-all shadow-sm active:scale-95"
             >
               <FaBarcode />
               <span>Start Next Sale</span>
-              <span className="text-[10px] text-slate-400 font-mono">[Enter]</span>
+              <span className="text-[10px] text-emerald-100 font-mono bg-emerald-750 px-1 rounded">[Enter]</span>
               <FaArrowRight className="text-xs ml-1" />
             </button>
           </div>
