@@ -1,22 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  FaUserCircle, FaArrowLeft, FaBackspace, FaLock,
-  FaCheckCircle, FaExclamationTriangle, FaSearch,
-  FaQuestionCircle
-} from 'react-icons/fa';
+import { FaSearch, FaTimes, FaExclamationTriangle, FaCheckCircle, FaUserPlus } from 'react-icons/fa';
 
 import { getApiUrl } from '../utils/getApiUrl';
-import loginImage from '../images/login.jpg';
-import novaLogo from '../images/nova_logo.png';
-import Header from './login/Header';
-import Footer from './login/Footer';
-import CashierCard from './login/CashierCard';
-import NumericKeypad from './login/NumericKeypad';
-import ForgotPinModal from './login/ForgotPinModal';
-import LoadingSkeleton from './login/LoadingSkeleton';
-import CorporateHub from './login/CorporateHub';
+import RegisterHeader from './login/RegisterHeader';
+import CashierRow from './login/CashierRow';
+import RegisterKeypad from './login/RegisterKeypad';
+import WorkstationDossier from './login/WorkstationDossier';
+import RegisterHelpModal from './login/RegisterHelpModal';
+import RegisterForgotPinModal from './login/RegisterForgotPinModal';
 
 const LoginSelectionPage = () => {
   const [users, setUsers] = useState([]);
@@ -24,73 +16,55 @@ const LoginSelectionPage = () => {
   const [pin, setPin] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [fetchError, setFetchError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
   const [isForgotPin, setIsForgotPin] = useState(false);
   const [resetError, setResetError] = useState(null);
-  const [isHelpDeskOpen, setIsHelpDeskOpen] = useState(false);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
 
   const navigate = useNavigate();
   const location = useLocation();
 
-  useEffect(() => {
-    const queryParams = new URLSearchParams(location.search);
-    if (queryParams.get('pinReset') === 'true') {
-      setSnackbarMessage('PIN reset successful!');
-      setTimeout(() => setSnackbarMessage(null), 4000);
-    }
-    fetchUsers();
-  }, [location]);
-
-  // Physical keyboard support
-  useEffect(() => {
-    if (!selectedUser || isForgotPin) return;
-
-    const handleKeyDown = (e) => {
-      if (e.key >= '0' && e.key <= '9') {
-        if (pin.length < 6) {
-          setPin(prev => prev + e.key);
-        }
-      } else if (e.key === 'Backspace') {
-        setPin(prev => prev.slice(0, -1));
-      } else if (e.key === 'Enter') {
-        if (pin.length === 6) {
-          submitPin(pin);
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedUser, pin, isForgotPin]);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
+      setFetchError(null);
+      setError(null);
       const apiUrl = getApiUrl();
       const res = await fetch(`${apiUrl}/api/cashiers/login-directory`);
-      if (!res.ok) throw new Error('Failed to fetch users.');
+      if (!res.ok) {
+        throw new Error(`Service returned HTTP ${res.status}`);
+      }
       const data = await res.json();
-      setUsers(data);
+      setUsers(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError(err.message || 'An error occurred while fetching users.');
+      console.error('Failed to fetch cashiers:', err);
+      setFetchError('Unable to reach cashier service. Please verify your connection.');
+      setUsers([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const handleUserClick = (user) => {
-    setSelectedUser(user);
-    setPin('');
-    setError(null);
-    setIsForgotPin(false);
-  };
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    if (queryParams.get('pinReset') === 'true') {
+      setSnackbarMessage('PIN reset completed successfully.');
+      setTimeout(() => setSnackbarMessage(null), 4000);
+    }
+    fetchUsers();
+  }, [location, fetchUsers]);
 
-  const submitPin = async (currentPin) => {
-    if (loading) return;
+  // Submit PIN for authentication
+  const submitPin = useCallback(async (currentPin) => {
+    if (submitting || !selectedUser) return;
 
     try {
-      setLoading(true);
+      setSubmitting(true);
+      setError(null);
       const apiUrl = getApiUrl();
       const res = await fetch(`${apiUrl}/api/login`, {
         method: 'POST',
@@ -98,80 +72,88 @@ const LoginSelectionPage = () => {
         body: JSON.stringify({ userId: selectedUser._id, pin: currentPin }),
       });
 
-      if (!res.ok) throw new Error('Invalid PIN or login failed.');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Incorrect PIN or cashier verification failed.');
+      }
+
       const data = await res.json();
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
 
-      setSnackbarMessage(`Welcome back, ${data.user.firstname}!`);
+      setSnackbarMessage(`Welcome, ${data.user.firstname}. Register unlocking…`);
       setTimeout(() => {
-        setSnackbarMessage(null);
         navigate('/scan', {
           state: { userId: data.user._id, firstname: data.user.firstname },
         });
-      }, 1500);
+      }, 1000);
     } catch (err) {
-      setError(err.message || 'Login failed. Please verify credentials.');
+      setError(err.message || 'Verification failed. Please check your PIN.');
       setPin('');
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
-  };
+  }, [selectedUser, submitting, navigate]);
 
-  const handlePinSubmit = () => {
-    if (pin.length === 6) {
-      submitPin(pin);
-    }
-  };
+  // Hardware keyboard entry support
+  useEffect(() => {
+    if (!selectedUser || isForgotPin || isHelpOpen) return;
 
-  const handleForgotPinSubmit = async (enteredEmail, enteredEmployeeId) => {
-    if (!enteredEmail) {
-      setResetError('Please enter a valid email address.');
-      return;
-    }
+    const handleKeyDown = (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
-    const cashierNum = `C-${selectedUser._id.substring(selectedUser._id.length - 4).toUpperCase()}`;
-    if (enteredEmployeeId && enteredEmployeeId.toUpperCase() !== cashierNum) {
-      setResetError('Employee ID does not match selected profile.');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setResetError(null);
-      const apiUrl = getApiUrl();
-      const response = await fetch(`${apiUrl}/api/forgot-pin`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: enteredEmail }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Something went wrong');
+      if (e.key >= '0' && e.key <= '9') {
+        if (pin.length < 6) {
+          setPin((prev) => {
+            const next = prev + e.key;
+            if (next.length === 6) {
+              setTimeout(() => submitPin(next), 50);
+            }
+            return next;
+          });
+          setError(null);
+        }
+      } else if (e.key === 'Backspace') {
+        setPin((prev) => prev.slice(0, -1));
+        setError(null);
+      } else if (e.key === 'Enter') {
+        if (pin.length === 6) {
+          submitPin(pin);
+        }
+      } else if (e.key === 'Escape') {
+        setSelectedUser(null);
+        setPin('');
+        setError(null);
       }
+    };
 
-      setSnackbarMessage('Reset link sent to your email!');
-      setTimeout(() => {
-        closeModal();
-        setSnackbarMessage(null);
-      }, 1500);
-    } catch (error) {
-      setResetError('There was an issue resetting the PIN.');
-      setSnackbarMessage('Error resetting PIN.');
-      setTimeout(() => setSnackbarMessage(null), 3000);
-    } finally {
-      setLoading(false);
-    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedUser, pin, isForgotPin, isHelpOpen, submitPin]);
+
+  const handleUserSelect = (user) => {
+    setSelectedUser(user);
+    setPin('');
+    setError(null);
+    setIsForgotPin(false);
   };
 
   const handleKeypadPress = (val) => {
     if (val === 'backspace') {
-      setPin(prev => prev.slice(0, -1));
+      setPin((prev) => prev.slice(0, -1));
+      setError(null);
     } else if (val === 'enter') {
-      handlePinSubmit();
+      if (pin.length === 6) {
+        submitPin(pin);
+      }
     } else {
       if (pin.length < 6) {
-        setPin(prev => prev + val);
+        const next = pin + val;
+        setPin(next);
+        setError(null);
+        if (next.length === 6) {
+          setTimeout(() => submitPin(next), 100);
+        }
       }
     }
   };
@@ -183,382 +165,388 @@ const LoginSelectionPage = () => {
     setIsForgotPin(false);
   };
 
-  // Filter Cashier Lists
-  const filteredUsers = users.filter(user => {
-    const fullName = `${user.firstname || ''} ${user.lastname || ''}`.toLowerCase();
-    return fullName.includes(searchQuery.toLowerCase());
-  });
+  const handleForgotPinSubmit = async (enteredEmail, enteredEmployeeId) => {
+    if (!enteredEmail) {
+      setResetError('Please enter a valid account email.');
+      return;
+    }
+
+    const cashierNum = selectedUser
+      ? `C-${selectedUser._id.substring(selectedUser._id.length - 4).toUpperCase()}`
+      : '';
+    if (enteredEmployeeId && enteredEmployeeId.toUpperCase() !== cashierNum) {
+      setResetError('Employee code does not match this cashier profile.');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      setResetError(null);
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/forgot-pin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: enteredEmail }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to request reset instructions.');
+      }
+
+      setSnackbarMessage('PIN reset instructions sent to registered email.');
+      setTimeout(() => {
+        setIsForgotPin(false);
+        setSnackbarMessage(null);
+      }, 2000);
+    } catch (err) {
+      setResetError(err.message || 'Error processing PIN reset request.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Filter Cashier Lists cleanly
+  const filteredUsers = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return users;
+    return users.filter((u) => {
+      const name = `${u.firstname || ''} ${u.lastname || ''}`.toLowerCase();
+      const station = (u.station || '').toLowerCase();
+      const role = (u.role || '').toLowerCase();
+      const id = (u._id || '').toLowerCase();
+      return name.includes(q) || station.includes(q) || role.includes(q) || id.includes(q);
+    });
+  }, [users, searchQuery]);
+
+  // Determine mutually exclusive directory state
+  let directoryView = 'ready';
+  if (loading) {
+    directoryView = 'loading';
+  } else if (fetchError) {
+    directoryView = 'error';
+  } else if (users.length === 0) {
+    directoryView = 'empty';
+  } else if (filteredUsers.length === 0) {
+    directoryView = 'no_search_results';
+  }
 
   return (
-    <div className="w-screen h-screen bg-slate-50 flex flex-col font-sans text-slate-800 antialiased selection:bg-slate-900 selection:text-white overflow-hidden relative">
+    <div className="min-h-screen bg-[#F5F3ED] text-[#252924] font-sans antialiased flex flex-col selection:bg-[#252924] selection:text-[#FFFFFF]">
+      {/* Toast notification */}
+      {snackbarMessage && (
+        <div
+          role="status"
+          className="fixed top-16 right-6 z-50 bg-[#252924] text-white px-4 py-3 rounded border border-[#DDDCD4] flex items-center gap-2.5 text-xs font-medium shadow-none animate-fadeIn"
+        >
+          <FaCheckCircle className="text-[#B55E42] text-sm shrink-0" />
+          <span>{snackbarMessage}</span>
+        </div>
+      )}
 
-      {/* Success/Error toasts */}
-      <AnimatePresence>
-        {snackbarMessage && (
-          <motion.div
-            initial={{ opacity: 0, y: -40, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.95 }}
-            className="fixed top-16 right-6 bg-slate-900 border border-slate-750 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-2.5 z-50 text-xs font-medium"
-          >
-            <FaCheckCircle className="text-slate-300 text-sm" />
-            <span>{snackbarMessage}</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Slim Global Architectural Header */}
+      <RegisterHeader
+        onHelpClick={() => setIsHelpOpen(true)}
+        isServiceConnected={!fetchError}
+      />
 
-      {/* Top Header — Uniform h-14 (56px) across the entire workstation */}
-      <Header theme="light" onHelpDeskClick={() => setIsHelpDeskOpen(true)} />
-
-      {/* Full-Screen Workspace Grid */}
-      <div className="flex-1 w-full bg-slate-50 grid grid-cols-1 lg:grid-cols-12 relative z-10 overflow-hidden">
-
-        {/* Left Side: Workstation Information & Corporate Hub */}
-        <div className="hidden lg:flex lg:col-span-5 xl:col-span-4 h-full flex-col justify-between p-6 bg-slate-900 text-white border-r border-slate-800 overflow-y-auto no-scrollbar">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Workstation Status</span>
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-mono font-semibold bg-emerald-950/60 text-emerald-400 border border-emerald-800/60">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                ACTIVE POS-01
-              </span>
+      {/* Main Unified Editorial Workspace */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 xl:gap-12 items-start">
+          
+          {/* LEFT COLUMN: Main Staff Directory (Span 7) */}
+          <section className="lg:col-span-7 xl:col-span-7 space-y-6">
+            
+            {/* Editorial Heading Unit */}
+            <div className="space-y-2 border-b border-[#DDDCD4] pb-5">
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#B55E42]">
+                  01 / STAFF ACCESS
+                </span>
+                <span className="h-px w-8 bg-[#DDDCD4]" />
+              </div>
+              <h1 className="font-serif sm:font-sans text-3xl sm:text-4xl lg:text-[40px] font-bold tracking-tight text-[#252924] leading-[1.1]">
+                Who's on the register?
+              </h1>
+              <p className="text-sm text-[#6C716A] leading-relaxed pt-1">
+                Select your cashier profile to begin a sales session.
+              </p>
             </div>
-            <CorporateHub theme="dark" />
-          </div>
 
-          <div className="pt-4 border-t border-slate-800 text-[10px] text-slate-500 font-mono flex items-center justify-between">
-            <span>SUELTO RETAIL v1.1</span>
-            <span>STATION SECURE</span>
-          </div>
-        </div>
-
-        {/* Right Side: Cashier Selection & PIN Entry */}
-        <div className="col-span-12 lg:col-span-7 xl:col-span-8 p-4 md:p-8 flex flex-col justify-between overflow-y-auto bg-slate-50 h-full">
-
-          {/* Main changing view */}
-          <div className="flex-grow flex flex-col justify-center max-w-[460px] w-full mx-auto py-4">
-            <motion.div
-              layout
-              className="bg-white border border-slate-200/90 rounded-xl p-5 md:p-7 shadow-xs space-y-5 text-slate-800 relative overflow-hidden"
-            >
-              <AnimatePresence mode="wait">
-                {!selectedUser ? (
-                  /* CASHIER LIST / SELECTION TAB */
-                  <motion.div
-                    key="cashier-selection"
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -15 }}
-                    transition={{ duration: 0.3 }}
-                    className="space-y-5"
+            {/* Substantial, Accessible Search Input */}
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-[#6C716A] pointer-events-none">
+                <FaSearch className="text-xs" />
+              </span>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search staff by name, station, or ID…"
+                aria-label="Search cashiers"
+                className="w-full h-11 pl-10 pr-20 bg-[#FFFFFF] border border-[#DDDCD4] rounded text-xs text-[#252924] placeholder:text-[#6C716A] focus:outline-none focus:border-[#B55E42] focus:ring-1 focus:ring-[#B55E42] transition-colors font-medium"
+              />
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center gap-2">
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="p-1 text-[#6C716A] hover:text-[#252924] rounded"
+                    aria-label="Clear search"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-800 shadow-xs">
-                        <FaLock className="text-xs" />
-                      </div>
-                      <div>
-                        <h2 className="text-xl font-semibold text-slate-950 tracking-tight leading-none">Choose cashier</h2>
-                        <p className="text-slate-500 text-xs mt-2 font-medium">Select your profile to open the register.</p>
-                      </div>
-                    </div>
-
-                    {/* Search box filter */}
-                    <div className="relative">
-                      <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-xs">
-                        <FaSearch />
-                      </span>
-                      <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search cashiers"
-                        className="w-full bg-slate-50 border border-slate-200 text-xs font-semibold rounded-xl pl-9 pr-4 py-3 outline-none transition-all focus:bg-white focus:border-slate-800 focus:ring-1 focus:ring-slate-800 text-slate-800 placeholder:text-slate-400"
-                      />
-                    </div>
-
-                    {/* Cashiers list body */}
-                    {loading ? (
-                      <LoadingSkeleton />
-                    ) : filteredUsers.length > 0 ? (
-                      <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1 scrollbar-thin">
-                        {filteredUsers.map((user) => (
-                          <CashierCard
-                            key={user._id}
-                            user={user}
-                            isSelected={false}
-                            onClick={() => handleUserClick(user)}
-                            theme="light"
-                          />
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-8 text-center space-y-3">
-                        <FaUserCircle className="text-slate-400 text-4xl mx-auto" />
-                        <h4 className="text-sm font-bold text-slate-800">No Cashiers Found</h4>
-                        <p className="text-slate-500 text-[11px] leading-relaxed max-w-xs mx-auto">
-                          No cashier profiles match this search.
-                        </p>
-                        <p className="text-[10px] font-semibold text-slate-500">Ask a manager to add or assign a cashier.</p>
-                      </div>
-                    )}
-
-                    {error && (
-                      <div className="bg-rose-50 border border-rose-100 text-rose-700 p-3 rounded-lg text-xs font-semibold text-center flex items-center justify-center gap-1.5">
-                        <FaExclamationTriangle className="text-rose-500" />
-                        <span>{error}</span>
-                      </div>
-                    )}
-
-                    <div className="border-t border-slate-200 pt-4 text-center text-[10px] font-mono uppercase tracking-wider text-slate-400">
-                      Cashier accounts managed via admin panel
-                    </div>
-                  </motion.div>
-                ) : (
-                  /* PIN AUTHENTICATION SCREEN */
-                  <motion.div
-                    key="pin-authentication"
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -15 }}
-                    transition={{ duration: 0.3 }}
-                    className="space-y-6"
-                  >
-
-                    {/* Selected cashier banner */}
-                    <div className="flex items-center justify-between pb-3 border-b border-slate-200">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-xl border border-slate-200 overflow-hidden bg-slate-50 flex items-center justify-center shadow-xs">
-                          <img
-                            src={selectedUser.image ? (selectedUser.image.startsWith('http') ? selectedUser.image : `${getApiUrl()}/${selectedUser.image}`) : ''}
-                            alt={selectedUser.firstname}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="text-left leading-none">
-                          <h4 className="font-bold text-slate-900 text-xs">{selectedUser.firstname} {selectedUser.lastname}</h4>
-                          <span className="text-slate-500 text-[10px] font-mono">{selectedUser.station || 'Unassigned register'}</span>
-                        </div>
-                      </div>
-
-                      <button
-                        onClick={closeModal}
-                        className="text-[10px] font-mono font-semibold text-slate-500 hover:text-slate-900 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition-all active:scale-95 uppercase tracking-wide"
-                      >
-                        <FaArrowLeft className="text-[8px]" /> Back
-                      </button>
-                    </div>
-
-                    {/* PIN field header */}
-                    <div className="text-center space-y-1">
-                      <h3 className="font-bold text-slate-950 text-lg tracking-tight">Enter PIN</h3>
-                      <p className="text-slate-500 text-xs font-medium">Use your six-digit cashier PIN.</p>
-                    </div>
-
-                    {/* PIN Display Indicators - Minimalist Segmented Digit Slots */}
-                    <div className="space-y-4">
-                      <div className="flex justify-center gap-2 py-1">
-                        {[...Array(6)].map((_, idx) => {
-                          const hasChar = idx < pin.length;
-                          const isCurrent = idx === pin.length;
-                          return (
-                            <motion.div
-                              key={idx}
-                              animate={{ scale: hasChar ? [1, 1.08, 1] : 1 }}
-                              transition={{ duration: 0.15 }}
-                              className={`w-10 h-12 rounded-xl border transition-all duration-150 flex items-center justify-center ${
-                                hasChar
-                                  ? 'border-slate-950 bg-white shadow-xs'
-                                  : isCurrent
-                                  ? 'border-slate-400 bg-white ring-2 ring-slate-100'
-                                  : 'border-slate-200 bg-slate-50/80'
-                              }`}
-                            >
-                              {hasChar ? (
-                                <motion.span 
-                                  initial={{ scale: 0 }}
-                                  animate={{ scale: 1 }}
-                                  className="w-2.5 h-2.5 rounded-full bg-slate-950 block" 
-                                />
-                              ) : isCurrent ? (
-                                <span className="w-1.5 h-0.5 bg-slate-400 block rounded-full" />
-                              ) : null}
-                            </motion.div>
-                          );
-                        })}
-                      </div>
-
-                      {error && (
-                        <div className="bg-rose-50 border border-rose-100 text-rose-700 p-3 rounded-lg text-xs font-semibold text-center flex items-center justify-center gap-1.5">
-                          <FaExclamationTriangle className="text-rose-500" />
-                          <span>{error}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Touchscreen keypad overlay */}
-                    <NumericKeypad onKeyPress={handleKeypadPress} theme="light" />
-
-                    {/* Submit and Forgot options */}
-                    <div className="space-y-3">
-                      <button
-                        onClick={handlePinSubmit}
-                        disabled={pin.length < 6 || loading}
-                        className="w-full h-12 bg-slate-950 hover:bg-slate-800 disabled:bg-slate-200 text-white disabled:text-slate-400 text-xs font-bold rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 active:scale-98 disabled:cursor-not-allowed"
-                      >
-                        {loading ? 'Signing in…' : 'Open register'}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setIsForgotPin(true)}
-                        className="w-full text-center text-[10px] font-mono font-semibold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-wider block"
-                      >
-                        Forgot PIN?
-                      </button>
-                    </div>
-
-                  </motion.div>
+                    <FaTimes className="text-xs" />
+                  </button>
                 )}
-              </AnimatePresence>
-            </motion.div>
-          </div>
+                {!loading && !fetchError && (
+                  <span className="font-mono text-[10px] text-[#6C716A] bg-[#F5F3ED] px-2 py-0.5 rounded border border-[#DDDCD4]">
+                    {filteredUsers.length} available
+                  </span>
+                )}
+              </div>
+            </div>
 
-          {/* Footer info */}
-          <Footer theme="light" />
+            {/* MUTUALLY EXCLUSIVE DIRECTORY STATES */}
+
+            {/* 1. Loading State */}
+            {directoryView === 'loading' && (
+              <div className="bg-[#FFFFFF] border border-[#DDDCD4] rounded p-8 text-center space-y-4">
+                <div className="w-6 h-6 border-2 border-[#B55E42] border-t-transparent rounded-full animate-spin mx-auto" />
+                <div className="space-y-1">
+                  <h3 className="font-semibold text-sm text-[#252924]">Loading cashier profiles</h3>
+                  <p className="text-xs text-[#6C716A]">Establishing secure connection with the branch directory…</p>
+                </div>
+              </div>
+            )}
+
+            {/* 2. Fetch Error State (Mutual exclusion: No zero count displayed!) */}
+            {directoryView === 'error' && (
+              <div className="bg-[#FFFFFF] border border-[#DDDCD4] rounded p-7 text-center space-y-4">
+                <div className="w-10 h-10 rounded bg-[#FDF2F2] border border-[#FCA5A5] text-[#B91C1C] flex items-center justify-center mx-auto">
+                  <FaExclamationTriangle className="text-sm" />
+                </div>
+                <div className="space-y-1 max-w-sm mx-auto">
+                  <h3 className="font-bold text-sm text-[#252924]">Unable to load cashiers</h3>
+                  <p className="text-xs text-[#6C716A] leading-relaxed">
+                    We couldn't reach the service. Try again or check network connectivity.
+                  </p>
+                </div>
+                <div>
+                  <button
+                    type="button"
+                    onClick={fetchUsers}
+                    className="px-4 py-2 bg-[#252924] hover:bg-[#B55E42] text-white rounded text-xs font-semibold tracking-wide transition-colors"
+                  >
+                    Retry Connection
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* 3. Empty State (Zero cashiers registered) */}
+            {directoryView === 'empty' && (
+              <div className="bg-[#FFFFFF] border border-[#DDDCD4] rounded p-8 text-center space-y-4">
+                <div className="w-10 h-10 rounded bg-[#F3E8E1] border border-[#DDDCD4] text-[#B55E42] flex items-center justify-center mx-auto">
+                  <FaUserPlus className="text-sm" />
+                </div>
+                <div className="space-y-1 max-w-sm mx-auto">
+                  <h3 className="font-bold text-sm text-[#252924]">No cashier profiles available</h3>
+                  <p className="text-xs text-[#6C716A] leading-relaxed">
+                    There are currently no active cashier accounts configured for this store branch. An authorized administrator must register staff accounts.
+                  </p>
+                </div>
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/admin-login')}
+                    className="px-4 py-2 bg-[#252924] hover:bg-[#B55E42] text-white rounded text-xs font-semibold tracking-wide transition-colors"
+                  >
+                    Open Manager Portal →
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* 4. Search Returned No Matches */}
+            {directoryView === 'no_search_results' && (
+              <div className="bg-[#FFFFFF] border border-[#DDDCD4] rounded p-8 text-center space-y-3">
+                <h3 className="font-bold text-sm text-[#252924]">No matching cashier</h3>
+                <p className="text-xs text-[#6C716A] max-w-sm mx-auto">
+                  No staff profile matches "{searchQuery}". Check spelling or search by station.
+                </p>
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="px-3.5 py-1.5 border border-[#DDDCD4] bg-[#FFFFFF] hover:bg-[#F5F3ED] text-[#252924] rounded text-xs font-semibold transition-colors"
+                  >
+                    Clear Search Filter
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* 5. Ready State: Structured Cashier Directory Rows */}
+            {directoryView === 'ready' && (
+              <div
+                className="space-y-2 max-h-[500px] overflow-y-auto pr-1"
+                role="list"
+                aria-label="Available cashiers"
+              >
+                {filteredUsers.map((user) => (
+                  <CashierRow
+                    key={user._id}
+                    user={user}
+                    isSelected={selectedUser?._id === user._id}
+                    onSelect={handleUserSelect}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Understated Directory Footer Note */}
+            <div className="pt-2 text-center sm:text-left text-[11px] font-mono text-[#6C716A]">
+              Terminal ID: SUELTO-REG-01 · Active Hardware Node
+            </div>
+          </section>
+
+          {/* RIGHT COLUMN: PIN Entry or Workstation Dossier (Span 5) */}
+          <section className="lg:col-span-5 xl:col-span-5">
+            {!selectedUser ? (
+              /* When no user is selected: Terminal Dossier */
+              <WorkstationDossier />
+            ) : (
+              /* When user is selected: The PIN Terminal */
+              <div className="bg-[#FFFFFF] border border-[#DDDCD4] rounded p-6 sm:p-7 space-y-6">
+                
+                {/* Active Cashier Banner */}
+                <div className="flex items-center justify-between pb-4 border-b border-[#DDDCD4]">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded border border-[#DDDCD4] bg-[#F3E8E1] text-[#B55E42] font-mono font-bold text-xs flex items-center justify-center shrink-0">
+                      {selectedUser.firstname?.charAt(0)}
+                      {selectedUser.lastname?.charAt(0)}
+                    </div>
+                    <div className="min-w-0">
+                      <span className="font-bold text-sm text-[#252924] block truncate">
+                        {selectedUser.firstname} {selectedUser.lastname}
+                      </span>
+                      <span className="font-mono text-[10px] text-[#6C716A] block">
+                        {selectedUser.role ? selectedUser.role.toUpperCase() : 'CASHIER'} · {selectedUser.station || 'POS-01'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={closeModal}
+                    className="text-[11px] font-mono font-semibold text-[#6C716A] hover:text-[#B55E42] border border-[#DDDCD4] hover:bg-[#F5F3ED] px-2.5 py-1 rounded transition-colors"
+                  >
+                    ← Switch
+                  </button>
+                </div>
+
+                {/* PIN Header */}
+                <div className="text-center space-y-1">
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="font-mono text-[10px] uppercase font-bold tracking-widest text-[#B55E42]">
+                      02 / SECURITY ACCESS
+                    </span>
+                  </div>
+                  <h2 className="font-serif sm:font-sans text-xl font-bold text-[#252924] tracking-tight">
+                    Enter Cashier PIN
+                  </h2>
+                  <p className="text-xs text-[#6C716A]">
+                    Type your six-digit terminal passcode.
+                  </p>
+                </div>
+
+                {/* 6-Digit Segmented Slots (Solid, zero gradients) */}
+                <div className="space-y-3">
+                  <div className="flex justify-center gap-2 py-1" aria-label={`PIN entered: ${pin.length} of 6 digits`}>
+                    {[...Array(6)].map((_, idx) => {
+                      const isFilled = idx < pin.length;
+                      const isCurrent = idx === pin.length;
+                      return (
+                        <div
+                          key={idx}
+                          className={`w-10 h-12 rounded border flex items-center justify-center transition-all ${
+                            isFilled
+                              ? 'border-[#252924] bg-[#FFFFFF]'
+                              : isCurrent
+                              ? 'border-[#B55E42] bg-[#FFFFFF] ring-1 ring-[#B55E42]'
+                              : 'border-[#DDDCD4] bg-[#F5F3ED]'
+                          }`}
+                        >
+                          {isFilled ? (
+                            <span className="w-2.5 h-2.5 rounded-full bg-[#252924] block" />
+                          ) : isCurrent ? (
+                            <span className="w-1.5 h-0.5 bg-[#B55E42] block" />
+                          ) : null}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Restrained Error Alert */}
+                  {error && (
+                    <div
+                      role="alert"
+                      className="p-3 bg-[#FDF2F2] border border-[#FCA5A5] rounded text-xs text-[#991B1B] text-center font-medium"
+                    >
+                      {error}
+                    </div>
+                  )}
+                </div>
+
+                {/* Tactile Keypad */}
+                <RegisterKeypad
+                  onKeyPress={handleKeypadPress}
+                  disabled={submitting}
+                />
+
+                {/* Primary Action Button */}
+                <div className="space-y-3 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (pin.length === 6) submitPin(pin);
+                    }}
+                    disabled={pin.length < 6 || submitting}
+                    className="w-full h-11 bg-[#B55E42] hover:bg-[#9C4F37] disabled:bg-[#DDDCD4] text-white disabled:text-[#6C716A] text-xs font-semibold tracking-wider uppercase rounded transition-colors flex items-center justify-center gap-2 disabled:cursor-not-allowed shadow-none"
+                  >
+                    {submitting ? 'Verifying PIN…' : 'Unlock Register Station →'}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsForgotPin(true)}
+                    className="w-full text-center font-mono text-[11px] text-[#6C716A] hover:text-[#252924] transition-colors uppercase tracking-wider block"
+                  >
+                    Forgot Security PIN?
+                  </button>
+                </div>
+
+              </div>
+            )}
+          </section>
 
         </div>
+      </main>
 
-      </div>
+      {/* Support Modals */}
+      <RegisterHelpModal
+        isOpen={isHelpOpen}
+        onClose={() => setIsHelpOpen(false)}
+      />
 
-      {/* Forgot PIN Slide-up Modal */}
-      <AnimatePresence>
-        {isForgotPin && (
-          <ForgotPinModal
-            isOpen={isForgotPin}
-            onClose={() => setIsForgotPin(false)}
-            onSubmit={handleForgotPinSubmit}
-            selectedUser={selectedUser}
-            loading={loading}
-            resetError={resetError}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Help Desk Modal Dialog */}
-      <AnimatePresence>
-        {isHelpDeskOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md"
-          >
-            <motion.div
-              initial={{ scale: 0.95, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 20 }}
-              className="bg-slate-900 border border-slate-800 rounded-xl p-6 md:p-8 max-w-[650px] w-full shadow-lg space-y-6 text-left relative text-white"
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-950/50 border border-emerald-900/40 flex items-center justify-center text-emerald-400">
-                    <FaQuestionCircle className="text-lg" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg text-white leading-none tracking-tight">Workstation Support Desk</h3>
-                    <p className="text-[10.5px] text-slate-400 mt-1.5 font-semibold uppercase tracking-wider">Secure Terminal Guide & Hotkeys</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setIsHelpDeskOpen(false)}
-                  className="bg-slate-950 border border-slate-800 hover:bg-slate-800 text-slate-400 hover:text-white px-3 py-1.5 rounded-lg text-[10px] font-mono font-semibold uppercase tracking-wide transition-all active:scale-95"
-                >
-                  Close
-                </button>
-              </div>
-
-              {/* Grid content */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 overflow-y-auto max-h-[60vh] pr-2 scrollbar-thin">
-                
-                {/* Hardware Troubleshooting */}
-                <div className="space-y-3">
-                  <h4 className="text-[11px] font-bold text-slate-300 uppercase tracking-widest">
-                    Workstation Troubleshooting
-                  </h4>
-                  
-                  <div className="space-y-2.5 text-[11px]">
-                    <div className="p-3 bg-slate-950/50 border border-slate-850 rounded-xl">
-                      <span className="block font-bold text-slate-200">Thermal Printer is Offline</span>
-                      <p className="text-slate-400 mt-1 leading-normal">Verify the USB cable is connected. Toggle the power switch located at the back-right. Ensure paper roll is feeding from the bottom.</p>
-                    </div>
-                    <div className="p-3 bg-slate-950/50 border border-slate-850 rounded-xl">
-                      <span className="block font-bold text-slate-200">Barcode Scanner Fails to Scan</span>
-                      <p className="text-slate-400 mt-1 leading-normal">Position barcodes 10-15cm from the laser array. Clean the scanner glass using a dry microfiber cloth to remove smudges.</p>
-                    </div>
-                    <div className="p-3 bg-slate-950/50 border border-slate-850 rounded-xl">
-                      <span className="block font-bold text-slate-200">RJ11 Cash Drawer Not Triggering</span>
-                      <p className="text-slate-400 mt-1 leading-normal">Confirm that the RJ11 cable is plugged directly into the back-left port of the thermal printer (not the computer).</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Keyboard Shortcuts & Support */}
-                <div className="space-y-5">
-                  
-                  <div className="space-y-3">
-                    <h4 className="text-[11px] font-bold text-slate-300 uppercase tracking-widest">
-                      Cashier Hotkeys (Checkout Screen)
-                    </h4>
-                    
-                    <div className="space-y-2 font-mono text-[10.5px]">
-                      <div className="flex items-center justify-between p-2 bg-slate-950/30 border border-slate-850 rounded-lg">
-                        <span className="text-slate-400 font-bold uppercase">Focus Catalog Search</span>
-                        <kbd className="px-2 py-0.5 bg-slate-800 border border-slate-700 rounded text-slate-200 text-[10px] font-sans font-bold shadow-sm">F1</kbd>
-                      </div>
-                      <div className="flex items-center justify-between p-2 bg-slate-950/30 border border-slate-850 rounded-lg">
-                        <span className="text-slate-400 font-bold uppercase">Tender Exact Cash</span>
-                        <kbd className="px-2 py-0.5 bg-slate-800 border border-slate-700 rounded text-slate-200 text-[10px] font-sans font-bold shadow-sm">F2</kbd>
-                      </div>
-                      <div className="flex items-center justify-between p-2 bg-slate-950/30 border border-slate-850 rounded-lg">
-                        <span className="text-slate-400 font-bold uppercase">Reprint Last Invoice</span>
-                        <kbd className="px-2 py-0.5 bg-slate-800 border border-slate-700 rounded text-slate-200 text-[10px] font-sans font-bold shadow-sm">F3</kbd>
-                      </div>
-                      <div className="flex items-center justify-between p-2 bg-slate-950/30 border border-slate-850 rounded-lg">
-                        <span className="text-slate-400 font-bold uppercase">Cancel / Clear Cart</span>
-                        <kbd className="px-2 py-0.5 bg-slate-800 border border-slate-700 rounded text-slate-200 text-[10px] font-sans font-bold shadow-sm">ESC</kbd>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <h4 className="text-[11px] font-bold text-slate-300 uppercase tracking-widest">
-                      Support Escalations
-                    </h4>
-                    
-                    <div className="p-4 bg-slate-950/60 border border-slate-800 rounded-xl space-y-2 text-[10.5px]">
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">Branch Manager Line:</span>
-                        <span className="font-bold text-slate-200 font-mono">EXT 805</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">IT Systems Hotline:</span>
-                        <span className="font-bold text-slate-200 font-mono">EXT 104</span>
-                      </div>
-                    </div>
-                  </div>
-
-                </div>
-
-              </div>
-
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
+      <RegisterForgotPinModal
+        isOpen={isForgotPin}
+        onClose={() => setIsForgotPin(false)}
+        onSubmit={handleForgotPinSubmit}
+        selectedUser={selectedUser}
+        loading={submitting}
+        resetError={resetError}
+      />
     </div>
   );
-}
+};
 
 export default LoginSelectionPage;
