@@ -1,116 +1,113 @@
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import {
-  FaArrowRight,
-  FaBarcode,
-  FaBoxOpen,
-  FaCheck,
-  FaChartLine,
-  FaPlay
-} from 'react-icons/fa';
-import finalScanPage from '../../images/final_scan_page.png';
+import { FaArrowRight, FaArrowDown, FaCheck, FaShieldAlt } from 'react-icons/fa';
 
-const trustPoints = ['No complicated setup', 'Built for fast-moving counters', 'Clear end-of-day totals'];
+const operationalHighlights = [
+  {
+    code: 'SPEC-01',
+    label: 'Checkout Pipeline',
+    value: 'Direct Barcode & Integer-Cent Accuracy',
+    detail: 'Eliminates floating-point rounding errors across line items and split tender.',
+  },
+  {
+    code: 'SPEC-02',
+    label: 'Cashier Accountability',
+    value: 'Mandatory Shift Cash Float',
+    detail: 'Every transaction is immutably linked to an active shift and drawer opening log.',
+  },
+  {
+    code: 'SPEC-03',
+    label: 'Network Resilience',
+    value: 'IndexedDB Durable Cache',
+    detail: 'Full product search and local transaction queuing continue during outages.',
+  },
+];
 
 const Hero = () => {
-  const rise = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1] } }
-  };
-
   return (
-    <section className="relative overflow-hidden bg-[#f8faf9] px-5 pb-16 pt-14 sm:px-6 sm:pb-24 sm:pt-20 lg:px-8 border-b border-slate-200/60">
-      <div className="pointer-events-none absolute -left-40 -top-48 h-[520px] w-[520px] rounded-full bg-slate-200/40 blur-3xl" />
-      <div className="pointer-events-none absolute -right-40 top-20 h-[460px] w-[460px] rounded-full bg-emerald-100/30 blur-3xl" />
+    <section className="bg-[#F2F0E9] border-b border-[#D0D0C7] pt-12 pb-16 sm:pt-16 sm:pb-20 lg:pt-20 lg:pb-24">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        
+        {/* Top Editorial Index Marker */}
+        <div className="flex items-center gap-3 mb-6">
+          <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#A14E38] bg-[#F0E4DD] px-2.5 py-1 rounded border border-[#D0D0C7]">
+            01 / RETAIL OPERATIONS JOURNAL
+          </span>
+          <span className="h-px flex-1 bg-[#D0D0C7]" />
+          <span className="font-mono text-[10px] text-[#656960] tracking-wider hidden sm:inline">
+            SUELTO SYSTEM V1.0 · POINT OF SALE
+          </span>
+        </div>
 
-      <div className="relative mx-auto grid max-w-7xl items-center gap-14 lg:grid-cols-[0.88fr_1.12fr] lg:gap-12">
-        <motion.div initial="hidden" animate="visible" transition={{ staggerChildren: 0.08 }} className="max-w-2xl">
-          <motion.div variants={rise} className="mb-7 inline-flex items-center gap-2.5 rounded-full border border-slate-200/90 bg-white px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-700 shadow-xs">
-            <span className="font-mono text-[9px] text-slate-400">v1.0</span>
-            <span className="h-3 w-px bg-slate-200" />
-            <span>Point of sale for independent retail</span>
-          </motion.div>
+        {/* Large Architectural Statement */}
+        <div className="max-w-4xl space-y-6">
+          <h1 className="font-serif sm:font-sans text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-[#242824] leading-[1.05]">
+            Every sale <br />
+            <span className="text-[#A14E38]">accounted for.</span>
+          </h1>
 
-          <motion.h1 variants={rise} className="text-[44px] font-extrabold leading-[0.98] tracking-[-0.055em] text-slate-950 sm:text-6xl lg:text-[68px]">
-            Run the counter.
-            <span className="mt-2 block text-emerald-800">See the whole store.</span>
-          </motion.h1>
+          <p className="max-w-2xl text-base sm:text-lg lg:text-xl text-[#656960] leading-relaxed font-normal">
+            One focused workspace for checkout, inventory, and daily store operations.
+            Built for actual retail counters with instant barcode lookup, shift-bound cash drawers, and durable local continuity.
+          </p>
+        </div>
 
-          <motion.p variants={rise} className="mt-7 max-w-xl text-base font-medium leading-7 text-slate-600 sm:text-lg">
-            Checkout, stock, shifts, receipts, and daily reporting—one focused workspace that keeps every sale moving.
-          </motion.p>
+        {/* Primary and Secondary Action Cluster */}
+        <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 max-w-md">
+          <Link
+            to="/login-selection"
+            className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-[#FFFFFF] bg-[#242824] hover:bg-[#3A3E39] transition-colors rounded text-center shadow-none"
+          >
+            <span>Open register</span>
+            <FaArrowRight className="text-[10px]" />
+          </Link>
 
-          <motion.div variants={rise} className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link
-              to="/login-selection"
-              className="group flex items-center justify-center gap-3 rounded-2xl bg-slate-950 px-6 py-4 text-sm font-bold text-white shadow-lg shadow-slate-900/15 transition-all hover:-translate-y-0.5 hover:bg-slate-800"
-            >
-              Open register
-              <FaArrowRight className="text-[10px] transition-transform group-hover:translate-x-1" />
-            </Link>
-            <a
-              href="#product-tour"
-              className="flex items-center justify-center gap-3 rounded-2xl border border-slate-300 bg-white/90 px-6 py-4 text-sm font-bold text-slate-800 transition-all hover:border-slate-400 hover:bg-white shadow-xs"
-            >
-              <span className="grid h-6 w-6 place-items-center rounded-lg bg-slate-100 text-slate-700"><FaPlay className="ml-0.5 text-[8px]" /></span>
-              See the product
-            </a>
-          </motion.div>
+          <a
+            href="#product-showcase"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3.5 text-xs font-semibold text-[#242824] hover:text-[#A14E38] transition-colors border border-[#D0D0C7] bg-[#FFFFFF] hover:bg-[#F2F0E9] rounded text-center"
+          >
+            <span>Explore the system</span>
+            <FaArrowDown className="text-[9px] text-[#656960]" />
+          </a>
+        </div>
 
-          <motion.div variants={rise} className="mt-8 flex flex-col gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:flex-wrap sm:gap-x-6">
-            {trustPoints.map((point) => (
-              <span key={point} className="flex items-center gap-2 text-[11px] font-semibold text-slate-600">
-                <span className="grid h-5 w-5 place-items-center rounded-md bg-slate-100 text-slate-700"><FaCheck className="text-[7.5px]" /></span>
-                {point}
-              </span>
-            ))}
-          </motion.div>
-        </motion.div>
+        {/* Verification Guarantee Points */}
+        <div className="mt-8 pt-6 border-t border-[#D0D0C7] flex flex-wrap gap-x-6 gap-y-2 text-xs text-[#656960]">
+          <span className="flex items-center gap-1.5 font-medium">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#166534]" />
+            Zero external cloud subscriptions required
+          </span>
+          <span className="flex items-center gap-1.5 font-medium">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#166534]" />
+            Atomic single-transaction stock deductions
+          </span>
+          <span className="flex items-center gap-1.5 font-medium">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#166534]" />
+            Immutable manager audit ledger
+          </span>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, x: 30, scale: 0.98 }}
-          animate={{ opacity: 1, x: 0, scale: 1 }}
-          transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-          className="relative"
-        >
-          <div className="absolute -inset-4 rounded-[32px] bg-gradient-to-br from-slate-200/50 via-white/40 to-emerald-100/30 blur-xl" />
-          <div className="relative overflow-hidden rounded-[24px] border border-slate-200 bg-slate-950 p-2.5 shadow-[0_30px_70px_-25px_rgba(15,23,42,0.35)]">
-            <div className="flex items-center justify-between px-3 pb-2.5 pt-1 border-b border-slate-800/80 mb-2">
-              <div className="flex gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-full bg-slate-700" />
-                <span className="h-2.5 w-2.5 rounded-full bg-slate-700" />
-                <span className="h-2.5 w-2.5 rounded-full bg-slate-700" />
+        {/* Operational System Specifications Table */}
+        <div className="mt-12 sm:mt-16 grid grid-cols-1 md:grid-cols-3 border border-[#D0D0C7] bg-[#FFFFFF] rounded divide-y md:divide-y-0 md:divide-x divide-[#D0D0C7]">
+          {operationalHighlights.map((spec) => (
+            <div key={spec.code} className="p-6 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-[10px] font-bold text-[#A14E38] tracking-widest uppercase">
+                  {spec.code}
+                </span>
+                <span className="font-mono text-[10px] text-[#656960] uppercase">
+                  {spec.label}
+                </span>
               </div>
-              <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-400">Main branch · Register 01</span>
-              <span className="text-[9px] font-mono font-semibold text-slate-400 tracking-wider">ACTIVE</span>
+              <h3 className="text-sm font-bold text-[#242824] pt-1">
+                {spec.value}
+              </h3>
+              <p className="text-xs text-[#656960] leading-relaxed">
+                {spec.detail}
+              </p>
             </div>
-            <div className="overflow-hidden rounded-[17px] bg-white">
-              <img src={finalScanPage} alt="Suelto checkout workspace" className="h-auto w-full object-cover" />
-            </div>
-          </div>
+          ))}
+        </div>
 
-          <div className="absolute -bottom-7 left-3 flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-white/95 p-3 shadow-xl sm:-left-7 sm:p-4 backdrop-blur-sm">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-slate-950 text-white shadow-sm"><FaBarcode /></span>
-            <span><strong className="block text-xs text-slate-950">Scan-ready checkout</strong><span className="text-[10px] font-medium text-slate-500">Built for speed at the counter</span></span>
-          </div>
-          <div className="absolute -right-2 top-12 hidden items-center gap-3 rounded-2xl border border-white bg-white/95 p-4 shadow-xl sm:flex lg:-right-6">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-sky-100 text-sky-700"><FaChartLine /></span>
-            <span><strong className="block text-xs text-slate-950">Live store view</strong><span className="text-[10px] font-medium text-slate-500">Sales, shifts & stock</span></span>
-          </div>
-        </motion.div>
-      </div>
-
-      <div className="relative mx-auto mt-20 grid max-w-7xl grid-cols-1 overflow-hidden rounded-2xl border border-slate-200 bg-white/80 shadow-sm sm:grid-cols-3">
-        {[
-          { icon: FaBarcode, value: 'Faster', label: 'barcode-first checkout' },
-          { icon: FaBoxOpen, value: 'Automatic', label: 'stock movement tracking' },
-          { icon: FaChartLine, value: 'Clear', label: 'shift and sales reporting' }
-        ].map(({ icon: Icon, value, label }, index) => (
-          <div key={label} className={`flex items-center gap-4 px-6 py-5 ${index ? 'border-t border-slate-200 sm:border-l sm:border-t-0' : ''}`}>
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-slate-100 text-slate-700"><Icon /></span>
-            <span><strong className="block text-sm text-slate-950">{value}</strong><span className="text-xs font-medium text-slate-500">{label}</span></span>
-          </div>
-        ))}
       </div>
     </section>
   );

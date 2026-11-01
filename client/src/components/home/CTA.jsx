@@ -1,35 +1,60 @@
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaArrowRight, FaCheck } from 'react-icons/fa';
+import { FaArrowRight, FaShieldAlt } from 'react-icons/fa';
 
-const CtaSection = () => (
-  <section className="bg-white px-5 py-20 sm:px-6 sm:py-28 lg:px-8">
-    <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[30px] bg-slate-950 px-6 py-14 text-white shadow-2xl shadow-slate-950/20 sm:px-12 sm:py-16 lg:px-16 border border-slate-850">
-      <div className="pointer-events-none absolute -right-24 -top-40 h-[420px] w-[420px] rounded-full border-[70px] border-white/5" />
-      <div className="pointer-events-none absolute -bottom-52 right-40 h-[360px] w-[360px] rounded-full bg-slate-800/30 blur-3xl" />
-      <div className="relative grid items-end gap-10 lg:grid-cols-[1fr_auto]">
-        <div className="max-w-3xl">
-          <span className="text-[10px] font-mono font-semibold uppercase tracking-[0.2em] text-slate-400">Ready for Deployment</span>
-          <h2 className="mt-4 text-4xl font-extrabold leading-[1.04] tracking-[-0.045em] sm:text-5xl">A clearer day at the counter starts here.</h2>
-          <div className="mt-7 flex flex-wrap gap-x-6 gap-y-3">
-            {['Quick cashier access', 'One connected workspace', 'Built-in store controls'].map((item) => (
-              <span key={item} className="flex items-center gap-2 text-xs font-semibold text-slate-300">
-                <span className="grid h-4 w-4 place-items-center rounded-md bg-slate-800 text-slate-300"><FaCheck className="text-[7px]" /></span>
-                {item}
-              </span>
-            ))}
+const CtaSection = () => {
+  return (
+    <section className="bg-[#242824] text-[#FFFFFF] py-20 sm:py-28 lg:py-32 border-b border-[#D0D0C7]">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        
+        <div className="max-w-3xl space-y-6">
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#F0E4DD] bg-[#A14E38] px-2.5 py-0.5 rounded">
+              08 / GET STARTED
+            </span>
+            <span className="h-px w-10 bg-[#3D423D]" />
+            <span className="font-mono text-[10px] text-[#A6AAA1] uppercase tracking-wider">
+              OPERATIONAL ACCESS
+            </span>
+          </div>
+
+          <h2 className="font-serif sm:font-sans text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-[#FFFFFF] leading-[1.05]">
+            Ready for the <br />
+            <span className="text-[#F0E4DD]">next sale?</span>
+          </h2>
+
+          <p className="text-base sm:text-lg text-[#A6AAA1] max-w-xl leading-relaxed">
+            Open your register and get back to business. Launch an authorized cashier workstation or access store intelligence in seconds.
+          </p>
+
+          <div className="pt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 max-w-md">
+            <Link
+              to="/login-selection"
+              className="inline-flex items-center justify-center gap-2.5 px-7 py-4 text-xs font-bold uppercase tracking-wider text-[#242824] bg-[#FFFFFF] hover:bg-[#F2F0E9] transition-colors rounded text-center"
+            >
+              <span>Open register</span>
+              <FaArrowRight className="text-[10px]" />
+            </Link>
+
+            <Link
+              to="/admin-login"
+              className="inline-flex items-center justify-center gap-2 px-6 py-4 text-xs font-semibold text-[#FFFFFF] hover:text-[#F0E4DD] transition-colors border border-[#3D423D] bg-transparent hover:bg-[#2C312C] rounded text-center"
+            >
+              <FaShieldAlt className="text-xs text-[#A14E38]" />
+              <span>Manager sign in</span>
+            </Link>
+          </div>
+
+          <div className="pt-6 font-mono text-[11px] text-[#A6AAA1] flex flex-wrap items-center gap-4">
+            <span>REGISTER STATUS: ONLINE</span>
+            <span className="text-[#3D423D]">·</span>
+            <span>HARDWARE COMPATIBLE: ESC/POS · USB · BLUETOOTH</span>
           </div>
         </div>
-        <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
-          <Link to="/login-selection" className="group flex min-w-[190px] items-center justify-center gap-3 rounded-2xl bg-white px-6 py-4 text-sm font-bold text-slate-950 shadow-lg transition-transform hover:-translate-y-0.5 hover:bg-slate-100">
-            Open register <FaArrowRight className="text-[10px] transition-transform group-hover:translate-x-1" />
-          </Link>
-          <Link to="/admin-login" className="min-w-[190px] rounded-2xl border border-white/20 bg-white/5 px-6 py-4 text-center text-sm font-semibold text-white transition-colors hover:bg-white/10">
-            Manager sign in
-          </Link>
-        </div>
+
       </div>
-    </div>
-  </section>
-);
+    </section>
+  );
+};
 
 export default CtaSection;

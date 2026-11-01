@@ -1,45 +1,109 @@
-import { motion } from 'framer-motion';
-import { FaBarcode, FaMoneyBillWave, FaPrint, FaUserLock } from 'react-icons/fa';
+import React from 'react';
 
-const steps = [
-  { title: 'Start a secure shift', desc: 'Sign in with a cashier PIN and confirm the opening float.', icon: FaUserLock },
-  { title: 'Scan the basket', desc: 'Build the order with barcode lookup and a searchable catalog.', icon: FaBarcode },
-  { title: 'Take payment', desc: 'Accept cash or digital methods and keep totals accurate.', icon: FaMoneyBillWave },
-  { title: 'Close with confidence', desc: 'Print the receipt and carry every sale into the shift report.', icon: FaPrint }
+const workflowSteps = [
+  {
+    step: '01',
+    phase: 'INITIALIZATION',
+    title: 'Open cashier shift & declare cash float',
+    description:
+      'The cashier selects their profile at the Register Desk, enters their 6-digit PIN, and inputs the verified starting drawer float. Without an open shift, transactions are locked.',
+    checkpoint: 'Shift ID immutably stored in session context',
+  },
+  {
+    step: '02',
+    phase: 'COUNTER TRANSACTION',
+    title: 'Scan items & apply authorized discounts',
+    description:
+      'Products are buffered instantly via barcode reader or catalog search. Line item quantities adjust on screen. Discounts require verified supervisor credentials and cannot stack.',
+    checkpoint: 'Real-time integer-cent price calculation',
+  },
+  {
+    step: '03',
+    phase: 'TENDER SETTLEMENT',
+    title: 'Record payment & deduct atomic stock',
+    description:
+      'Tender is accepted via Cash, GCash/Maya with digital reference code, or Customer Credit. Sale completion and stock decrement execute within a single atomic MongoDB transaction.',
+    checkpoint: 'Zero duplicate stock deductions via idempotency key',
+  },
+  {
+    step: '04',
+    phase: 'RECONCILIATION',
+    title: 'Generate receipt & close shift with variance audit',
+    description:
+      'A thermal slip is issued immediately. At shift end, the cashier records final physical cash in the drawer. The system computes exact overage/shortage variance for manager sign-off.',
+    checkpoint: 'X/Z reading logged to central immutable audit ledger',
+  },
 ];
 
-const Workflow = () => (
-  <section id="workflow" className="bg-white px-5 py-20 sm:px-6 sm:py-28 lg:px-8 border-b border-slate-200/60">
-    <div className="mx-auto max-w-7xl">
-      <div className="max-w-2xl">
-        <span className="text-[10px] font-mono font-semibold uppercase tracking-[0.2em] text-slate-400">Standard Operations</span>
-        <h2 className="mt-4 text-4xl font-extrabold tracking-[-0.045em] text-slate-950 sm:text-5xl">Four steps from open to settled.</h2>
-      </div>
-      <motion.div
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: '-80px' }}
-        variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.08 } } }}
-        className="relative mt-12 grid gap-4 md:grid-cols-4"
-      >
-        <div className="absolute left-[12.5%] right-[12.5%] top-8 hidden h-px bg-slate-200 md:block" />
-        {steps.map(({ title, desc, icon: Icon }, index) => (
-          <motion.article
-            key={title}
-            variants={{ hidden: { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
-            className="relative rounded-[22px] border border-slate-200/90 bg-white p-6 shadow-xs hover:border-slate-400 transition-colors"
-          >
-            <div className="relative z-10 flex items-center justify-between">
-              <span className="grid h-14 w-14 place-items-center rounded-2xl bg-slate-950 text-white shadow-lg shadow-slate-900/10"><Icon /></span>
-              <span className="text-3xl font-extrabold tracking-[-0.06em] text-slate-100">0{index + 1}</span>
+const Workflow = () => {
+  return (
+    <section id="how-it-works" className="bg-[#FFFFFF] py-16 sm:py-24 lg:py-28 border-b border-[#D0D0C7]">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        
+        {/* Section Header */}
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-10 border-b border-[#D0D0C7]">
+          <div className="space-y-3 max-w-2xl">
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#A14E38] bg-[#F0E4DD] px-2.5 py-0.5 rounded border border-[#D0D0C7]">
+                05 / OPERATIONAL LIFECYCLE
+              </span>
+              <span className="h-px w-10 bg-[#D0D0C7]" />
+              <span className="font-mono text-[10px] text-[#656960] uppercase">
+                REGISTER DISCIPLINE
+              </span>
             </div>
-            <h3 className="mt-8 text-base font-extrabold text-slate-950">{title}</h3>
-            <p className="mt-2 text-xs font-medium leading-6 text-slate-600">{desc}</p>
-          </motion.article>
-        ))}
-      </motion.div>
-    </div>
-  </section>
-);
+            <h2 className="font-serif sm:font-sans text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-[#242824] leading-[1.1]">
+              How SUELTO POS works.
+            </h2>
+            <p className="text-sm sm:text-base text-[#656960] leading-relaxed">
+              Four disciplined steps from opening the register drawer to final day-end cash reconciliation.
+            </p>
+          </div>
+
+          <div className="font-mono text-xs text-[#656960]">
+            STANDARD OPERATING PROCEDURE
+          </div>
+        </div>
+
+        {/* Clean Editorial Numbered Timeline (Zero Gradients, Pure Flat Architecture) */}
+        <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {workflowSteps.map((item) => (
+            <div
+              key={item.step}
+              className="p-6 border border-[#D0D0C7] bg-[#F2F0E9] rounded flex flex-col justify-between space-y-6"
+            >
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-serif text-3xl font-bold text-[#242824]">
+                    {item.step}
+                  </span>
+                  <span className="font-mono text-[9px] uppercase font-bold tracking-widest text-[#A14E38] bg-[#FFFFFF] px-2 py-0.5 rounded border border-[#D0D0C7]">
+                    {item.phase}
+                  </span>
+                </div>
+
+                <h3 className="font-sans text-sm font-bold text-[#242824] leading-snug">
+                  {item.title}
+                </h3>
+
+                <p className="text-xs text-[#656960] leading-relaxed">
+                  {item.description}
+                </p>
+              </div>
+
+              <div className="pt-3 border-t border-[#D0D0C7] font-mono text-[10px] text-[#656960]">
+                <span className="text-[#242824] font-bold block uppercase tracking-wider text-[9px] mb-0.5">
+                  Audit Checkpoint
+                </span>
+                <span>{item.checkpoint}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+      </div>
+    </section>
+  );
+};
 
 export default Workflow;

@@ -1,24 +1,32 @@
+import React from 'react';
 import Navbar from './home/Navbar';
 import Hero from './home/Hero';
-import DashboardPreview from './home/DashboardPreview';
-import Screenshots from './home/Screenshots';
-import FeatureGrid from './home/FeatureGrid';
-import BusinessTypes from './home/BusinessTypes';
+import ProductShowcase from './home/ProductShowcase';
+import CoreOperations from './home/CoreOperations';
+import ProductTour from './home/ProductTour';
 import Workflow from './home/Workflow';
+import StoreTypes from './home/StoreTypes';
+import OfflineCapability from './home/OfflineCapability';
 import CTA from './home/CTA';
 import Footer from './home/Footer';
 
+/**
+ * SUELTO POS — Landing Page
+ * Creative Concept: "SUELTO / RETAIL OPERATIONS JOURNAL"
+ * Architectural Flat Surfaces, Editorial Typography, Zero Gradients
+ */
 const HomePage = () => {
   return (
-    <div className="flex min-h-screen flex-col justify-between bg-white font-sans text-slate-800 antialiased selection:bg-emerald-500/20 selection:text-emerald-950">
+    <div className="min-h-screen bg-[#F2F0E9] text-[#242824] font-sans antialiased flex flex-col selection:bg-[#242824] selection:text-[#FFFFFF]">
       <Navbar />
-      <main className="flex-grow">
+      <main className="flex-1 w-full">
         <Hero />
-        <FeatureGrid />
-        <DashboardPreview />
-        <Screenshots />
+        <ProductShowcase />
+        <CoreOperations />
+        <ProductTour />
         <Workflow />
-        <BusinessTypes />
+        <StoreTypes />
+        <OfflineCapability />
         <CTA />
       </main>
       <Footer />

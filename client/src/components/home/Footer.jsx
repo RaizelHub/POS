@@ -1,45 +1,112 @@
+import React from 'react';
 import { Link } from 'react-router-dom';
 import novaLogo from '../../images/nova_logo.png';
 
-const Footer = () => (
-  <footer className="bg-slate-950 px-5 py-12 text-slate-400 sm:px-6 lg:px-8">
-    <div className="mx-auto max-w-7xl">
-      <div className="grid gap-10 border-b border-white/10 pb-10 md:grid-cols-[1.4fr_0.6fr_0.6fr]">
-        <div className="max-w-sm">
-          <div className="flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center overflow-hidden rounded-xl bg-white">
-              <img src={novaLogo} alt="" className="h-8 w-8 object-contain" />
-            </span>
-            <span>
-              <strong className="block text-sm tracking-tight text-white">SUELTO</strong>
-              <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-500">Retail OS</span>
-            </span>
+const Footer = () => {
+  return (
+    <footer className="bg-[#FFFFFF] text-[#242824] py-12 sm:py-16 border-t border-[#D0D0C7] select-none">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        
+        {/* Main Footer Row */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 pb-10 border-b border-[#D0D0C7]">
+          
+          {/* Col 1: Identity & Dossier Summary (Span 6) */}
+          <div className="md:col-span-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded border border-[#D0D0C7] bg-[#F2F0E9]">
+                <img src={novaLogo} alt="SUELTO Logo" className="h-5 w-5 object-contain" />
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="font-sans text-sm font-extrabold tracking-[0.16em] uppercase text-[#242824]">
+                  SUELTO
+                </span>
+                <span className="text-[#D0D0C7]">/</span>
+                <span className="font-mono text-[10px] uppercase tracking-wider text-[#656960]">
+                  RETAIL OPERATIONS JOURNAL
+                </span>
+              </div>
+            </div>
+
+            <p className="text-xs text-[#656960] max-w-md leading-relaxed">
+              A disciplined, offline-first point of sale and inventory management application designed for independent retail counters, cashiers, and store managers.
+            </p>
+
+            <div className="font-mono text-[10px] text-[#656960] pt-1">
+              BUILD: RETAIL OS V1.0 · MERN ARCHITECTURE · SOLID FLAT PALETTE
+            </div>
           </div>
-          <p className="mt-5 text-xs font-medium leading-6">A focused point-of-sale and store operations workspace for independent retailers.</p>
-        </div>
-        <div>
-          <h3 className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-white">Explore</h3>
-          <div className="mt-4 flex flex-col gap-3 text-xs font-semibold">
-            <a href="#features" className="hover:text-white">Features</a>
-            <a href="#product-tour" className="hover:text-white">Product tour</a>
-            <a href="#workflow" className="hover:text-white">How it works</a>
+
+          {/* Col 2: System Navigation (Span 3) */}
+          <div className="md:col-span-3 space-y-3">
+            <h4 className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#A14E38]">
+              System Index
+            </h4>
+            <ul className="space-y-2 text-xs font-semibold text-[#656960]">
+              <li>
+                <a href="#product-showcase" className="hover:text-[#242824] transition-colors">
+                  01 / The Register
+                </a>
+              </li>
+              <li>
+                <a href="#operations" className="hover:text-[#242824] transition-colors">
+                  02 / Three Core Operations
+                </a>
+              </li>
+              <li>
+                <a href="#product-tour" className="hover:text-[#242824] transition-colors">
+                  03 / Interface Dossier
+                </a>
+              </li>
+              <li>
+                <a href="#how-it-works" className="hover:text-[#242824] transition-colors">
+                  04 / Standard Lifecycle
+                </a>
+              </li>
+              <li>
+                <a href="#store-types" className="hover:text-[#242824] transition-colors">
+                  05 / Target Environments
+                </a>
+              </li>
+              <li>
+                <a href="#offline" className="hover:text-[#242824] transition-colors">
+                  06 / Offline Architecture
+                </a>
+              </li>
+            </ul>
           </div>
-        </div>
-        <div>
-          <h3 className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-white">Access</h3>
-          <div className="mt-4 flex flex-col gap-3 text-xs font-semibold">
-            <Link to="/login-selection" className="hover:text-white">Open register</Link>
-            <Link to="/admin-login" className="hover:text-white">Admin login</Link>
-            <Link to="/admin-login" className="hover:text-white">Manager sign in</Link>
+
+          {/* Col 3: Terminal Access (Span 3) */}
+          <div className="md:col-span-3 space-y-3">
+            <h4 className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#A14E38]">
+              Terminal Access
+            </h4>
+            <ul className="space-y-2 text-xs font-semibold text-[#656960]">
+              <li>
+                <Link to="/login-selection" className="hover:text-[#242824] transition-colors flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#166534]" />
+                  <span>Open Register Desk</span>
+                </Link>
+              </li>
+              <li>
+                <Link to="/admin-login" className="hover:text-[#242824] transition-colors flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#A14E38]" />
+                  <span>Admin Management Console</span>
+                </Link>
+              </li>
+            </ul>
           </div>
+
         </div>
+
+        {/* Bottom Colophon */}
+        <div className="pt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-[11px] font-mono text-[#656960]">
+          <span>© 2026 SUELTO RETAIL SYSTEMS · ALL RIGHTS RESERVED</span>
+          <span>DISCIPLINED POINT OF SALE · ZERO GRADIENTS</span>
+        </div>
+
       </div>
-      <div className="flex flex-col gap-2 pt-7 text-[10px] font-medium text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-        <p>© 2026 SUELTO Retail Systems.</p>
-        <p>Checkout, inventory, shifts, and reporting—together.</p>
-      </div>
-    </div>
-  </footer>
-);
+    </footer>
+  );
+};
 
 export default Footer;

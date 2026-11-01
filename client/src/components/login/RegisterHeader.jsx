@@ -57,9 +57,8 @@ const RegisterHeader = ({ onHelpClick, isServiceConnected = true }) => {
           title={serviceOperational ? 'Backend service connected' : 'Service unreachable'}
         >
           <span
-            className={`w-2 h-2 rounded-full ${
-              serviceOperational ? 'bg-[#166534]' : 'bg-[#B91C1C]'
-            }`}
+            className={`w-2 h-2 rounded-full ${serviceOperational ? 'bg-[#166534]' : 'bg-[#B91C1C]'
+              }`}
           />
           <span className="hidden sm:inline font-medium text-[#252924]">
             {serviceOperational ? 'SERVICE READY' : 'OFFLINE'}
