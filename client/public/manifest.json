@@ -1,0 +1,19 @@
+{
+  "name": "SUELTO POS — Retail Terminal",
+  "short_name": "SUELTO POS",
+  "description": "Offline-First Retail Point of Sale and Inventory Management Platform",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F5F3ED",
+  "theme_color": "#F5F3ED",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
+

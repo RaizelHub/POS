@@ -2,24 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FaArrowLeft, FaShieldAlt, FaQuestionCircle } from 'react-icons/fa';
 import novaLogo from '../../images/nova_logo.png';
+import { useConnectivity, CONNECTION_STATUS } from '../../utils/connectivity';
 
 const RegisterHeader = ({ onHelpClick, isServiceConnected = true }) => {
   const [time, setTime] = useState(new Date());
-  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
+  const { isOnline, status } = useConnectivity();
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      clearInterval(timer);
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
+    return () => clearInterval(timer);
   }, []);
 
   const serviceOperational = isOnline && isServiceConnected;

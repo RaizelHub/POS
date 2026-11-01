@@ -25,6 +25,7 @@ import returnRoutes from './Routes/returnRoutes.js';
 import reportRoutes from './Routes/reportRoutes.js';
 import auditRoutes from './Routes/auditRoutes.js';
 import fs from 'fs';
+import mongoose from 'mongoose';
 
 const app = express();
 dotenvSafe.config({
@@ -109,15 +110,33 @@ if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Health check endpoint
-app.get('/api/health', (req, res) => {
+// Process health check endpoint (liveness probe)
+const handleHealth = (req, res) => {
   res.status(200).json({
     status: 'ok',
     uptimeSeconds: Math.floor(process.uptime()),
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
   });
-});
+};
+
+// Readiness probe endpoint (checks database connectivity)
+const handleReadiness = (req, res) => {
+  const isDbReady = mongoose.connection && mongoose.connection.readyState === 1;
+  const statusCode = isDbReady ? 200 : 503;
+  res.status(statusCode).json({
+    status: isDbReady ? 'ready' : 'unready',
+    database: isDbReady ? 'connected' : 'disconnected',
+    readyState: mongoose.connection ? mongoose.connection.readyState : 0,
+    uptimeSeconds: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString(),
+  });
+};
+
+app.get('/health', handleHealth);
+app.get('/api/health', handleHealth);
+app.get('/ready', handleReadiness);
+app.get('/api/ready', handleReadiness);
 
 // API routes
 app.use('/api', userRoutes);

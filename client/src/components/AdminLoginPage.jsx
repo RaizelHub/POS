@@ -5,6 +5,7 @@ import axios from "axios";
 import config from '../config';
 import novaLogo from '../images/nova_logo.png';
 import retailTerminal from '../images/retail_terminal.jpg';
+import { useConnectivity } from '../utils/connectivity';
 
 const AdminLoginPage = () => {
   const [email, setEmail] = useState("");
@@ -12,23 +13,13 @@ const AdminLoginPage = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [time, setTime] = useState(new Date());
-  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
+  const { isOnline } = useConnectivity();
 
   const navigate = useNavigate();
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      clearInterval(timer);
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
+    return () => clearInterval(timer);
   }, []);
 
   const handleSubmit = async (e) => {

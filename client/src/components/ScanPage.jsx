@@ -24,6 +24,13 @@ import {
   syncPendingDrafts,
 } from '../utils/draftStorage';
 import TransactionsLedger from './TransactionsLedger';
+import { useConnectivity, CONNECTION_STATUS } from '../utils/connectivity';
+import {
+  syncCatalogToIndexedDb,
+  getCachedCatalog,
+  getCachedProductByBarcode,
+  getCatalogSyncMetadata,
+} from '../utils/catalogCache';
 
 function ScanPage() {
   const [user, setUser] = useState(null);
@@ -39,6 +46,9 @@ function ScanPage() {
   const [loading, setLoading] = useState(true);
   const [availableProducts, setAvailableProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(true);
+  const [isCatalogCached, setIsCatalogCached] = useState(false);
+  const [cachedMeta, setCachedMeta] = useState(null);
+  const { isOnline, status: connectionStatus } = useConnectivity();
 
   // Cart state
   const [cart, setCart] = useState([]);
@@ -453,24 +463,42 @@ function ScanPage() {
     console.log('Attempting to fetch product with barcode:', trimmedBarcode);
 
     try {
-      const response = await apiFetch(`${config.apiUrl}/api/products/barcode/${encodeURIComponent(trimmedBarcode)}`);
+      let product = null;
 
-      if (!response.ok) {
-        const errorResponse = await response.json();
-        throw new Error(errorResponse.message || 'Product not found!');
+      // First attempt online API if connection is alive
+      if (isOnline) {
+        try {
+          const response = await apiFetch(`${config.apiUrl}/api/products/barcode/${encodeURIComponent(trimmedBarcode)}`);
+          if (response.ok) {
+            product = await response.json();
+          }
+        } catch (netErr) {
+          console.warn('Network barcode query failed, attempting IndexedDB lookup:', netErr);
+        }
       }
 
-      const product = await response.json();
-      console.log('Successfully fetched product:', product);
+      // Offline IndexedDB fallback lookup
+      if (!product) {
+        product = await getCachedProductByBarcode(trimmedBarcode);
+        if (product) {
+          console.log('Product retrieved from local IndexedDB cache:', product);
+        }
+      }
 
-      if (product.quantity <= 0) {
+      if (!product) {
+        throw new Error('Product not found in catalog or offline database.');
+      }
+
+      const availableStock = typeof product.stock === 'number' ? product.stock : (product.quantity || 0);
+      if (availableStock <= 0) {
         setError(`${product.name} is out of stock.`);
         return;
       }
 
       addToCart(product);
 
-      setSnackbarMessage(`${product.name} (₱${product.price.toFixed(2)}) added to cart!`);
+      const priceDisplay = Number(product.price || 0).toFixed(2);
+      setSnackbarMessage(`${product.name} (₱${priceDisplay}) added to cart!`);
       setSnackbarOpen(true);
       setError('');
     } catch (error) {
@@ -488,12 +516,13 @@ function ScanPage() {
   const addToCart = (product) => {
     setCart(prevCart => {
       const existingProductIndex = prevCart.findIndex(item => item.product._id === product._id);
+      const availableStock = typeof product.stock === 'number' ? product.stock : (typeof product.quantity === 'number' ? product.quantity : 9999);
 
       if (existingProductIndex >= 0) {
         const currentQtyInCart = prevCart[existingProductIndex].quantity;
-        if (currentQtyInCart >= product.quantity) {
-          setError(`Cannot add more of ${product.name}. Only ${product.quantity} in stock.`);
-          setSnackbarMessage(`Warning: Only ${product.quantity} in stock for ${product.name}.`);
+        if (currentQtyInCart >= availableStock) {
+          setError(`Cannot add more of ${product.name}. Only ${availableStock} in stock.`);
+          setSnackbarMessage(`Warning: Only ${availableStock} in stock for ${product.name}.`);
           setSnackbarOpen(true);
           return prevCart;
         }
@@ -615,6 +644,7 @@ function ScanPage() {
   };
 
   const fetchAvailableProducts = async () => {
+    setProductsLoading(true);
     try {
       const response = await apiFetch(`${config.apiUrl}/api/products`);
       if (!response.ok) {
@@ -622,9 +652,30 @@ function ScanPage() {
       }
       const data = await response.json();
       setAvailableProducts(data);
+      setIsCatalogCached(false);
+
+      // Asynchronously update IndexedDB offline catalog cache
+      syncCatalogToIndexedDb(data)
+        .then((meta) => setCachedMeta(meta))
+        .catch((err) => console.warn('[ScanPage] IndexedDB catalog caching error:', err));
     } catch (error) {
-      console.error('Error fetching products:', error);
-      setAvailableProducts([]);
+      console.warn('Network product fetch failed, attempting offline catalog fallback:', error);
+      try {
+        const cached = await getCachedCatalog();
+        if (cached && cached.length > 0) {
+          setAvailableProducts(cached);
+          setIsCatalogCached(true);
+          const meta = await getCatalogSyncMetadata();
+          setCachedMeta(meta);
+          setSnackbarMessage(`Offline mode: Loaded ${cached.length} products from local catalog.`);
+          setSnackbarOpen(true);
+        } else {
+          setAvailableProducts([]);
+        }
+      } catch (cacheErr) {
+        console.error('Failed to read offline catalog from IndexedDB:', cacheErr);
+        setAvailableProducts([]);
+      }
     } finally {
       setProductsLoading(false);
     }
@@ -744,6 +795,44 @@ function ScanPage() {
           </div>
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Connectivity Status Indicator — Pure solid colors */}
+          <div
+            className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-mono border ${
+              isOnline
+                ? 'bg-emerald-950/60 border-emerald-800 text-emerald-300'
+                : connectionStatus === CONNECTION_STATUS.SYNCING
+                ? 'bg-amber-950/60 border-amber-800 text-amber-300'
+                : 'bg-[#B55E42]/20 border-[#B55E42]/60 text-[#F3E8E1]'
+            }`}
+            title={
+              isOnline
+                ? 'Connected to store server'
+                : connectionStatus === CONNECTION_STATUS.SYNCING
+                ? 'Synchronizing local queue with server'
+                : 'Offline mode: Operating from local database'
+            }
+          >
+            <span
+              className={`w-2 h-2 rounded-full ${
+                isOnline
+                  ? 'bg-emerald-400'
+                  : connectionStatus === CONNECTION_STATUS.SYNCING
+                  ? 'bg-amber-400 animate-pulse'
+                  : 'bg-[#B55E42] animate-pulse'
+              }`}
+            />
+            <span className="font-semibold uppercase tracking-wider">
+              {isOnline
+                ? 'Online'
+                : connectionStatus === CONNECTION_STATUS.SYNCING
+                ? 'Syncing'
+                : 'Offline'}
+            </span>
+            {isCatalogCached && !isOnline && (
+              <span className="text-[10px] text-slate-300 hidden md:inline">· Cached Catalog</span>
+            )}
+          </div>
+
           {/* Mobile Cart Toggle Pill */}
           <button
             type="button"
@@ -852,6 +941,24 @@ function ScanPage() {
                   />
               </div>
             </div>
+
+            {/* Offline Catalog Operational Strip (Zero Gradients) */}
+            {(!isOnline || isCatalogCached) && (
+              <div className="mb-4 px-3.5 py-2.5 bg-[#F3E8E1] border border-[#DDDCD4] rounded flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-[#252924]">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-[#B55E42]" />
+                  <span className="font-semibold uppercase tracking-wider text-[11px] text-[#B55E42]">
+                    Offline Local Database
+                  </span>
+                  <span className="text-[#6C716A]">
+                    — Browsing cached product catalog ({filteredProducts.length} items available)
+                  </span>
+                </div>
+                <span className="font-mono text-[10px] text-[#6C716A]">
+                  {cachedMeta?.syncedAt ? `Synchronized: ${new Date(cachedMeta.syncedAt).toLocaleTimeString()}` : 'Durable Cache Active'}
+                </span>
+              </div>
+            )}
 
             <div className="flex gap-2 overflow-x-auto pb-3 mb-1 no-scrollbar" aria-label="Product categories">
                   {catalogCategories.map((cat) => (
